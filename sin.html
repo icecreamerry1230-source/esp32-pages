@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>动态三角函数传递可视化</title>
+    <style>
+        /* === 全局重置与风格 === */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0b0e1a;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #e0e8f0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1300px;
+            width: 100%;
+            background: radial-gradient(ellipse at center, #141b2b 0%, #0b0e1a 100%);
+            border-radius: 40px;
+            padding: 30px 35px 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(2px);
+        }
+
+        /* === 标题区域 === */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
+            gap: 15px;
+        }
+
+        .header h1 {
+            font-weight: 300;
+            font-size: 28px;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #7ec8ff, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header h1 span {
+            font-weight: 600;
+            background: linear-gradient(135deg, #f472b6, #fb923c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header .sub {
+            font-size: 14px;
+            color: #8896b0;
+            letter-spacing: 1px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 6px 16px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        /* === 画布网格 === */
+        .canvas-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 24px;
+            margin-bottom: 28px;
+        }
+
+        @media (max-width: 860px) {
+            .canvas-grid {
+                grid-template-columns: 1fr;
+                gap: 28px;
+            }
+        }
+
+        /* === 每个画布卡片 === */
+        .canvas-card {
+            background: rgba(18, 26, 42, 0.7);
+            border-radius: 24px;
+            padding: 18px 18px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.3);
+            transition: border-color 0.3s;
+        }
+
+        .canvas-card:hover {
+            border-color: rgba(120, 180, 255, 0.15);
+        }
+
+        .canvas-card .card-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            font-weight: 400;
+            letter-spacing: 1.5px;
+            color: #7a8aa8;
+            padding: 0 6px 10px 6px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            text-transform: uppercase;
+        }
+
+        .canvas-card .card-title .badge {
+            background: rgba(120, 180, 255, 0.08);
+            padding: 2px 12px;
+            border-radius: 30px;
+            font-size: 11px;
+            color: #7ec8ff;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 1 / 1;
+            border-radius: 16px;
+            background: #0b0f1a;
+            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.6);
+            margin-top: 6px;
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        /* === 控制面板 === */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 20px 35px;
+            background: rgba(12, 18, 30, 0.7);
+            border-radius: 30px;
+            padding: 16px 30px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(8px);
+            margin-top: 6px;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 12px 20px;
+            flex-wrap: wrap;
+            flex: 1 1 auto;
+        }
+
+        .control-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-item label {
+            font-size: 13px;
+            font-weight: 400;
+            color: #9aabca;
+            letter-spacing: 0.5px;
+            min-width: 40px;
+        }
+
+        .control-item input[type="range"] {
+            width: 120px;
+            height: 4px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: linear-gradient(90deg, #2a3a5a, #5a7aaa);
+            border-radius: 10px;
+            outline: none;
+            transition: background 0.2s;
+        }
+
+        .control-item input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #7ec8ff, #4a7aaa);
+            cursor: pointer;
+            box-shadow: 0 0 16px rgba(120, 200, 255, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            transition: 0.15s;
+        }
+
+        .control-item input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.12);
+            border-color: #7ec8ff;
+        }
+
+        .control-item input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #7ec8ff, #4a7aaa);
+            cursor: pointer;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .control-value {
+            min-width: 38px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #c8d8f0;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .control-group .divider {
+            width: 1px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .btn-toggle {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #b0c4e0;
+            padding: 6px 18px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 400;
+            cursor: pointer;
+            transition: 0.2s;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-toggle:hover {
+            background: rgba(120, 200, 255, 0.08);
+            border-color: rgba(120, 200, 255, 0.25);
+            color: #d0e4ff;
+        }
+
+        .btn-toggle.active {
+            background: rgba(120, 200, 255, 0.12);
+            border-color: #7ec8ff;
+            color: #7ec8ff;
+            box-shadow: 0 0 20px rgba(120, 200, 255, 0.05);
+        }
+
+        .btn-toggle .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4a6a8a;
+            transition: 0.3s;
+        }
+
+        .btn-toggle.active .dot {
+            background: #7ec8ff;
+            box-shadow: 0 0 12px #7ec8ff;
+        }
+
+        /* === 图例 === */
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px 28px;
+            padding: 10px 6px 0 6px;
+            font-size: 13px;
+            color: #9aabca;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-swatch {
+            width: 20px;
+            height: 3px;
+            border-radius: 4px;
+        }
+
+        /* === 响应式微调 === */
+        @media (max-width: 600px) {
+            .container {
+                padding: 16px;
+            }
+            .controls {
+                padding: 14px 18px;
+                gap: 12px;
+            }
+            .control-item input[type="range"] {
+                width: 80px;
+            }
+            .header h1 {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- 标题 -->
+        <div class="header">
+            <h1>⟳ <span>三角函数</span> · 传递可视化</h1>
+            <div class="sub">⚡ 动态映射 · 相位传递</div>
+        </div>
+
+        <!-- 画布网格 -->
+        <div class="canvas-grid">
+            <!-- 左侧：单位圆 + 三角线 -->
+            <div class="canvas-card">
+                <div class="card-title">
+                    <span>◉ 单位圆 · 三角映射</span>
+                    <span class="badge">sin / cos / tan</span>
+                </div>
+                <canvas id="circleCanvas" width="600" height="600"></canvas>
+            </div>
+
+            <!-- 右侧：波形图 -->
+            <div class="canvas-card">
+                <div class="card-title">
+                    <span>〰️ 波形传递 · 相位关系</span>
+                    <span class="badge">动态偏移</span>
+                </div>
+                <canvas id="waveCanvas" width="600" height="600"></canvas>
+            </div>
+        </div>
+
+        <!-- 图例 -->
+        <div class="legend" style="margin-bottom: 12px;">
+            <span class="legend-item"><span class="legend-swatch" style="background:#f87171;"></span> sin(θ)</span>
+            <span class="legend-item"><span class="legend-swatch" style="background:#60a5fa;"></span> cos(θ)</span>
+            <span class="legend-item"><span class="legend-swatch" style="background:#fbbf24;"></span> tan(θ)</span>
+            <span class="legend-item"><span class="legend-swatch" style="background:#a78bfa;height:2px;border-top:2px dashed #a78bfa;"></span> 传递相位</span>
+        </div>
+
+        <!-- 控制面板 -->
+        <div class="controls">
+            <div class="control-group">
+                <!-- 频率 -->
+                <div class="control-item">
+                    <label>频率</label>
+                    <input type="range" id="freqSlider" min="0.2" max="3.0" step="0.05" value="1.0" />
+                    <span class="control-value" id="freqValue">1.00</span>
+                </div>
+
+                <div class="divider"></div>
+
+                <!-- 振幅 -->
+                <div class="control-item">
+                    <label>振幅</label>
+                    <input type="range" id="ampSlider" min="0.2" max="1.5" step="0.02" value="1.0" />
+                    <span class="control-value" id="ampValue">1.00</span>
+                </div>
+
+                <div class="divider"></div>
+
+                <!-- 相位偏移 (传递) -->
+                <div class="control-item">
+                    <label>传递</label>
+                    <input type="range" id="phaseSlider" min="0" max="360" step="1" value="0" />
+                    <span class="control-value" id="phaseValue">0°</span>
+                </div>
+
+                <div class="divider"></div>
+
+                <!-- 动画开关 -->
+                <button class="btn-toggle active" id="animToggle">
+                    <span class="dot"></span> 动画
+                </button>
+
+                <!-- 重置 -->
+                <button class="btn-toggle" id="resetBtn" style="border-color:rgba(255,255,255,0.04);">
+                    ⟲ 重置
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ===== 获取 DOM 元素 =====
+            const circleCanvas = document.getElementById('circleCanvas');
+            const waveCanvas = document.getElementById('waveCanvas');
+            const ctxCircle = circleCanvas.getContext('2d');
+            const ctxWave = waveCanvas.getContext('2d');
+
+            const freqSlider = document.getElementById('freqSlider');
+            const ampSlider = document.getElementById('ampSlider');
+            const phaseSlider = document.getElementById('phaseSlider');
+            const freqValue = document.getElementById('freqValue');
+            const ampValue = document.getElementById('ampValue');
+            const phaseValue = document.getElementById('phaseValue');
+            const animToggle = document.getElementById('animToggle');
+            const resetBtn = document.getElementById('resetBtn');
+
+            // ===== 状态 =====
+            let frequency = 1.0;
+            let amplitude = 1.0;
+            let phaseDeg = 0; // 传递相位 (度)
+            let animating = true;
+            let time = 0;
+            let animationId = null;
+
+            // ===== 尺寸适配 (保持清晰) =====
+            function resizeCanvases() {
+                const rectCircle = circleCanvas.getBoundingClientRect();
+                const rectWave = waveCanvas.getBoundingClientRect();
+                // 已设置固定尺寸 600x600，无需 resize，但确保 CSS 不拉伸
+            }
+
+            // ===== 绘制单位圆 + 三角线 =====
+            function drawCircle(angle) {
+                const W = 600,
+                    H = 600;
+                ctxCircle.clearRect(0, 0, W, H);
+
+                const cx = W / 2,
+                    cy = H / 2;
+                const radius = 220;
+
+                // ---- 极细网格 ----
+                ctxCircle.save();
+                ctxCircle.strokeStyle = 'rgba(255,255,255,0.03)';
+                ctxCircle.lineWidth = 0.5;
+                for (let i = -10; i <= 10; i++) {
+                    const pos = cx + i * (radius / 8);
+                    ctxCircle.beginPath();
+                    ctxCircle.moveTo(pos, 10);
+                    ctxCircle.lineTo(pos, H - 10);
+                    ctxCircle.stroke();
+                    ctxCircle.beginPath();
+                    ctxCircle.moveTo(10, pos);
+                    ctxCircle.lineTo(W - 10, pos);
+                    ctxCircle.stroke();
+                }
+                ctxCircle.restore();
+
+                // ---- 坐标轴 ----
+                ctxCircle.save();
+                ctxCircle.strokeStyle = 'rgba(255,255,255,0.12)';
+                ctxCircle.lineWidth = 1;
+                ctxCircle.beginPath();
+                ctxCircle.moveTo(30, cy);
+                ctxCircle.lineTo(W - 30, cy);
+                ctxCircle.moveTo(cx, 30);
+                ctxCircle.lineTo(cx, H - 30);
+                ctxCircle.stroke();
+                ctxCircle.restore();
+
+                // ---- 单位圆 ----
+                ctxCircle.save();
+                ctxCircle.beginPath();
+                ctxCircle.arc(cx, cy, radius, 0, Math.PI * 2);
+                ctxCircle.strokeStyle = 'rgba(255,255,255,0.08)';
+                ctxCircle.lineWidth = 1.5;
+                ctxCircle.stroke();
+                ctxCircle.restore();
+
+                // ---- 角度弧 ----
+                const theta = angle;
+                const arcEnd = theta;
+                ctxCircle.save();
+                ctxCircle.beginPath();
+                ctxCircle.arc(cx, cy, 40, -arcEnd, 0);
+                ctxCircle.strokeStyle = 'rgba(255,255,200,0.2)';
+                ctxCircle.lineWidth = 2;
+                ctxCircle.stroke();
+                ctxCircle.restore();
+
+                // ---- 三角函数线 ----
+                const x = radius * Math.cos(theta);
+                const y = -radius * Math.sin(theta);
+                const px = cx + x;
+                const py = cy + y;
+
+                // 垂直线 (sin)
+                ctxCircle.save();
+                ctxCircle.beginPath();
+                ctxCircle.moveTo(px, cy);
+                ctxCircle.lineTo(px, py);
+                ctxCircle.strokeStyle = '#f87171';
+                ctxCircle.lineWidth = 2.5;
+                ctxCircle.shadowColor = '#f87171';
+                ctxCircle.shadowBlur = 12;
+                ctxCircle.stroke();
+                ctxCircle.restore();
+
+                // 水平线 (cos)
+                ctxCircle.save();
+                ctxCircle.beginPath();
+                ctxCircle.moveTo(cx, py);
+                ctxCircle.lineTo(px, py);
+                ctxCircle.strokeStyle = '#60a5fa';
+                ctxCircle.lineWidth = 2.5;
+                ctxCircle.shadowColor = '#60a5fa';
+                ctxCircle.shadowBlur = 12;
+                ctxCircle.stroke();
+                ctxCircle.restore();
+
+                // 正切线 (从圆心到 (1, tan) 方向延伸)
+                const tanVal = Math.tan(theta);
+                let tanX = radius * 1.2;
+                let tanY = -radius * 1.2 * tanVal;
+                // 限制显示范围
+                const maxExt = radius * 1.6;
+                if (Math.abs(tanY) > maxExt) {
+                    const ratio = maxExt / Math.abs(tanY);
+                    tanX = radius * 1.2 * ratio;
+                    tanY = tanY > 0 ? maxExt : -maxExt;
+                }
+                ctxCircle.save();
+                ctxCircle.beginPath();
+                ctxCircle.moveTo(cx, cy);
+                ctxCircle.lineTo(cx + tanX, cy + tanY);
+                ctxCircle.strokeStyle = '#fbbf24';
+                ctxCircle.lineWidth = 2;
+                ctxCircle.shadowColor = '#fbbf24';
+                ctxCircle.shadowBlur = 10;
+                ctxCircle.setLineDash([6, 8]);
+                ctxCircle.stroke();
+                ctxCircle.restore();
+
+                // ---- 点 (角度位置) ----
+                ctxCircle.save();
+                ctxCircle.beginPath();
+                ctxCircle.arc(px, py, 7, 0, Math.PI * 2);
+                ctxCircle.fillStyle = '#ffffff';
+                ctxCircle.shadowColor = 'rgba(255,255,255,0.5)';
+                ctxCircle.shadowBlur = 20;
+                ctxCircle.fill();
+                ctxCircle.restore();
+
+                // ---- 中心点 ----
+                ctxCircle.save();
+                ctxCircle.beginPath();
+                ctxCircle.arc(cx, cy, 4, 0, Math.PI * 2);
+                ctxCircle.fillStyle = 'rgba(255,255,255,0.5)';
+                ctxCircle.fill();
+                ctxCircle.restore();
+
+                // ---- 标签 (角度值) ----
+                ctxCircle.save();
+                ctxCircle.fillStyle = 'rgba(255,255,255,0.25)';
+                ctxCircle.font = '13px monospace';
+                ctxCircle.textAlign = 'center';
+                ctxCircle.textBaseline = 'bottom';
+                const deg = ((theta * 180 / Math.PI) % 360 + 360) % 360;
+                ctxCircle.fillText('θ = ' + deg.toFixed(1) + '°', cx, 28);
+                ctxCircle.restore();
+
+                // ---- 显示 sin / cos / tan 数值 ----
+                const sinVal = Math.sin(theta);
+                const cosVal = Math.cos(theta);
+                const tanValDisplay = Math.tan(theta);
+                ctxCircle.save();
+                ctxCircle.font = '13px monospace';
+                ctxCircle.textAlign = 'left';
+                ctxCircle.textBaseline = 'top';
+                const infoX = 20,
+                    infoY = 40;
+                ctxCircle.fillStyle = '#f87171';
+                ctxCircle.fillText('sin = ' + sinVal.toFixed(3), infoX, infoY);
+                ctxCircle.fillStyle = '#60a5fa';
+                ctxCircle.fillText('cos = ' + cosVal.toFixed(3), infoX, infoY + 22);
+                ctxCircle.fillStyle = '#fbbf24';
+                ctxCircle.fillText('tan = ' + (Math.abs(tanValDisplay) > 10 ? '∞' : tanValDisplay.toFixed(3)), infoX, infoY + 44);
+                ctxCircle.restore();
+
+                // ---- 相位传递指示 (在圆上画一个小标记) ----
+                const phaseRad = phaseDeg * Math.PI / 180;
+                const px2 = cx + radius * 0.7 * Math.cos(theta + phaseRad);
+                const py2 = cy - radius * 0.7 * Math.sin(theta + phaseRad);
+                ctxCircle.save();
+                ctxCircle.beginPath();
+                ctxCircle.arc(px2, py2, 5, 0, Math.PI * 2);
+                ctxCircle.fillStyle = '#a78bfa';
+                ctxCircle.shadowColor = '#a78bfa';
+                ctxCircle.shadowBlur = 18;
+                ctxCircle.fill();
+                ctxCircle.restore();
+
+                // 传递连线 (虚线)
+                ctxCircle.save();
+                ctxCircle.beginPath();
+                ctxCircle.moveTo(px, py);
+                ctxCircle.lineTo(px2, py2);
+                ctxCircle.strokeStyle = 'rgba(167,139,250,0.3)';
+                ctxCircle.lineWidth = 1.5;
+                ctxCircle.setLineDash([4, 6]);
+                ctxCircle.stroke();
+                ctxCircle.restore();
+            }
+
+            // ===== 绘制波形图 (含传递) =====
+            function drawWave(angle) {
+                const W = 600,
+                    H = 600;
+                ctxWave.clearRect(0, 0, W, H);
+
+                const pad = 40;
+                const graphW = W - pad * 2;
+                const graphH = H - pad * 2;
+                const midY = pad + graphH / 2;
+                const ampScale = (graphH / 2) * amplitude * 0.85;
+
+                // 显示范围: 两个周期
+                const xMin = -2 * Math.PI;
+                const xMax = 2 * Math.PI;
+                const range = xMax - xMin;
+                const steps = 400;
+
+                // ---- 背景网格 ----
+                ctxWave.save();
+                ctxWave.strokeStyle = 'rgba(255,255,255,0.03)';
+                ctxWave.lineWidth = 0.5;
+                for (let i = 0; i <= 8; i++) {
+                    const xPos = pad + (i / 8) * graphW;
+                    ctxWave.beginPath();
+                    ctxWave.moveTo(xPos, pad);
+                    ctxWave.lineTo(xPos, H - pad);
+                    ctxWave.stroke();
+                }
+                for (let i = 0; i <= 6; i++) {
+                    const yPos = pad + (i / 6) * graphH;
+                    ctxWave.beginPath();
+                    ctxWave.moveTo(pad, yPos);
+                    ctxWave.lineTo(W - pad, yPos);
+                    ctxWave.stroke();
+                }
+                ctxWave.restore();
+
+                // ---- 坐标轴 ----
+                ctxWave.save();
+                ctxWave.strokeStyle = 'rgba(255,255,255,0.10)';
+                ctxWave.lineWidth = 1;
+                ctxWave.beginPath();
+                ctxWave.moveTo(pad, midY);
+                ctxWave.lineTo(W - pad, midY);
+                ctxWave.moveTo(pad, pad);
+                ctxWave.lineTo(pad, H - pad);
+                ctxWave.stroke();
+                ctxWave.restore();
+
+                // 辅助函数：将角度映射到画布 x
+                function mapX(theta) {
+                    return pad + ((theta - xMin) / range) * graphW;
+                }
+
+                function mapY(val) {
+                    return midY - val * ampScale;
+                }
+
+                // ---- 绘制三条曲线 ----
+                const curves = [
+                    { color: '#f87171', label: 'sin', fn: (t) => Math.sin(t) },
+                    { color: '#60a5fa', label: 'cos', fn: (t) => Math.cos(t) },
+                    { color: '#fbbf24', label: 'tan', fn: (t) => Math.tan(t) }
+                ];
+
+                // 先绘制 tan (放在底层避免遮挡)
+                const tanCurve = curves[2];
+                ctxWave.save();
+                ctxWave.beginPath();
+                let started = false;
+                for (let i = 0; i <= steps; i++) {
+                    const t = xMin + (i / steps) * range;
+                    const val = tanCurve.fn(t * frequency + angle);
+                    // 限制 y 范围避免爆炸
+                    const clamped = Math.max(-3, Math.min(3, val));
+                    const yPos = mapY(clamped);
+                    const xPos = mapX(t);
+                    if (!started) { ctxWave.moveTo(xPos, yPos);
+                        started = true; } else { ctxWave.lineTo(xPos, yPos); }
+                }
+                ctxWave.strokeStyle = '#fbbf24';
+                ctxWave.lineWidth = 1.8;
+                ctxWave.shadowColor = 'rgba(251,191,36,0.15)';
+                ctxWave.shadowBlur = 8;
+                ctxWave.globalAlpha = 0.6;
+                ctxWave.stroke();
+                ctxWave.restore();
+
+                // sin 和 cos (正常绘制)
+                const sinCurve = curves[0];
+                const cosCurve = curves[1];
+                [sinCurve, cosCurve].forEach((curve) => {
+                    ctxWave.save();
+                    ctxWave.beginPath();
+                    for (let i = 0; i <= steps; i++) {
+                        const t = xMin + (i / steps) * range;
+                        const val = curve.fn(t * frequency + angle);
+                        const yPos = mapY(val);
+                        const xPos = mapX(t);
+                        if (i === 0) ctxWave.moveTo(xPos, yPos);
+                        else ctxWave.lineTo(xPos, yPos);
+                    }
+                    ctxWave.strokeStyle = curve.color;
+                    ctxWave.lineWidth = 2.8;
+                    ctxWave.shadowColor = curve.color;
+                    ctxWave.shadowBlur = 10;
+                    ctxWave.globalAlpha = 0.9;
+                    ctxWave.stroke();
+                    ctxWave.restore();
+                });
+
+                // ---- 绘制传递相位偏移曲线 (虚线) ----
+                const phaseRad = phaseDeg * Math.PI / 180;
+                // 传递曲线：sin(t + phase) 用紫色虚线表示
+                ctxWave.save();
+                ctxWave.beginPath();
+                for (let i = 0; i <= steps; i++) {
+                    const t = xMin + (i / steps) * range;
+                    const val = Math.sin(t * frequency + angle + phaseRad);
+                    const yPos = mapY(val);
+                    const xPos = mapX(t);
+                    if (i === 0) ctxWave.moveTo(xPos, yPos);
+                    else ctxWave.lineTo(xPos, yPos);
+                }
+                ctxWave.strokeStyle = '#a78bfa';
+                ctxWave.lineWidth = 2.2;
+                ctxWave.shadowColor = '#a78bfa';
+                ctxWave.shadowBlur = 14;
+                ctxWave.setLineDash([6, 8]);
+                ctxWave.globalAlpha = 0.85;
+                ctxWave.stroke();
+                ctxWave.restore();
+
+                // ---- 标注 ----
+                ctxWave.save();
+                ctxWave.font = '12px monospace';
+                ctxWave.textAlign = 'left';
+                ctxWave.textBaseline = 'top';
+                ctxWave.fillStyle = 'rgba(255,255,255,0.15)';
+                ctxWave.fillText('−2π', pad - 4, H - pad + 6);
+                ctxWave.textAlign = 'right';
+                ctxWave.fillText('2π', W - pad + 4, H - pad + 6);
+                ctxWave.textAlign = 'center';
+                ctxWave.fillText('0', pad + graphW / 2, H - pad + 6);
+                ctxWave.restore();
+
+                // ---- 当前角度指示线 ----
+                const curX = mapX(angle);
+                ctxWave.save();
+                ctxWave.beginPath();
+                ctxWave.moveTo(curX, pad);
+                ctxWave.lineTo(curX, H - pad);
+                ctxWave.strokeStyle = 'rgba(255,255,255,0.06)';
+                ctxWave.lineWidth = 1;
+                ctxWave.setLineDash([2, 6]);
+                ctxWave.stroke();
+                ctxWave.restore();
+
+                // ---- 图例内嵌 (右下) ----
+                const legX = W - 160,
+                    legY = H - 80;
+                ctxWave.save();
+                ctxWave.globalAlpha = 0.7;
+                ctxWave.font = '12px monospace';
+                ctxWave.textAlign = 'left';
+                ctxWave.textBaseline = 'top';
+                const items = [
+                    { color: '#f87171', label: 'sin' },
+                    { color: '#60a5fa', label: 'cos' },
+                    { color: '#fbbf24', label: 'tan' },
+                    { color: '#a78bfa', label: '传递 (sin+φ)' }
+                ];
+                items.forEach((item, idx) => {
+                    const yOff = legY + idx * 20;
+                    ctxWave.fillStyle = item.color;
+                    ctxWave.fillRect(legX, yOff + 6, 16, 2.5);
+                    ctxWave.fillStyle = 'rgba(255,255,255,0.5)';
+                    ctxWave.fillText(item.label, legX + 22, yOff + 2);
+                });
+                ctxWave.restore();
+            }
+
+            // ===== 主渲染循环 =====
+            function render(timestamp) {
+                if (animating) {
+                    time += 0.008;
+                }
+                // 当前角度 (随时间变化)
+                const angle = time;
+
+                drawCircle(angle);
+                drawWave(angle);
+
+                animationId = requestAnimationFrame(render);
+            }
+
+            // ===== 控制绑定 =====
+            function updateFromSliders() {
+                frequency = parseFloat(freqSlider.value);
+                amplitude = parseFloat(ampSlider.value);
+                phaseDeg = parseFloat(phaseSlider.value);
+
+                freqValue.textContent = frequency.toFixed(2);
+                ampValue.textContent = amplitude.toFixed(2);
+                phaseValue.textContent = phaseDeg.toFixed(0) + '°';
+            }
+
+            freqSlider.addEventListener('input', updateFromSliders);
+            ampSlider.addEventListener('input', updateFromSliders);
+            phaseSlider.addEventListener('input', updateFromSliders);
+
+            // 动画切换
+            animToggle.addEventListener('click', function() {
+                animating = !animating;
+                this.classList.toggle('active');
+                if (animating) {
+                    // 如果当前暂停，重启动画循环
+                }
+            });
+
+            // 重置
+            resetBtn.addEventListener('click', function() {
+                freqSlider.value = '1.0';
+                ampSlider.value = '1.0';
+                phaseSlider.value = '0';
+                updateFromSliders();
+                time = 0;
+                // 如果暂停则恢复动画
+                if (!animating) {
+                    animating = true;
+                    animToggle.classList.add('active');
+                }
+            });
+
+            // 初始化
+            updateFromSliders();
+            // 启动动画
+            render();
+
+            // 窗口失焦时降低性能? 不做额外处理
+
+            // 页面可见性变化时暂停/恢复 (优化)
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden) {
+                    // 不停止动画，但可以降低帧率? 保持简单
+                }
+            });
+
+            // 清理 (非必须)
+            window.addEventListener('beforeunload', function() {
+                if (animationId) cancelAnimationFrame(animationId);
+            });
+
+        })();
+    </script>
+
+</body>
+</html>
