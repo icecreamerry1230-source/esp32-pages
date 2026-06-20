@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no"><title>计算器</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:#0b0e1a;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  display:flex;justify-content:center;align-items:center;
+  min-height:100vh;color:#e0e8f0;padding:20px;
+  user-select:none;-webkit-user-select:none;touch-action:manipulation;
+}
+.calc{
+  max-width:340px;width:100%;
+  background:rgba(18,26,42,0.9);border:1px solid rgba(255,255,255,0.06);
+  border-radius:24px;padding:20px;
+}
+.back{
+  color:#6a7a95;text-decoration:none;font-size:13px;letter-spacing:1px;
+  display:inline-block;margin-bottom:16px;transition:color 0.2s;
+}
+.back:hover{color:#a78bfa}
+.display{
+  background:rgba(0,0,0,0.3);border-radius:16px;padding:20px;
+  text-align:right;margin-bottom:16px;min-height:80px;
+}
+.display .expr{font-size:16px;color:#5a6a85;min-height:24px;word-break:break-all}
+.display .result{font-size:36px;font-weight:300;color:#e0e8f0;margin-top:4px;word-break:break-all}
+.btns{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.btn{
+  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);
+  border-radius:16px;padding:16px 0;font-size:20px;color:#e0e8f0;
+  cursor:pointer;transition:all 0.15s;text-align:center;
+  font-family:inherit;-webkit-tap-highlight-color:transparent;
+}
+.btn:active{transform:scale(0.95);background:rgba(255,255,255,0.1)}
+.btn-op{background:rgba(167,139,250,0.12);border-color:rgba(167,139,250,0.2);color:#a78bfa}
+.btn-eq{background:rgba(120,200,255,0.15);border-color:rgba(120,200,255,0.25);color:#7ec8ff}
+.btn-fn{color:#6a7a95;font-size:16px}
+.btn-zero{grid-column:span 2}
+</style>
+</head>
+<body>
+<div class="calc">
+  <a class="back" href="tools.html">← 工具</a>
+  <div class="display">
+    <div class="expr" id="expr"></div>
+    <div class="result" id="result">0</div>
+  </div>
+  <div class="btns">
+    <button class="btn btn-fn" onclick="input('C')">C</button>
+    <button class="btn btn-fn" onclick="input('±')">±</button>
+    <button class="btn btn-fn" onclick="input('%')">%</button>
+    <button class="btn btn-op" onclick="input('÷')">÷</button>
+
+    <button class="btn" onclick="input('7')">7</button>
+    <button class="btn" onclick="input('8')">8</button>
+    <button class="btn" onclick="input('9')">9</button>
+    <button class="btn btn-op" onclick="input('×')">×</button>
+
+    <button class="btn" onclick="input('4')">4</button>
+    <button class="btn" onclick="input('5')">5</button>
+    <button class="btn" onclick="input('6')">6</button>
+    <button class="btn btn-op" onclick="input('−')">−</button>
+
+    <button class="btn" onclick="input('1')">1</button>
+    <button class="btn" onclick="input('2')">2</button>
+    <button class="btn" onclick="input('3')">3</button>
+    <button class="btn btn-op" onclick="input('+')">+</button>
+
+    <button class="btn btn-zero" onclick="input('0')">0</button>
+    <button class="btn" onclick="input('.')">.</button>
+    <button class="btn btn-eq" onclick="input('=')">=</button>
+  </div>
+</div>
+
+<script>
+let expr='',current='0',lastOp='',shouldReset=false;
+
+function update(){
+  document.getElementById('expr').textContent=expr;
+  document.getElementById('result').textContent=current;
+}
+
+function input(key){
+  if(key==='C'){
+    expr='';current='0';lastOp='';shouldReset=false;
+    update();return;
+  }
+  if(key==='±'){
+    if(current!=='0'){
+      current=current.startsWith('-')?current.slice(1):'-'+current;
+    }
+    update();return;
+  }
+  if(key==='%'){
+    if(current!=='0'){
+      current=String(parseFloat(current)/100);
+    }
+    update();return;
+  }
+  if('0123456789'.includes(key)){
+    if(shouldReset){current='0';shouldReset=false}
+    if(current==='0'&&key!=='.')current=key;
+    else current+=key;
+    update();return;
+  }
+  if(key==='.'){
+    if(shouldReset){current='0';shouldReset=false}
+    if(!current.includes('.'))current+=key;
+    update();return;
+  }
+  if('+−×÷'.includes(key)){
+    if(lastOp&&shouldReset){
+      expr=expr.slice(0,-1)+key;
+    }else{
+      if(current==='0'&&expr==='')current='0';
+      expr+=current+key;
+    }
+    lastOp=key;shouldReset=true;
+    update();return;
+  }
+  if(key==='='){
+    if(lastOp&&shouldReset)return;
+    try{
+      const fullExpr=expr+current;
+      const clean=fullExpr.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-');
+      const result=Function('"use strict";return ('+clean+')')();
+      expr='';current=String(Number.isFinite(result)?result:'错误');
+      lastOp='';shouldReset=true;
+    }catch(e){
+      current='错误';expr='';lastOp='';shouldReset=true;
+    }
+    update();
+  }
+}
+update();
+</script>
+</body>
+</html>
