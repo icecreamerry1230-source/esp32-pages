@@ -163,6 +163,8 @@
     </div>
 </div>
 
+<script src="leaderboard.js"></script>
+<script src="game-sdk.js"></script>
 <script>
 (function() {
     'use strict';
@@ -351,6 +353,8 @@
         pauseGame(true);
         if (score > bestScore) { bestScore = score; saveBest(bestScore); }
         updateScore();
+        submitGameScore('tetris', score, 'Lv'+level+' '+lines+'行');
+        submitGameScore('tetris', score, 'Lv'+level+' '+lines+'行');
         overlayMsg.textContent = '游戏结束';
         overlaySub.textContent = `得分: ${score} | 行数: ${lines} | 等级: ${level}`;
         overlay.classList.add('show');

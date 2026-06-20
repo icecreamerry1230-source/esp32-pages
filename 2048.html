@@ -214,6 +214,8 @@
     </div>
 </div>
 
+<script src="leaderboard.js"></script>
+<script src="game-sdk.js"></script>
 <script>
 (function() {
     'use strict';
@@ -447,12 +449,15 @@
         // 检查胜利
         if (!gameWon && checkWin()) {
             gameWon = true;
+            submitGameScore('2048', score);
             setTimeout(() => showOverlay('🎉 你赢了！', '已达 2048，可继续挑战', 'win'), 200);
         }
 
         // 检查结束
         if (!hasMoves()) {
             gameOver = true;
+                submitGameScore('2048', score);
+                submitGameScore('2048', score);
             setTimeout(() => showOverlay('游戏结束', '没有可用的移动了', 'lose'), 300);
         }
     }

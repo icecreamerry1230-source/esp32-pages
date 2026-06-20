@@ -49,6 +49,8 @@
         </div>
     </div>
 </div>
+<script src="leaderboard.js"></script>
+<script src="game-sdk.js"></script>
 <script>
 (function(){
     const canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d');
@@ -177,7 +179,9 @@
     function endGame(){
         gameOver=true;cancelAnimationFrame(gameLoop);
         if(score>bestScore){bestScore=score;saveBest(bestScore);bestEl.textContent=bestScore}
-        overlayMsg.textContent='💥 坠毁了';
+        submitGameScore('shooter', score);
+    submitGameScore('shooter', score);
+    overlayMsg.textContent='💥 坠毁了';
         overlaySub.textContent=`得分: ${score}`;
         overlay.classList.add('show');
     }

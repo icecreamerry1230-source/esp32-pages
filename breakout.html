@@ -52,6 +52,8 @@
         </div>
     </div>
 </div>
+<script src="leaderboard.js"></script>
+<script src="game-sdk.js"></script>
 <script>
 (function(){
     const canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d');
@@ -149,6 +151,8 @@
         gameOver=true;cancelAnimationFrame(gameLoop);
         if(score>bestScore){bestScore=score;saveBest(bestScore);bestEl.textContent=bestScore}
         overlayMsg.className='msg '+(won?'win':'lose');
+        submitGameScore('breakout', score);
+        submitGameScore('breakout', score);
         overlayMsg.textContent=won?'🎉 通关！':'💥 失败';
         overlaySub.textContent=`得分: ${score}`;
         overlay.classList.add('show');

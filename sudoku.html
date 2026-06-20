@@ -67,6 +67,8 @@
         </div>
     </div>
 </div>
+<script src="leaderboard.js"></script>
+<script src="game-sdk.js"></script>
 <script>
 (function(){
     const gridEl=document.getElementById('grid');
@@ -173,6 +175,7 @@
         if(!timerInterval){timerInterval=setInterval(()=>{timerVal++;const m=Math.floor(timerVal/60),s=timerVal%60;timerEl.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')},1000)}
         if(puzzle[selected.r][selected.c]===0){userBoard[selected.r][selected.c]=n}
         renderGrid();
+        submitGameScore('sudoku', Math.max(1,3600-timerVal), timerEl.textContent);
         if(isComplete()){clearInterval(timerInterval);overlaySub.textContent=`用时 ${timerEl.textContent}`;overlay.classList.add('show')}
     }
 

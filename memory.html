@@ -58,6 +58,8 @@
         </div>
     </div>
 </div>
+<script src="leaderboard.js"></script>
+<script src="game-sdk.js"></script>
 <script>
 (function(){
     const EMOJIS = ['🍎','🍋','🍇','🍒','🌟','🔥','💎','🎵','🚀','🦊','🐸','🐙','🌈','🎯','🍕','⚽'];
@@ -117,6 +119,8 @@
         const prev = loadBest(count);
         if(!prev||moves<prev) saveBest(count,moves);
         bestEl.textContent = loadBest(count);
+        submitGameScore('memory', Math.max(1,200-moves), moves+'步');
+        submitGameScore('memory', Math.max(1,200-moves), moves+'步');
         overlaySub.textContent = `用了 ${moves} 步`;
         overlay.classList.add('show');
     }

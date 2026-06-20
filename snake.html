@@ -172,6 +172,8 @@
     </div>
 </div>
 
+<script src="leaderboard.js"></script>
+<script src="game-sdk.js"></script>
 <script>
 (function() {
     'use strict';
@@ -281,6 +283,8 @@
             saveBest(bestScore);
         }
         updateScore();
+        submitGameScore('snake', score, '难度'+difficulty);
+        submitGameScore('snake', score, '难度'+difficulty);
         overlayMsg.textContent = '游戏结束';
         overlaySub.textContent = `得分: ${score}`;
         overlay.classList.add('show');

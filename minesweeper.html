@@ -160,6 +160,8 @@
     </div>
 </div>
 
+<script src="leaderboard.js"></script>
+<script src="game-sdk.js"></script>
 <script>
 (function() {
     'use strict';
@@ -346,6 +348,8 @@
             const b = loadBest(diff);
             bestEl.textContent = b ? `${b}s` : '--';
             overlayMsg.className = 'msg win';
+            submitGameScore('minesweeper', Math.max(1,1000-timerValue), timerValue+'s');
+            submitGameScore('minesweeper', Math.max(1,1000-timerValue), timerValue+'s');
             overlayMsg.textContent = '🎉 你赢了！';
             overlaySub.textContent = `用时 ${timerValue} 秒`;
         } else {
