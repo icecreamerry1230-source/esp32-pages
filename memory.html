@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>记忆翻牌</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}body{background:#0b0e1a;font-family:'Segoe UI',system-ui,sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;color:#e0e8f0;padding:16px;user-select:none;-webkit-user-select:none}
+        .container{max-width:460px;width:100%}
+        .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+        .title{font-size:32px;font-weight:700;background:linear-gradient(135deg,#fbbf24,#f59e0b,#d97706);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:2px}
+        .stats{display:flex;gap:10px}
+        .stat-box{background:rgba(18,26,42,.9);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:6px 14px;text-align:center;min-width:55px}
+        .stat-label{font-size:10px;color:#8896b0;letter-spacing:1px}
+        .stat-value{font-size:20px;font-weight:600;color:#f0f4ff}
+        .stat-value.best{color:#fbbf24}
+        .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px}
+        .btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#b0c4e0;padding:10px 20px;border-radius:30px;font-size:14px;font-weight:500;cursor:pointer;letter-spacing:.5px;transition:.2s}
+        .btn:hover{background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.3);color:#fbbf24}
+        .btn.primary{background:rgba(251,191,36,.12);border-color:#f59e0b;color:#fbbf24}
+        .btn.primary:hover{background:rgba(251,191,36,.25)}
+        .game-wrapper{background:rgba(18,26,42,.8);border-radius:16px;padding:14px;border:1px solid rgba(255,255,255,.06);box-shadow:inset 0 0 60px rgba(0,0,0,.3)}
+        .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+        .card{aspect-ratio:1;border-radius:12px;cursor:pointer;transition:transform .2s,background .15s;display:flex;align-items:center;justify-content:center;font-size:36px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.06)}
+        .card:active{transform:scale(.95)}
+        .card.flipped{background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.3);transform:rotateY(180deg)}
+        .card.matched{background:rgba(74,222,128,.12);border-color:rgba(74,222,128,.3);pointer-events:none;opacity:.7}
+        .overlay{position:absolute;inset:0;background:rgba(11,14,26,.88);border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:10;opacity:0;pointer-events:none;transition:opacity .3s}
+        .overlay.show{opacity:1;pointer-events:all}
+        .overlay .msg{font-size:32px;font-weight:700;letter-spacing:2px;color:#fbbf24}
+        .overlay .sub{font-size:14px;color:#8896b0}
+        @media(max-width:400px){.title{font-size:24px}.card{font-size:28px;border-radius:8px}.grid{gap:6px}}
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="title">🧠 记忆翻牌</div>
+        <div class="stats">
+            <div class="stat-box"><div class="stat-label">步数</div><div class="stat-value" id="moves">0</div></div>
+            <div class="stat-box"><div class="stat-label">🏆</div><div class="stat-value best" id="best">--</div></div>
+        </div>
+    </div>
+    <div class="toolbar">
+        <select id="diffSelect" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:#b0c4e0;padding:8px 16px;border-radius:20px;font-size:13px">
+            <option value="8">简单 · 8张</option>
+            <option value="12" selected>中等 · 12张</option>
+            <option value="16">困难 · 16张</option>
+        </select>
+        <button class="btn primary" id="restartBtn">⟳ 新游戏</button>
+    </div>
+    <div class="game-wrapper" style="position:relative">
+        <div class="grid" id="grid"></div>
+        <div class="overlay" id="overlay">
+            <div class="msg">🎉 恭喜过关！</div>
+            <div class="sub" id="overlaySub"></div>
+            <button class="btn primary" id="overlayBtn">⟳ 再来一局</button>
+        </div>
+    </div>
+</div>
+<script>
+(function(){
+    const EMOJIS = ['🍎','🍋','🍇','🍒','🌟','🔥','💎','🎵','🚀','🦊','🐸','🐙','🌈','🎯','🍕','⚽'];
+    let cards, flipped, matched, moves, totalPairs, lockBoard;
+    const gridEl = document.getElementById('grid');
+    const movesEl = document.getElementById('moves');
+    const bestEl = document.getElementById('best');
+    const overlay = document.getElementById('overlay');
+    const overlaySub = document.getElementById('overlaySub');
+
+    function loadBest(n){try{return parseInt(localStorage.getItem(`memory_best_${n}`))||null}catch{return null}}
+    function saveBest(n,v){try{localStorage.setItem(`memory_best_${n}`,v)}catch{}}
+
+    function init(){
+        const count = parseInt(document.getElementById('diffSelect').value);
+        const symbols = EMOJIS.slice(0, count/2);
+        cards = [...symbols,...symbols].sort(()=>Math.random()-.5);
+        flipped = []; matched = new Set(); moves = 0; totalPairs = count/2; lockBoard = false;
+        movesEl.textContent = '0';
+        const b = loadBest(count);
+        bestEl.textContent = b||'--';
+        overlay.classList.remove('show');
+        renderGrid();
+    }
+
+    function renderGrid(){
+        gridEl.innerHTML = '';
+        cards.forEach((s,i)=>{
+            const c = document.createElement('div');
+            c.className = 'card';
+            if(flipped.includes(i)||matched.has(i)){c.classList.add('flipped');c.textContent=s}
+            if(matched.has(i)) c.classList.add('matched');
+            c.addEventListener('click',()=>flip(i));
+            gridEl.appendChild(c);
+        });
+    }
+
+    function flip(i){
+        if(lockBoard||flipped.includes(i)||matched.has(i)) return;
+        flipped.push(i); renderGrid();
+        if(flipped.length === 2){
+            moves++; movesEl.textContent = moves;
+            if(cards[flipped[0]] === cards[flipped[1]]){
+                matched.add(flipped[0]); matched.add(flipped[1]);
+                flipped = [];
+                renderGrid();
+                if(matched.size === cards.length) win();
+            }else{
+                lockBoard = true;
+                setTimeout(()=>{flipped=[];lockBoard=false;renderGrid()},600);
+            }
+        }
+    }
+
+    function win(){
+        const count = parseInt(document.getElementById('diffSelect').value);
+        const prev = loadBest(count);
+        if(!prev||moves<prev) saveBest(count,moves);
+        bestEl.textContent = loadBest(count);
+        overlaySub.textContent = `用了 ${moves} 步`;
+        overlay.classList.add('show');
+    }
+
+    document.getElementById('diffSelect').addEventListener('change',init);
+    document.getElementById('restartBtn').addEventListener('click',init);
+    document.getElementById('overlayBtn').addEventListener('click',init);
+    init();
+})();
+</script>
+</body>
+</html>

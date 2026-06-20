@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>五子棋</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}body{background:#0b0e1a;font-family:'Segoe UI',system-ui,sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;color:#e0e8f0;padding:16px;user-select:none;-webkit-user-select:none}
+        .container{max-width:460px;width:100%}
+        .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+        .title{font-size:32px;font-weight:700;background:linear-gradient(135deg,#e0e8f0,#94a3b8,#475569);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:2px}
+        .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px}
+        .btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#b0c4e0;padding:10px 20px;border-radius:30px;font-size:14px;font-weight:500;cursor:pointer;letter-spacing:.5px;transition:.2s}
+        .btn:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);color:#e0e8f0}
+        .btn.primary{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15);color:#e0e8f0}
+        .btn.primary:hover{background:rgba(255,255,255,.15)}
+        .turn{font-size:18px;font-weight:600;letter-spacing:1px;display:flex;align-items:center;gap:8px}
+        .turn .dot{width:20px;height:20px;border-radius:50%;display:inline-block}
+        .dot.black{background:#1a1a2e;border:2px solid #475569}
+        .dot.white{background:#e0e8f0;border:2px solid #94a3b8}
+        .game-wrapper{background:rgba(18,26,42,.8);border-radius:16px;padding:8px;border:1px solid rgba(255,255,255,.06);box-shadow:inset 0 0 60px rgba(0,0,0,.3);position:relative;display:flex;justify-content:center}
+        canvas{display:block;border-radius:8px}
+        .overlay{position:absolute;inset:0;background:rgba(11,14,26,.88);border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:10;opacity:0;pointer-events:none;transition:opacity .3s}
+        .overlay.show{opacity:1;pointer-events:all}
+        .overlay .msg{font-size:30px;font-weight:700;letter-spacing:2px;color:#fbbf24}
+        .overlay .sub{font-size:14px;color:#8896b0}
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="title">⚫ 五子棋</div>
+        <div class="turn"><span class="dot black" id="turnDot"></span> <span id="turnText">黑方回合</span></div>
+    </div>
+    <div class="toolbar">
+        <span style="font-size:12px;color:#5a6a85">⚫ 你先 · ○ 电脑</span>
+        <button class="btn primary" id="restartBtn">⟳ 重新开始</button>
+    </div>
+    <div class="game-wrapper" id="gameWrapper">
+        <canvas id="canvas"></canvas>
+        <div class="overlay" id="overlay">
+            <div class="msg" id="overlayMsg"></div>
+            <div class="sub" id="overlaySub"></div>
+            <button class="btn primary" id="overlayBtn">⟳ 再来一局</button>
+        </div>
+    </div>
+</div>
+<script>
+(function(){
+    const SIZE=15,canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d');
+    const gameWrapper=document.getElementById('gameWrapper');
+    const turnDot=document.getElementById('turnDot'),turnText=document.getElementById('turnText');
+    const overlay=document.getElementById('overlay'),overlayMsg=document.getElementById('overlayMsg'),overlaySub=document.getElementById('overlaySub');
+
+    let board,currentPlayer,gameOver,cellSize,padding;
+
+    function init(){
+        board=Array.from({length:SIZE},()=>Array(SIZE).fill(0));
+        currentPlayer=1;gameOver=false;
+        resizeCanvas();
+        overlay.classList.remove('show');
+        updateTurn();
+        draw();
+    }
+
+    function resizeCanvas(){
+        const w=Math.min(gameWrapper.clientWidth-20,420);
+        canvas.width=w;canvas.height=w;
+        cellSize=w/(SIZE+1);padding=cellSize/2;
+        draw();
+    }
+
+    function draw(){
+        const w=canvas.width;
+        ctx.clearRect(0,0,w,w);
+        // 棋盘
+        ctx.fillStyle='#d4a574';ctx.fillRect(padding,padding,w-padding*2,w-padding*2);
+        ctx.strokeStyle='rgba(0,0,0,.3)';ctx.lineWidth=.6;
+        for(let i=0;i<SIZE;i++){ctx.beginPath();ctx.moveTo(padding,padding+i*cellSize);ctx.lineTo(padding+(SIZE-1)*cellSize,padding+i*cellSize);ctx.stroke();ctx.beginPath();ctx.moveTo(padding+i*cellSize,padding);ctx.lineTo(padding+i*cellSize,padding+(SIZE-1)*cellSize);ctx.stroke()}
+        // 星位
+        const stars=[[3,3],[3,7],[3,11],[7,3],[7,7],[7,11],[11,3],[11,7],[11,11]];
+        for(const [r,c] of stars){ctx.fillStyle='rgba(0,0,0,.5)';ctx.beginPath();ctx.arc(padding+c*cellSize,padding+r*cellSize,3,0,Math.PI*2);ctx.fill()}
+        // 棋子
+        for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++)if(board[r][c]){const x=padding+c*cellSize,y=padding+r*cellSize;ctx.beginPath();ctx.arc(x,y,cellSize*.42,0,Math.PI*2);ctx.fillStyle=board[r][c]===1?'#1a1a2e':'#e0e8f0';ctx.fill();ctx.strokeStyle='#475569';ctx.lineWidth=1.5;ctx.stroke();if(board[r][c]===2){const g=ctx.createRadialGradient(x-cellSize*.1,y-cellSize*.1,0,x,y,cellSize*.35);g.addColorStop(0,'rgba(255,255,255,.3)');g.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=g;ctx.fill()}}
+        // 最后落子标记
+        if(window.lastMove){const{x,y}=lastMove;ctx.strokeStyle='#f87171';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,cellSize*.2,0,Math.PI*2);ctx.stroke()}
+    }
+
+    function placeStone(r,c){
+        if(gameOver||board[r][c]!==0)return;
+        board[r][c]=currentPlayer;
+        window.lastMove={x:padding+c*cellSize,y:padding+r*cellSize};
+        draw();
+
+        if(checkWin(r,c,currentPlayer)){
+            gameOver=true;
+            overlayMsg.textContent=currentPlayer===1?'🎉 你赢了！':'💻 电脑赢了';
+            overlaySub.textContent='';
+            overlay.classList.add('show');
+            return;
+        }
+        if(board.every(row=>row.every(v=>v!==0))){
+            gameOver=true;
+            overlayMsg.textContent='🤝 平局';
+            overlaySub.textContent='';
+            overlay.classList.add('show');
+            return;
+        }
+
+        currentPlayer=currentPlayer===1?2:1;
+        updateTurn();
+        if(currentPlayer===2)setTimeout(aiMove,200);
+    }
+
+    function checkWin(r,c,p){
+        const dirs=[[1,0],[0,1],[1,1],[1,-1]];
+        for(const [dr,dc] of dirs){
+            let cnt=1;
+            for(let i=1;i<5;i++){const nr=r+dr*i,nc=c+dc*i;if(nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&board[nr][nc]===p)cnt++;else break}
+            for(let i=1;i<5;i++){const nr=r-dr*i,nc=c-dc*i;if(nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&board[nr][nc]===p)cnt++;else break}
+            if(cnt>=5)return true;
+        }
+        return false;
+    }
+
+    function aiMove(){
+        if(gameOver||currentPlayer!==2)return;
+        // 简单AI：评分+防守
+        let bestScore=-1,best={r:7,c:7};
+        for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++)if(board[r][c]===0){const s=evaluate(r,c,2)+evaluate(r,c,1)*.9;if(s>bestScore){bestScore=s;best={r,c}}}
+        if(bestScore===0){best={r:Math.floor(Math.random()*SIZE),c:Math.floor(Math.random()*SIZE)};while(board[best.r]&&board[best.r][best.c]!==0){best={r:Math.floor(Math.random()*SIZE),c:Math.floor(Math.random()*SIZE)}}
+        }
+        placeStone(best.r,best.c);
+    }
+
+    function evaluate(r,c,p){
+        let score=0;
+        const dirs=[[1,0],[0,1],[1,1],[1,-1]];
+        for(const [dr,dc] of dirs){
+            let cnt=1,open=0;
+            for(let i=1;i<6;i++){const nr=r+dr*i,nc=c+dc*i;if(nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&board[nr][nc]===p)cnt++;else{open++;break}}
+            for(let i=1;i<6;i++){const nr=r-dr*i,nc=c-dc*i;if(nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&board[nr][nc]===p)cnt++;else{open++;break}}
+            if(cnt>=5)score+=100000;
+            else if(cnt===4){if(open>=2)score+=5000;else if(open===1)score+=2000}
+            else if(cnt===3){if(open>=2)score+=1000;else if(open===1)score+=200}
+            else if(cnt===2){if(open>=2)score+=50}
+            else if(cnt===1){if(open>=2)score+=5}
+        }
+        return score;
+    }
+
+    function updateTurn(){
+        turnDot.className='dot '+(currentPlayer===1?'black':'white');
+        turnText.textContent=currentPlayer===1?'黑方回合':'电脑思考中...';
+    }
+
+    canvas.addEventListener('click',e=>{
+        if(currentPlayer!==1||gameOver)return;
+        const r=canvas.getBoundingClientRect();
+        const x=e.clientX-r.left,y=e.clientY-r.top;
+        const c=Math.round((x-padding)/cellSize),row=Math.round((y-padding)/cellSize);
+        if(row>=0&&row<SIZE&&c>=0&&c<SIZE)placeStone(row,c);
+    });
+    document.getElementById('restartBtn').addEventListener('click',init);
+    document.getElementById('overlayBtn').addEventListener('click',init);
+    window.addEventListener('resize',resizeCanvas);
+    init();
+})();
+</script>
+</body>
+</html>

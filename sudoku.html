@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>数独</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}body{background:#0b0e1a;font-family:'Segoe UI',system-ui,sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;color:#e0e8f0;padding:16px;user-select:none;-webkit-user-select:none}
+        .container{max-width:420px;width:100%}
+        .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+        .title{font-size:32px;font-weight:700;background:linear-gradient(135deg,#a78bfa,#818cf8,#6366f1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:2px}
+        .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px}
+        .btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#b0c4e0;padding:8px 16px;border-radius:30px;font-size:13px;font-weight:500;cursor:pointer;letter-spacing:.5px;transition:.2s}
+        .btn:hover{background:rgba(168,139,250,.1);border-color:rgba(168,139,250,.3);color:#c4b5fd}
+        .btn.primary{background:rgba(168,139,250,.12);border-color:#8b5cf6;color:#a78bfa}
+        .btn.primary:hover{background:rgba(168,139,250,.25)}
+        .btn.num{width:34px;height:34px;padding:0;border-radius:8px;font-size:16px;font-weight:700}
+        .btn.num.selected{background:rgba(168,139,250,.2);border-color:#a78bfa;color:#a78bfa}
+        .timer{font-size:14px;color:#8896b0;font-variant-numeric:tabular-nums}
+        .game-wrapper{background:rgba(18,26,42,.8);border-radius:16px;padding:12px;border:1px solid rgba(255,255,255,.06);box-shadow:inset 0 0 60px rgba(0,0,0,.3);position:relative}
+        .grid{display:grid;grid-template-columns:repeat(9,1fr);gap:1px}
+        .cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;cursor:pointer;border-radius:3px;transition:background .1s;-webkit-tap-highlight-color:transparent}
+        .cell.given{color:#a78bfa;font-weight:700}
+        .cell.user{color:#4ade80}
+        .cell.error{color:#f87171;background:rgba(248,113,113,.08)}
+        .cell.selected{background:rgba(168,139,250,.2);box-shadow:inset 0 0 0 2px #a78bfa}
+        .cell.highlight{background:rgba(168,139,250,.05)}
+        .cell.same{background:rgba(168,139,250,.1)}
+        .cell.box-right{border-right:2px solid rgba(255,255,255,.12)}
+        .cell.box-bottom{border-bottom:2px solid rgba(255,255,255,.12)}
+        .overlay{position:absolute;inset:0;background:rgba(11,14,26,.88);border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:10;opacity:0;pointer-events:none;transition:opacity .3s}
+        .overlay.show{opacity:1;pointer-events:all}
+        .overlay .msg{font-size:30px;font-weight:700;letter-spacing:2px;color:#fbbf24}
+        .overlay .sub{font-size:14px;color:#8896b0}
+        .num-pad{display:flex;gap:6px;justify-content:center;margin-top:10px;flex-wrap:wrap}
+        @media(max-width:400px){.cell{font-size:15px}.btn.num{width:28px;height:28px;font-size:14px}}
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="title">🔢 数独</div>
+        <span class="timer" id="timer">00:00</span>
+    </div>
+    <div class="toolbar">
+        <select id="diffSelect" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:#b0c4e0;padding:8px 14px;border-radius:20px;font-size:13px">
+            <option value="easy">简单</option>
+            <option value="medium" selected>中等</option>
+            <option value="hard">困难</option>
+        </select>
+        <button class="btn" id="hintBtn">💡 提示</button>
+        <button class="btn" id="checkBtn">✓ 检查</button>
+        <button class="btn primary" id="restartBtn">⟳ 新游戏</button>
+    </div>
+    <div class="num-pad">
+        <button class="btn num" data-n="1">1</button><button class="btn num" data-n="2">2</button><button class="btn num" data-n="3">3</button>
+        <button class="btn num" data-n="4">4</button><button class="btn num" data-n="5">5</button><button class="btn num" data-n="6">6</button>
+        <button class="btn num" data-n="7">7</button><button class="btn num" data-n="8">8</button><button class="btn num" data-n="9">9</button>
+        <button class="btn num" style="font-size:12px" data-n="0">✕</button>
+    </div>
+    <div class="game-wrapper" style="position:relative">
+        <div class="grid" id="grid"></div>
+        <div class="overlay" id="overlay">
+            <div class="msg">🎉 完成！</div>
+            <div class="sub" id="overlaySub"></div>
+            <button class="btn primary" id="overlayBtn">⟳ 再来一局</button>
+        </div>
+    </div>
+</div>
+<script>
+(function(){
+    const gridEl=document.getElementById('grid');
+    const timerEl=document.getElementById('timer');
+    const overlay=document.getElementById('overlay'),overlaySub=document.getElementById('overlaySub');
+
+    let puzzle,solution,userBoard,selected={r:0,c:0};
+    let timerVal=0,timerInterval,hintsUsed=0;
+
+    function init(){
+        const diff=document.getElementById('diffSelect').value;
+        const clues={easy:40,medium:32,hard:25}[diff];
+        generate(clues);
+        hintsUsed=0;
+        timerVal=0;timerEl.textContent='00:00';
+        clearInterval(timerInterval);timerInterval=null;
+        overlay.classList.remove('show');
+        selected={r:0,c:0};
+        renderGrid();
+    }
+
+    function generate(clues){
+        // 生成完整解
+        solution=solveEmpty();
+        // 挖空
+        puzzle=solution.map(r=>[...r]);
+        const positions=[];
+        for(let r=0;r<9;r++)for(let c=0;c<9;c++)positions.push({r,c});
+        positions.sort(()=>Math.random()-.5);
+        let removed=0;
+        for(const {r,c} of positions){
+            if(81-removed<=clues)break;
+            const save=puzzle[r][c];
+            puzzle[r][c]=0;
+            // 简单检查：确保唯一解（简化）
+            if(!hasUnique(puzzle.map(r=>[...r]))){puzzle[r][c]=save}else{removed++}
+        }
+        userBoard=puzzle.map(r=>[...r]);
+    }
+
+    function solveEmpty(){
+        const b=Array.from({length:9},()=>Array(9).fill(0));
+        const nums=[1,2,3,4,5,6,7,8,9];
+        // 随机填充对角线上的3个3x3宫（保证有效）
+        for(let i=0;i<3;i++){
+            const shuffled=[...nums].sort(()=>Math.random()-.5);
+            let idx=0;
+            for(let r=i*3;r<i*3+3;r++)for(let c=i*3;c<i*3+3;c++)b[r][c]=shuffled[idx++];
+        }
+        solve(b);
+        return b;
+    }
+
+    function solve(b){
+        const empty=findEmpty(b);
+        if(!empty)return true;
+        const {r,c}=empty;
+        const nums=[1,2,3,4,5,6,7,8,9].sort(()=>Math.random()-.5);
+        for(const n of nums){
+            if(isValid(b,r,c,n)){b[r][c]=n;if(solve(b))return true;b[r][c]=0}
+        }
+        return false;
+    }
+
+    function findEmpty(b){for(let r=0;r<9;r++)for(let c=0;c<9;c++)if(b[r][c]===0)return{r,c};return null}
+    function isValid(b,r,c,n){
+        for(let i=0;i<9;i++)if(b[r][i]===n||b[i][c]===n)return false;
+        const br=Math.floor(r/3)*3,bc=Math.floor(c/3)*3;
+        for(let i=br;i<br+3;i++)for(let j=bc;j<bc+3;j++)if(b[i][j]===n)return false;
+        return true;
+    }
+
+    function hasUnique(b){
+        let count=0;
+        function solveCount(b){
+            if(count>1)return;
+            const e=findEmpty(b);
+            if(!e){count++;return}
+            const {r,c}=e;
+            for(let n=1;n<=9;n++){if(isValid(b,r,c,n)){b[r][c]=n;solveCount(b);b[r][c]=0;if(count>1)return}}
+        }
+        solveCount(b);return count===1;
+    }
+
+    function renderGrid(){
+        gridEl.innerHTML='';
+        for(let r=0;r<9;r++)for(let c=0;c<9;c++){
+            const d=document.createElement('div');d.className='cell';
+            if(c===2||c===5)d.classList.add('box-right');
+            if(r===2||r===5)d.classList.add('box-bottom');
+            if(puzzle[r][c]!==0){d.textContent=puzzle[r][c];d.classList.add('given')}
+            else if(userBoard[r][c]!==0){d.textContent=userBoard[r][c];d.classList.add('user');if(userBoard[r][c]!==solution[r][c])d.classList.add('error')}
+            if(r===selected.r&&c===selected.c)d.classList.add('selected');
+            if(r===selected.r||c===selected.c)d.classList.add('highlight');
+            const br=Math.floor(selected.r/3)*3,bc=Math.floor(selected.c/3)*3;
+            if(r>=br&&r<br+3&&c>=bc&&c<bc+3)d.classList.add('highlight');
+            if(userBoard[selected.r]&&userBoard[selected.r][selected.c]&&userBoard[r][c]===userBoard[selected.r][selected.c]&&userBoard[r][c]!==0)d.classList.add('same');
+            d.addEventListener('click',()=>{selected={r,c};renderGrid()});
+            gridEl.appendChild(d);
+        }
+    }
+
+    function placeNumber(n){
+        if(!timerInterval){timerInterval=setInterval(()=>{timerVal++;const m=Math.floor(timerVal/60),s=timerVal%60;timerEl.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')},1000)}
+        if(puzzle[selected.r][selected.c]===0){userBoard[selected.r][selected.c]=n}
+        renderGrid();
+        if(isComplete()){clearInterval(timerInterval);overlaySub.textContent=`用时 ${timerEl.textContent}`;overlay.classList.add('show')}
+    }
+
+    function isComplete(){for(let r=0;r<9;r++)for(let c=0;c<9;c++)if(userBoard[r][c]!==solution[r][c])return false;return true}
+
+    function giveHint(){
+        if(puzzle[selected.r][selected.c]!==0)return;
+        userBoard[selected.r][selected.c]=solution[selected.r][selected.c];
+        hintsUsed++;
+        renderGrid();
+        if(isComplete()){clearInterval(timerInterval);overlaySub.textContent=`用时 ${timerEl.textContent}`;overlay.classList.add('show')}
+    }
+
+    function checkBoard(){
+        for(let r=0;r<9;r++)for(let c=0;c<9;c++)if(userBoard[r][c]!==0&&userBoard[r][c]!==solution[r][c])userBoard[r][c]=0;
+        renderGrid();
+    }
+
+    document.querySelectorAll('.btn.num').forEach(b=>b.addEventListener('click',()=>{const n=parseInt(b.dataset.n);placeNumber(n);document.querySelectorAll('.btn.num').forEach(x=>x.classList.remove('selected'));if(n>0)b.classList.add('selected')}));
+    document.addEventListener('keydown',e=>{const n=parseInt(e.key);if(n>=1&&n<=9)placeNumber(n);if(e.key==='Backspace'||e.key==='0')placeNumber(0);if(e.key.startsWith('Arrow')){e.preventDefault();const dr={ArrowUp:-1,ArrowDown:1,ArrowLeft:0,ArrowRight:0},dc={ArrowUp:0,ArrowDown:0,ArrowLeft:-1,ArrowRight:1};selected.r=Math.max(0,Math.min(8,selected.r+(dr[e.key]||0)));selected.c=Math.max(0,Math.min(8,selected.c+(dc[e.key]||0)));renderGrid()}});
+    document.getElementById('diffSelect').addEventListener('change',init);
+    document.getElementById('restartBtn').addEventListener('click',init);
+    document.getElementById('overlayBtn').addEventListener('click',init);
+    document.getElementById('hintBtn').addEventListener('click',giveHint);
+    document.getElementById('checkBtn').addEventListener('click',checkBoard);
+    init();
+})();
+</script>
+</body>
+</html>
