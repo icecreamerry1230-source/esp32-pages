@@ -13,7 +13,7 @@ body{
 .game{max-width:440px;width:100%;text-align:center}
 .back{color:#6a7a95;text-decoration:none;font-size:13px;letter-spacing:1px;display:inline-block;margin-bottom:8px;transition:color .2s}
 .back:hover{color:#fbbf24}
-canvas{border-radius:12px;display:block;margin:0 auto;background:#f0d9a0}
+canvas{border-radius:12px;display:block;margin:0 auto;background:#f0d9a0;width:100%;max-width:440px;aspect-ratio:9/10}
 .info-bar{display:flex;justify-content:space-between;align-items:center;margin:8px 4px}
 .info-bar .turn{font-size:14px;color:#c0c8d0}
 .info-bar .turn span{font-weight:700}
@@ -372,8 +372,10 @@ const c=document.getElementById('c'),ctx=c.getContext('2d');
 let CELL_SIZE=48,PADDING=24;
 const BOARD_W=COLS-1,BOARD_H=ROWS-1;
 function updateSize(){
-  const maxW=Math.min(c.parentElement.clientWidth-8,440);
+  const parentW=c.parentElement.clientWidth||c.parentElement.offsetWidth||360;
+  const maxW=Math.max(Math.min(parentW-8,440),280);
   CELL_SIZE=Math.floor((maxW-PADDING*2)/BOARD_W);
+  if(CELL_SIZE<25)CELL_SIZE=25;
   const w=CELL_SIZE*BOARD_W+PADDING*2;
   const h=CELL_SIZE*BOARD_H+PADDING*2;
   c.width=w;c.height=h;
@@ -619,7 +621,10 @@ document.getElementById('btn-undo').addEventListener('click',undo);
 document.getElementById('btn-reset').addEventListener('click',resetGame);
 
 let mode='pvp';
-updateSize();resetGame();render();
+// 延迟确保布局就绪
+setTimeout(()=>{updateSize();resetGame();render()},50);
+window.addEventListener('load',()=>{updateSize();render()});
+window.addEventListener('resize',()=>{updateSize();render()});
 </script>
 </body>
 </html>
