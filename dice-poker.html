@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no"><title>骰子扑克</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:#0b0e1a;font-family:'Segoe UI',system-ui,sans-serif;
+  display:flex;justify-content:center;align-items:center;
+  min-height:100vh;color:#e0e8f0;padding:16px;
+  user-select:none;-webkit-user-select:none;touch-action:manipulation;
+}
+.game{max-width:420px;width:100%}
+.back{color:#6a7a95;text-decoration:none;font-size:13px;letter-spacing:1px;transition:color .2s}
+.back:hover{color:#a78bfa}
+h1{
+  text-align:center;font-size:26px;font-weight:300;letter-spacing:3px;
+  background:linear-gradient(135deg,#fbbf24,#f97316);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  margin:12px 0 20px;
+}
+
+/* 计分板 */
+.scoreboard{
+  display:flex;justify-content:space-between;align-items:center;
+  background:rgba(18,26,42,.8);border:1px solid rgba(255,255,255,.06);
+  border-radius:16px;padding:16px 20px;margin-bottom:16px;
+}
+.scoreboard .total{font-size:28px;font-weight:700;color:#fbbf24}
+.scoreboard .label{font-size:11px;color:#5a6a85;letter-spacing:1px}
+.scoreboard .round{font-size:14px;color:#a78bfa}
+
+/* 骰子区 */
+.dice-row{display:flex;justify-content:center;gap:12px;margin:20px 0;flex-wrap:wrap}
+.die{
+  width:60px;height:60px;background:linear-gradient(135deg,#f5f5f5,#ddd);
+  border-radius:14px;cursor:pointer;display:flex;flex-wrap:wrap;
+  align-items:center;justify-content:center;padding:8px;
+  transition:all .15s;position:relative;
+  box-shadow:0 4px 12px rgba(0,0,0,.3);
+  border:3px solid transparent;
+}
+.die.held{border-color:#fbbf24;box-shadow:0 0 16px rgba(251,191,36,.3)}
+.die.rolling{animation:diceShake .1s infinite}
+@keyframes diceShake{0%{transform:rotate(0)}25%{transform:rotate(-8deg)}75%{transform:rotate(8deg)}100%{transform:rotate(0)}}
+.dot{
+  width:10px;height:10px;background:#333;border-radius:50%;
+  position:absolute;
+}
+/* 骰子点数布局通过JS设置className */
+
+/* 按钮 */
+.actions{display:flex;justify-content:center;gap:10px;margin:16px 0}
+.actions button{
+  background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.2);
+  color:#fbbf24;padding:10px 24px;border-radius:20px;font-size:15px;
+  cursor:pointer;transition:all .15s;
+}
+.actions button:active:not(:disabled){transform:scale(.95)}
+.actions button:disabled{opacity:.3;cursor:not-allowed}
+
+/* 计分卡 */
+.scorecard{background:rgba(18,26,42,.8);border:1px solid rgba(255,255,255,.06);border-radius:16px;overflow:hidden}
+.scorecard .section-title{
+  font-size:11px;color:#5a6a85;letter-spacing:2px;padding:12px 16px 6px;
+}
+.score-item{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.03);
+  cursor:pointer;transition:background .15s;
+}
+.score-item:hover{background:rgba(255,255,255,.03)}
+.score-item.scored{cursor:default;opacity:.5}
+.score-item.scored:hover{background:transparent}
+.score-item .s-name{font-size:14px;color:#c0c8d0}
+.score-item .s-val{font-size:15px;font-weight:600;color:#fbbf24;min-width:50px;text-align:right}
+.score-item .s-preview{font-size:13px;color:#5a6a85;margin-right:8px}
+.bonus-item{background:rgba(251,191,36,.04)}
+.total-row{
+  display:flex;justify-content:space-between;padding:12px 16px;
+  font-weight:700;font-size:16px;border-top:1px solid rgba(251,191,36,.15);
+}
+.total-row .s-val{color:#fbbf24}
+
+/* 消息 */
+.msg{text-align:center;font-size:13px;color:#fbbf24;min-height:20px;margin:6px 0}
+</style>
+</head>
+<body>
+<div class="game">
+  <a class="back" href="games.html">← 游戏列表</a>
+  <h1>🎲 骰子扑克</h1>
+
+  <div class="scoreboard">
+    <div><div class="label">总分</div><div class="total" id="total-score">0</div></div>
+    <div><div class="label">回合</div><div class="round" id="round-num">1/13</div></div>
+    <div><div class="label">剩余重掷</div><div class="round" id="rolls-left">3</div></div>
+  </div>
+
+  <div class="msg" id="msg"></div>
+
+  <div class="dice-row" id="dice-row"></div>
+
+  <div class="actions">
+    <button id="btn-roll">🎲 掷骰子</button>
+  </div>
+
+  <div class="scorecard" id="scorecard"></div>
+</div>
+
+<script>
+// ═══════════ 音频 ═══════════
+let audioCtx;
+function initA(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume()}
+function sndRoll(){
+  if(!audioCtx)return;const t=audioCtx.currentTime;
+  for(let i=0;i<5;i++){
+    const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+    o.type='triangle';o.frequency.setValueAtTime(60+Math.random()*200,t+i*.03);
+    g.gain.setValueAtTime(0.06,t+i*.03);g.gain.exponentialRampToValueAtTime(0.001,t+i*.03+.05);
+    o.connect(g);g.connect(audioCtx.destination);o.start(t+i*.03);o.stop(t+i*.03+.06);
+  }
+}
+function sndSelect(){
+  if(!audioCtx)return;const t=audioCtx.currentTime;
+  const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+  o.type='sine';o.frequency.setValueAtTime(600,t);o.frequency.linearRampToValueAtTime(900,t+.05);
+  g.gain.setValueAtTime(0.12,t);g.gain.exponentialRampToValueAtTime(0.001,t+.1);
+  o.connect(g);g.connect(audioCtx.destination);o.start(t);o.stop(t+.12);
+}
+
+// ═══════════ 游戏逻辑 ═══════════
+const CATEGORIES=[
+  {key:'ones',name:'一点 (1)',desc:'所有1点之和',group:'upper'},
+  {key:'twos',name:'二点 (2)',desc:'所有2点之和',group:'upper'},
+  {key:'threes',name:'三点 (3)',desc:'所有3点之和',group:'upper'},
+  {key:'fours',name:'四点 (4)',desc:'所有4点之和',group:'upper'},
+  {key:'fives',name:'五点 (5)',desc:'所有5点之和',group:'upper'},
+  {key:'sixes',name:'六点 (6)',desc:'所有6点之和',group:'upper'},
+  {key:'threeKind',name:'三条',desc:'至少三个相同 → 总和',group:'lower'},
+  {key:'fourKind',name:'四条',desc:'至少四个相同 → 总和',group:'lower'},
+  {key:'fullHouse',name:'葫芦',desc:'三条+一对 → 25分',group:'lower'},
+  {key:'smStraight',name:'小顺',desc:'连续四个 → 30分',group:'lower'},
+  {key:'lgStraight',name:'大顺',desc:'连续五个 → 40分',group:'lower'},
+  {key:'yahtzee',name:'快艇',desc:'五个相同 → 50分',group:'lower'},
+  {key:'chance',name:'机会',desc:'任意 → 总和',group:'lower'},
+];
+
+let dice=[1,1,1,1,1],held=[false,false,false,false,false];
+let scores={},rollsLeft=3,round=0,gameOver=false;
+
+function save(){localStorage.setItem('dice_poker',JSON.stringify({scores,round,gameOver}))}
+function load(){
+  try{const d=JSON.parse(localStorage.getItem('dice_poker'));if(d){scores=d.scores;round=d.round;gameOver=d.gameOver;return true}}catch(e){}
+  return false;
+}
+
+function calcScore(diceVals,cat){
+  const sorted=[...diceVals].sort((a,b)=>a-b);
+  const counts=Array(7).fill(0);diceVals.forEach(d=>counts[d]++);
+  switch(cat.key){
+    case'ones':return counts[1]*1;
+    case'twos':return counts[2]*2;
+    case'threes':return counts[3]*3;
+    case'fours':return counts[4]*4;
+    case'fives':return counts[5]*5;
+    case'sixes':return counts[6]*6;
+    case'threeKind':return counts.some(c=>c>=3)?diceVals.reduce((a,b)=>a+b,0):0;
+    case'fourKind':return counts.some(c=>c>=4)?diceVals.reduce((a,b)=>a+b,0):0;
+    case'fullHouse':return (counts.includes(3)&&counts.includes(2))?25:0;
+    case'smStraight':{
+      const u=[...new Set(sorted)];
+      for(let i=0;i<=u.length-4;i++){if(u[i+3]-u[i]===3)return 30}
+      // 检查 1,2,3,4 和 2,3,4,5 和 3,4,5,6
+      if([1,2,3,4].every(x=>counts[x]))return 30;
+      if([2,3,4,5].every(x=>counts[x]))return 30;
+      if([3,4,5,6].every(x=>counts[x]))return 30;
+      return 0;
+    }
+    case'lgStraight':{
+      const u=[...new Set(sorted)];
+      if(u.length===5&&(u[4]-u[0]===4))return 40;
+      return 0;
+    }
+    case'yahtzee':return counts.some(c=>c>=5)?50:0;
+    case'chance':return diceVals.reduce((a,b)=>a+b,0);
+  }
+  return 0;
+}
+
+function getTotal(){
+  let sum=0;
+  for(const cat of CATEGORIES)sum+=scores[cat.key]||0;
+  // 上部分区奖励
+  const upper=CATEGORIES.filter(c=>c.group==='upper');
+  const upperSum=upper.reduce((a,c)=>a+(scores[c.key]||0),0);
+  if(upperSum>=63)sum+=35;
+  return sum;
+}
+
+function rollDice(){
+  if(rollsLeft<=0||gameOver)return;
+  initA();
+  for(let i=0;i<5;i++)if(!held[i])dice[i]=Math.floor(Math.random()*6)+1;
+  rollsLeft--;
+  sndRoll();
+  if(rollsLeft===0&&round<13)document.getElementById('msg').textContent='请选择计分项目';
+  render();
+}
+
+function selectCategory(key){
+  if(scores[key]!==undefined||rollsLeft===3||gameOver)return;
+  initA();sndSelect();
+  scores[key]=calcScore(dice,{key});
+  round++;
+  // 新回合
+  dice=[1,1,1,1,1];held=[false,false,false,false,false];rollsLeft=3;
+  if(round>=13)endGame();
+  save();render();
+}
+
+function endGame(){
+  gameOver=true;
+  const total=getTotal();
+  document.getElementById('msg').textContent='游戏结束！总分: '+total;
+  save();
+}
+
+function newGame(){
+  scores={};round=0;gameOver=false;
+  dice=[1,1,1,1,1];held=[false,false,false,false,false];rollsLeft=3;
+  save();render();
+}
+
+// ═══════════ 渲染 ═══════════
+function drawDie(v){
+  const dots={
+    1:['mc'],2:['tl','br'],3:['tl','mc','br'],4:['tl','tr','bl','br'],
+    5:['tl','tr','mc','bl','br'],6:['tl','tr','ml','mr','bl','br'],
+  };
+  return dots[v].map(p=>`<div class="dot" style="position:absolute;${
+    {tl:'top:6px;left:6px',tr:'top:6px;right:6px',ml:'top:50%;left:6px;transform:translateY(-50%)',
+     mc:'top:50%;left:50%;transform:translate(-50%,-50%)',mr:'top:50%;right:6px;transform:translateY(-50%)',
+     bl:'bottom:6px;left:6px',br:'bottom:6px;right:6px'}[p]
+  }"></div>`).join('');
+}
+
+function render(){
+  // 骰子
+  document.getElementById('dice-row').innerHTML=dice.map((v,i)=>`<div class="die${held[i]?' held':''}" data-i="${i}">${drawDie(v)}</div>`).join('');
+  document.querySelectorAll('.die').forEach(el=>{el.addEventListener('click',()=>{if(rollsLeft<3&&rollsLeft>0&&!gameOver){held[el.dataset.i]=!held[el.dataset.i];render()}})});
+
+  // 状态
+  document.getElementById('rolls-left').textContent=rollsLeft;
+  document.getElementById('round-num').textContent=Math.min(round+1,13)+'/13';
+  document.getElementById('total-score').textContent=getTotal();
+  document.getElementById('btn-roll').disabled=rollsLeft<=0||gameOver;
+  document.getElementById('btn-roll').textContent=rollsLeft===3?'🎲 掷骰子':rollsLeft>0?'🎲 重掷 ('+rollsLeft+')':'选项目计分';
+
+  // 计分卡
+  const sc=document.getElementById('scorecard');
+  let html='<div class="section-title">📊 上半区</div>';
+  for(const cat of CATEGORIES.filter(c=>c.group==='upper')){
+    const done=scores[cat.key]!==undefined;
+    const preview=!done&&rollsLeft<3?calcScore(dice,cat):null;
+    html+=`<div class="score-item${done?' scored':''}" data-key="${cat.key}">
+      <span class="s-name">${cat.name}</span>
+      ${done?`<span class="s-val">${scores[cat.key]}</span>`:
+        preview!==null?`<span class="s-preview">+${preview}</span>`:''}
+    </div>`;
+  }
+  const upper=CATEGORIES.filter(c=>c.group==='upper');
+  const upperSum=upper.reduce((a,c)=>a+(scores[c.key]||0),0);
+  html+=`<div class="score-item bonus-item"><span class="s-name">🎁 上半区奖励 (≥63 +35)</span><span class="s-val">${upperSum>=63?35:0}</span></div>`;
+
+  html+='<div class="section-title">⭐ 下半区</div>';
+  for(const cat of CATEGORIES.filter(c=>c.group==='lower')){
+    const done=scores[cat.key]!==undefined;
+    const preview=!done&&rollsLeft<3?calcScore(dice,cat):null;
+    html+=`<div class="score-item${done?' scored':''}" data-key="${cat.key}">
+      <span class="s-name">${cat.name} <span style="font-size:10px;color:#5a6a85">${cat.desc}</span></span>
+      ${done?`<span class="s-val">${scores[cat.key]}</span>`:
+        preview!==null?`<span class="s-preview">+${preview}</span>`:''}
+    </div>`;
+  }
+  html+=`<div class="total-row"><span>总分</span><span class="s-val">${getTotal()}</span></div>`;
+  sc.innerHTML=html;
+
+  // 计分点击
+  sc.querySelectorAll('.score-item:not(.scored):not(.bonus-item)').forEach(el=>{
+    el.addEventListener('click',()=>selectCategory(el.dataset.key));
+  });
+}
+
+// 启动
+if(!load()){dice=Array.from({length:5},()=>Math.floor(Math.random()*6)+1)}
+document.getElementById('btn-roll').addEventListener('click',rollDice);
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no"><title>卡牌对战</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:#0b0e1a;font-family:'Segoe UI',system-ui,sans-serif;
+  display:flex;justify-content:center;align-items:center;
+  min-height:100vh;color:#e0e8f0;padding:12px;
+  user-select:none;-webkit-user-select:none;touch-action:manipulation;
+}
+.game{max-width:420px;width:100%}
+.back{color:#6a7a95;text-decoration:none;font-size:13px;letter-spacing:1px;transition:color .2s}
+.back:hover{color:#a78bfa}
+
+/* 敌人区 */
+.enemy-area{text-align:center;margin:16px 0}
+.enemy-sprite{font-size:56px;transition:transform .2s}
+.enemy-sprite.hit{animation:shake .3s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.enemy-name{font-size:14px;color:#c0c8d0;margin-top:4px}
+.enemy-hp-bar{width:100%;height:10px;background:rgba(255,255,255,.06);border-radius:5px;margin:8px 0;overflow:hidden}
+.enemy-hp-fill{height:100%;background:linear-gradient(90deg,#ef4444,#f87171);border-radius:5px;transition:width .4s}
+.enemy-intent{font-size:12px;color:#fbbf24;min-height:18px;margin-top:2px}
+
+/* 玩家区 */
+.player-area{text-align:center;margin:12px 0}
+.player-sprite{font-size:48px}
+.player-hp-bar{width:100%;height:8px;background:rgba(255,255,255,.06);border-radius:4px;margin:8px 0;overflow:hidden}
+.player-hp-fill{height:100%;background:linear-gradient(90deg,#22c55e,#4ade80);border-radius:4px;transition:width .4s}
+.player-hp-text{font-size:13px;color:#6a7a95}
+.player-mp{font-size:13px;color:#7ec8ff;margin-top:2px}
+
+/* 手牌 */
+.hand-label{font-size:11px;color:#5a6a85;letter-spacing:2px;margin:16px 0 8px;text-align:center}
+.hand{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;min-height:80px}
+.card{
+  width:80px;height:110px;background:linear-gradient(135deg,#1a2542,#1e3050);
+  border:2px solid rgba(255,255,255,.1);border-radius:12px;
+  cursor:pointer;transition:all .2s;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:6px;
+  position:relative;padding:8px;
+}
+.card:hover:not(.disabled){border-color:rgba(120,200,255,.4);transform:translateY(-6px)}
+.card.disabled{opacity:.35;cursor:not-allowed}
+.card .c-icon{font-size:24px}
+.card .c-name{font-size:12px;font-weight:600;text-align:center}
+.card .c-cost{font-size:10px;color:#7ec8ff}
+.card .c-val{font-size:10px;color:#c0c8d0}
+.card-attack{border-color:rgba(239,68,68,.3);background:linear-gradient(135deg,#2a1520,#351a25)}
+.card-attack:hover:not(.disabled){border-color:rgba(239,68,68,.6)}
+.card-defend{border-color:rgba(59,130,246,.3);background:linear-gradient(135deg,#15202a,#1a2535)}
+.card-defend:hover:not(.disabled){border-color:rgba(59,130,246,.6)}
+.card-skill{border-color:rgba(167,139,250,.3);background:linear-gradient(135deg,#201a2a,#251a35)}
+.card-skill:hover:not(.disabled){border-color:rgba(167,139,250,.6)}
+
+/* 日志 */
+.log{
+  background:rgba(18,26,42,.8);border:1px solid rgba(255,255,255,.06);
+  border-radius:12px;padding:10px 14px;margin-top:12px;max-height:80px;overflow-y:auto;
+  font-size:12px;color:#6a7a95;line-height:1.6;
+}
+.log .l-player{color:#4ade80}
+.log .l-enemy{color:#f87171}
+.log .l-info{color:#fbbf24}
+
+/* 按钮 */
+.end-btn{display:none;text-align:center;margin-top:12px}
+.end-btn button{
+  background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.2);
+  color:#fbbf24;padding:10px 32px;border-radius:20px;font-size:15px;cursor:pointer;
+}
+</style>
+</head>
+<body>
+<div class="game">
+  <a class="back" href="games.html">← 游戏列表</a>
+
+  <!-- 敌人 -->
+  <div class="enemy-area">
+    <div class="enemy-sprite" id="enemy-sprite">👹</div>
+    <div class="enemy-name" id="enemy-name">暗影魔</div>
+    <div class="enemy-hp-bar"><div class="enemy-hp-fill" id="enemy-hp-bar"></div></div>
+    <div style="font-size:12px;color:#6a7a95"><span id="enemy-hp">0</span> / <span id="enemy-maxhp">0</span></div>
+    <div class="enemy-intent" id="enemy-intent"></div>
+  </div>
+
+  <div class="player-area">
+    <div class="player-sprite">🧙</div>
+    <div class="player-hp-text">HP <span id="player-hp">0</span> / <span id="player-maxhp">0</span> &nbsp;|&nbsp; 护盾 <span id="player-block">0</span></div>
+    <div class="player-hp-bar"><div class="player-hp-fill" id="player-hp-bar"></div></div>
+    <div class="player-mp">🔮 法力: <span id="player-mp">0</span> / <span id="player-maxmp">0</span> (+<span id="player-mp-regen">0</span>/回合)</div>
+  </div>
+
+  <div class="hand-label">🎴 手牌 · 选择一张出牌</div>
+  <div class="hand" id="hand"></div>
+  <button style="display:block;margin:12px auto 0;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:#6a7a95;padding:8px 20px;border-radius:14px;font-size:13px;cursor:pointer" id="btn-end">结束回合</button>
+
+  <div class="log" id="log"></div>
+  <div class="end-btn" id="end-btns"></div>
+</div>
+
+<script>
+// ═══════════ 音频 ═══════════
+let audioCtx;
+function initA(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume()}
+function sndAttack(){
+  if(!audioCtx)return;const t=audioCtx.currentTime;
+  const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+  o.type='sawtooth';o.frequency.setValueAtTime(300,t);o.frequency.exponentialRampToValueAtTime(100,t+.08);
+  g.gain.setValueAtTime(0.12,t);g.gain.exponentialRampToValueAtTime(0.001,t+.12);
+  o.connect(g);g.connect(audioCtx.destination);o.start(t);o.stop(t+.15);
+}
+function sndDefend(){
+  if(!audioCtx)return;const t=audioCtx.currentTime;
+  const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+  o.type='sine';o.frequency.setValueAtTime(500,t);o.frequency.linearRampToValueAtTime(800,t+.08);
+  g.gain.setValueAtTime(0.1,t);g.gain.exponentialRampToValueAtTime(0.001,t+.15);
+  o.connect(g);g.connect(audioCtx.destination);o.start(t);o.stop(t+.18);
+}
+function sndSkill(){
+  if(!audioCtx)return;const t=audioCtx.currentTime;
+  [400,600,900].forEach((f,i)=>{
+    const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+    o.type='sine';o.frequency.setValueAtTime(f,t+i*.06);
+    g.gain.setValueAtTime(0.1,t+i*.06);g.gain.exponentialRampToValueAtTime(0.001,t+i*.06+.15);
+    o.connect(g);g.connect(audioCtx.destination);o.start(t+i*.06);o.stop(t+i*.06+.18);
+  });
+}
+function sndDraw(){
+  if(!audioCtx)return;const t=audioCtx.currentTime;
+  const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+  o.type='sine';o.frequency.setValueAtTime(1200,t);o.frequency.linearRampToValueAtTime(600,t+.04);
+  g.gain.setValueAtTime(0.06,t);g.gain.exponentialRampToValueAtTime(0.001,t+.06);
+  o.connect(g);g.connect(audioCtx.destination);o.start(t);o.stop(t+.08);
+}
+
+// ═══════════ 游戏数据 ═══════════
+const CARDS=[
+  {id:'slash',name:'斩击',icon:'⚔️',type:'attack',cost:1,val:6,desc:'造成6点伤害'},
+  {id:'strike',name:'猛击',icon:'🔨',type:'attack',cost:2,val:12,desc:'造成12点伤害'},
+  {id:'fireball',name:'火球',icon:'🔥',type:'skill',cost:3,val:20,desc:'造成20点伤害'},
+  {id:'shield',name:'护盾',icon:'🛡️',type:'defend',cost:1,val:8,desc:'获得8点护盾'},
+  {id:'fortify',name:'铁壁',icon:'🏰',type:'defend',cost:2,val:16,desc:'获得16点护盾'},
+  {id:'heal',name:'治愈',icon:'💚',type:'skill',cost:2,val:0,desc:'回复15点生命'},
+  {id:'drain',name:'吸血',icon:'🩸',type:'skill',cost:2,val:1,desc:'造成8伤，回复4点'},
+  {id:'powerstrike',name:'强化斩',icon:'💥',type:'attack',cost:4,val:28,desc:'造成28点伤害'},
+];
+
+const BOSSES=[
+  {name:'暗影魔',icon:'👹',hp:60,mpRegen:1,deck:['slash','slash','strike','shield','heal']},
+  {name:'石像鬼',icon:'🗿',hp:75,mpRegen:1,deck:['strike','strike','fortify','fireball','shield']},
+  {name:'火焰龙',icon:'🐉',hp:90,mpRegen:2,deck:['fireball','fireball','strike','strike','powerstrike','shield']},
+  {name:'最终魔王',icon:'😈',hp:120,mpRegen:2,deck:['powerstrike','powerstrike','fireball','fortify','drain','drain','heal']},
+];
+
+let playerHP,playerMaxHP,playerMP,playerMaxMP,playerMPRegen,playerBlock;
+let enemyHP,enemyMaxHP,enemyName,enemySprite,enemyDeck,enemyMPRegen;
+let hand,drawPile,discardPile,handSize;
+let bossIndex,turn,gameOver;
+
+function initGame(){
+  initA();
+  playerMaxHP=70;playerHP=playerMaxHP;playerMaxMP=6;playerMP=playerMaxMP;playerMPRegen=3;playerBlock=0;
+  bossIndex=0;turn=1;gameOver=false;
+  setupBoss();
+  drawPile=[...CARDS.map(c=>c.id),...CARDS.map(c=>c.id)]; // 各2张
+  shuffle(drawPile);discardPile=[];handSize=5;
+  drawHand(handSize);
+  render();
+}
+
+function setupBoss(){
+  const boss=BOSSES[bossIndex];
+  enemyName=boss.name;enemySprite=boss.icon;enemyMaxHP=boss.hp;enemyHP=boss.hp;
+  enemyDeck=[...boss.deck];enemyMPRegen=boss.mpRegen;
+}
+
+function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]]}}
+
+function drawHand(n){
+  hand=[];
+  for(let i=0;i<n;i++){
+    if(drawPile.length===0){if(discardPile.length===0)break;drawPile=[...discardPile];discardPile=[];shuffle(drawPile)}
+    hand.push(drawPile.pop());
+  }
+  sndDraw();
+}
+
+function playCard(index){
+  if(gameOver||playerMP<getCard(hand[index]).cost)return;
+  const card=getCard(hand[index]);
+  playerMP-=card.cost;
+  initA();
+
+  if(card.type==='attack'){
+    const dmg=card.val;
+    enemyHP-=dmg;sndAttack();
+    addLog('player','打出 '+card.name+' → 造成 '+dmg+' 伤害');
+  }else if(card.type==='defend'){
+    playerBlock+=card.val;sndDefend();
+    addLog('player','打出 '+card.name+' → +'+card.val+' 护盾');
+  }else if(card.type==='skill'){
+    if(card.id==='heal'){
+      const heal=15;playerHP=Math.min(playerMaxHP,playerHP+heal);sndSkill();
+      addLog('player','打出 '+card.name+' → 回复 '+heal+' 生命');
+    }else if(card.id==='drain'){
+      const dmg=8,heal=4;enemyHP-=dmg;playerHP=Math.min(playerMaxHP,playerHP+heal);sndSkill();
+      addLog('player','打出 '+card.name+' → 造成 '+dmg+' 伤害，回复 '+heal+' 生命');
+    }else if(card.id==='fireball'||card.id==='powerstrike'){
+      enemyHP-=card.val;sndSkill();
+      addLog('player','打出 '+card.name+' → 造成 '+card.val+' 伤害');
+    }
+  }
+
+  hand.splice(index,1);
+  if(enemyHP<=0){victory();return}
+  render();
+}
+
+function enemyTurn(){
+  if(gameOver)return;
+  // AI：随机选一张手牌模拟
+  const cardID=enemyDeck[Math.floor(Math.random()*enemyDeck.length)];
+  const card=getCard(cardID);
+  // AI 法力无限（或简化：敌人不需要法力，每回合出一张卡）
+  initA();
+
+  if(card.type==='attack'||card.id==='fireball'||card.id==='drain'||card.id==='powerstrike'){
+    let dmg=card.val||6;
+    if(playerBlock>0){
+      const blocked=Math.min(playerBlock,dmg);
+      playerBlock-=blocked;dmg-=blocked;
+      if(blocked>0)addLog('enemy',enemyName+' '+card.name+' → 护盾抵挡 '+blocked);
+    }
+    if(dmg>0){playerHP-=dmg;sndAttack();addLog('enemy',enemyName+' '+card.name+' → 造成 '+dmg+' 伤害')}
+  }else if(card.type==='defend'){
+    // 敌人护盾（简化：给敌人加临时血量效果，显示为护盾）
+    enemyHP+=card.val||8;sndDefend();
+    addLog('enemy',enemyName+' '+card.name+' → +'+card.val+' 护盾');
+  }else if(card.id==='heal'){
+    enemyHP+=15;sndSkill();
+    addLog('enemy',enemyName+' '+card.name+' → 回复 15 生命');
+  }
+
+  if(playerHP<=0){defeat();return}
+}
+
+function endTurn(){
+  if(gameOver||hand.length===0)return;
+  // 弃掉剩余手牌
+  discardPile.push(...hand);hand=[];
+  enemyTurn();
+  if(gameOver)return;
+  // 新回合
+  turn++;
+  playerBlock=0;
+  playerMP=Math.min(playerMaxMP,playerMP+playerMPRegen);
+  if(drawPile.length+discardPile.length<handSize){shuffleIntoDraw()}
+  drawHand(handSize);
+  render();
+}
+
+function shuffleIntoDraw(){drawPile.push(...discardPile);discardPile=[];shuffle(drawPile)}
+
+function victory(){
+  gameOver=true;
+  addLog('info','🎉 胜利！击败了 '+enemyName+'！');
+  bossIndex++;
+  if(bossIndex>=BOSSES.length){
+    addLog('info','🏆 你击败了所有 Boss！通关！');
+    document.getElementById('end-btns').innerHTML='<button onclick="fullReset()">重新开始</button>';
+  }else{
+    document.getElementById('end-btns').innerHTML='<button onclick="nextBoss()">下一关 →</button>';
+  }
+  document.getElementById('end-btns').style.display='block';
+  render();
+}
+
+function defeat(){
+  gameOver=true;
+  addLog('info','💀 战败... '+enemyName+' 击败了你');
+  document.getElementById('end-btns').innerHTML='<button onclick="retry()">重新挑战</button>';
+  document.getElementById('end-btns').style.display='block';
+  render();
+}
+
+function nextBoss(){setupBoss();gameOver=false;turn=1;playerBlock=0;playerHP=playerMaxHP;playerMP=playerMaxMP;drawPile=[...CARDS.map(c=>c.id),...CARDS.map(c=>c.id)];shuffle(drawPile);discardPile=[];hand=[];drawHand(handSize);document.getElementById('end-btns').style.display='none';document.getElementById('log').innerHTML='';render()}
+function retry(){gameOver=false;turn=1;playerBlock=0;playerHP=playerMaxHP;playerMP=playerMaxMP;drawPile=[...CARDS.map(c=>c.id),...CARDS.map(c=>c.id)];shuffle(drawPile);discardPile=[];hand=[];drawHand(handSize);document.getElementById('end-btns').style.display='none';document.getElementById('log').innerHTML='';render()}
+function fullReset(){bossIndex=0;gameOver=false;turn=1;playerBlock=0;playerHP=playerMaxHP;playerMP=playerMaxMP;setupBoss();drawPile=[...CARDS.map(c=>c.id),...CARDS.map(c=>c.id)];shuffle(drawPile);discardPile=[];hand=[];drawHand(handSize);document.getElementById('end-btns').style.display='none';document.getElementById('log').innerHTML='';render()}
+
+function getCard(id){return CARDS.find(c=>c.id===id)}
+
+function addLog(type,msg){
+  const el=document.getElementById('log');
+  const cls=type==='player'?'l-player':type==='enemy'?'l-enemy':'l-info';
+  el.innerHTML+=`<div class="${cls}">${msg}</div>`;
+  el.scrollTop=el.scrollHeight;
+  if(el.children.length>20)el.firstChild.remove();
+}
+
+// ═══════════ 渲染 ═══════════
+function render(){
+  document.getElementById('enemy-sprite').textContent=enemySprite;
+  document.getElementById('enemy-name').textContent=enemyName+' (第'+(bossIndex+1)+'/'+BOSSES.length+'关)';
+  document.getElementById('enemy-hp').textContent=Math.max(0,Math.floor(enemyHP));
+  document.getElementById('enemy-maxhp').textContent=enemyMaxHP;
+  document.getElementById('enemy-hp-bar').style.width=Math.max(0,enemyHP/enemyMaxHP*100)+'%';
+
+  document.getElementById('player-hp').textContent=Math.max(0,Math.floor(playerHP));
+  document.getElementById('player-maxhp').textContent=playerMaxHP;
+  document.getElementById('player-hp-bar').style.width=Math.max(0,playerHP/playerMaxHP*100)+'%';
+  document.getElementById('player-block').textContent=Math.floor(playerBlock);
+  document.getElementById('player-mp').textContent=Math.floor(playerMP);
+  document.getElementById('player-maxmp').textContent=playerMaxMP;
+  document.getElementById('player-mp-regen').textContent=playerMPRegen;
+
+  // 手牌
+  const h=document.getElementById('hand');
+  h.innerHTML=hand.map((cid,i)=>{
+    const c=getCard(cid);
+    const canPlay=!gameOver&&playerMP>=c.cost;
+    return`<div class="card card-${c.type}${canPlay?'':' disabled'}" onclick="playCard(${i})">
+      <div class="c-icon">${c.icon}</div><div class="c-name">${c.name}</div>
+      <div class="c-cost">🔮${c.cost}</div><div class="c-val">${c.desc}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('btn-end').disabled=gameOver;
+}
+
+// 启动
+initGame();
+document.getElementById('btn-end').addEventListener('click',endTurn);
+</script>
+</body>
+</html>
