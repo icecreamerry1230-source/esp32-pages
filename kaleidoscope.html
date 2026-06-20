@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no"><title>万花筒绘画</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}canvas{display:block;position:fixed;inset:0}.label{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.35);font-family:system-ui,sans-serif;font-size:13px;letter-spacing:2px;z-index:1;pointer-events:none}.btn{position:fixed;top:16px;right:16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.6);padding:8px 16px;border-radius:20px;font-size:13px;cursor:pointer;z-index:2;letter-spacing:1px}.btn2{right:80px}.btn3{right:148px}</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="label">手指拖动绘制万花筒</div>
+<button class="btn" onclick="clearCanvas()">清空</button>
+<button class="btn btn2" onclick="changeSymmetry()">镜像:6</button>
+<button class="btn btn3" onclick="toggleAutoColor()">自动色</button>
+<script>
+const c=document.getElementById('c'),ctx=c.getContext('2d');
+let w,h,cx,cy,drawing=false,lx=-1,ly=-1,symmetry=6,autoColor=true,hue=0;
+function resize(){w=c.width=window.innerWidth;h=c.height=window.innerHeight;cx=w/2;cy=h/2}
+resize();window.addEventListener('resize',resize);
+
+function drawLine(x1,y1,x2,y2,color){
+  ctx.strokeStyle=color;ctx.lineWidth=3;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+}
+
+function drawSymmetric(x1,y1,x2,y2){
+  if(autoColor){hue=(hue+1)%360;ctx.strokeStyle=`hsl(${hue},100%,70%)`}else{ctx.strokeStyle=`hsl(${(x1*0.2)%360},100%,70%)`}
+  ctx.lineWidth=3;ctx.lineCap='round';
+  for(let i=0;i<symmetry;i++){
+    const angle=(Math.PI*2/symmetry)*i;
+    const cos=Math.cos(angle),sin=Math.sin(angle);
+    const rx1=(x1-cx)*cos-(y1-cy)*sin+cx,ry1=(x1-cx)*sin+(y1-cy)*cos+cy;
+    const rx2=(x2-cx)*cos-(y2-cy)*sin+cx,ry2=(x2-cx)*sin+(y2-cy)*cos+cy;
+    ctx.beginPath();ctx.moveTo(rx1,ry1);ctx.lineTo(rx2,ry2);ctx.stroke();
+    // 镜像
+    const mx1=2*cx-rx1,my1=ry1,mx2=2*cx-rx2,my2=ry2;
+    ctx.beginPath();ctx.moveTo(mx1,my1);ctx.lineTo(mx2,my2);ctx.stroke();
+  }
+}
+
+c.addEventListener('pointerdown',e=>{drawing=true;lx=e.clientX;ly=e.clientY;ctx.globalCompositeOperation='source-over'});
+c.addEventListener('pointermove',e=>{if(!drawing)return;const x=e.clientX,y=e.clientY;drawSymmetric(lx,ly,x,y);lx=x;ly=y});
+c.addEventListener('pointerup',()=>{drawing=false});
+c.addEventListener('pointerleave',()=>{drawing=false});
+
+function clearCanvas(){ctx.clearRect(0,0,w,h)}
+function changeSymmetry(){symmetry=symmetry>=12?3:symmetry+1;document.querySelector('.btn2').textContent='镜像:'+symmetry}
+function toggleAutoColor(){autoColor=!autoColor;document.querySelector('.btn3').textContent=autoColor?'自动色':'拖拽色'}
+</script>
+</body>
+</html>

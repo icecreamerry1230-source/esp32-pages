@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no"><title>粒子烟花</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}canvas{display:block;position:fixed;inset:0}.label{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.4);font-family:system-ui,sans-serif;font-size:13px;letter-spacing:2px;z-index:1;pointer-events:none}.btn{position:fixed;top:16px;right:16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.6);padding:8px 16px;border-radius:20px;font-size:13px;cursor:pointer;z-index:2;letter-spacing:1px}</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="label">点击绽放烟花</div>
+<button class="btn" onclick="clearFireworks()">清空</button>
+<script>
+const c=document.getElementById('c'),ctx=c.getContext('2d');
+let w,h,fireworks=[],particles=[],gravity=.03;
+function resize(){w=c.width=window.innerWidth;h=c.height=window.innerHeight}
+resize();window.addEventListener('resize',resize);
+
+class Particle{
+  constructor(x,y,color,dx,dy,life,speed){
+    this.x=x;this.y=y;this.color=color;this.dx=dx;this.dy=dy;this.life=life;this.maxLife=life;this.speed=speed||1;
+  }
+  update(){this.x+=this.dx*this.speed;this.y+=this.dy*this.speed;this.dy+=gravity;this.life--}
+  draw(c){
+    const alpha=this.life/this.maxLife;
+    c.globalAlpha=alpha;c.fillStyle=this.color;c.shadowColor=this.color;c.shadowBlur=6*alpha;
+    c.beginPath();c.arc(this.x,this.y,2.5*alpha,0,Math.PI*2);c.fill();c.globalAlpha=1;
+  }
+}
+
+function launch(x,y){
+  const hue=Math.random()*360;
+  const count=80+Math.floor(Math.random()*60);
+  for(let i=0;i<count;i++){
+    const angle=Math.random()*Math.PI*2;
+    const speed=1+Math.random()*6;
+    const life=40+Math.floor(Math.random()*40);
+    const dx=Math.cos(angle)*speed;const dy=Math.sin(angle)*speed;
+    particles.push(new Particle(x,y,`hsl(${hue+Math.random()*30},100%,${50+Math.random()*30}%)`,dx,dy,life,speed));
+  }
+}
+
+function autoLaunch(){
+  if(Math.random()<.15)launch(Math.random()*w,Math.random()*h*.6);
+}
+let autoInterval=setInterval(autoLaunch,200);
+
+c.addEventListener('pointerdown',e=>{launch(e.clientX,e.clientY)});
+c.addEventListener('pointermove',e=>{if(e.pointerType==='touch'&&Math.random()<.4)launch(e.clientX,e.clientY)});
+
+function clearFireworks(){particles=[]}
+
+function animate(){
+  ctx.fillStyle='rgba(0,0,0,.12)';ctx.fillRect(0,0,w,h);
+  particles.forEach(p=>{p.update();p.draw(ctx)});
+  particles=particles.filter(p=>p.life>0);
+  requestAnimationFrame(animate);
+}
+animate();
+</script>
+</body>
+</html>
