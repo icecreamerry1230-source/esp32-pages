@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>黄金矿工 - 放置游戏</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:#0b0e1a;font-family:'Segoe UI',system-ui,sans-serif;
+  display:flex;justify-content:center;min-height:100vh;color:#e0e8f0;
+  padding:16px;user-select:none;-webkit-user-select:none;
+  touch-action:manipulation;
+}
+.game{max-width:420px;width:100%;padding-bottom:20px}
+.back{color:#6a7a95;text-decoration:none;font-size:13px;letter-spacing:1px;transition:color .2s}
+.back:hover{color:#fbbf24}
+
+/* 顶部资源区 */
+.resource-panel{
+  text-align:center;padding:24px 0 8px;
+}
+.resource-panel .gold-icon{font-size:48px}
+.resource-panel .gold-amount{font-size:40px;font-weight:700;color:#fbbf24;margin:8px 0}
+.resource-panel .gold-rate{font-size:14px;color:#5a6a85}
+.resource-panel .gold-rate span{color:#fbbf24}
+
+/* 消息队列 */
+.messages{
+  min-height:28px;text-align:center;margin:4px 0;
+  position:relative;overflow:hidden;
+}
+.msg{
+  font-size:13px;color:#fbbf24;animation:fadeUp 1.5s forwards;
+  position:absolute;left:50%;transform:translateX(-50%);white-space:nowrap;
+  pointer-events:none;
+}
+@keyframes fadeUp{
+  0%{opacity:1;top:0}
+  100%{opacity:0;top:-20px}
+}
+
+/* 主点击按钮 */
+.click-area{
+  display:flex;justify-content:center;margin:12px 0;
+}
+.click-btn{
+  width:120px;height:120px;border-radius:50%;
+  background:radial-gradient(circle at 40% 40%,#fbbf24,#b45309);
+  border:3px solid #f59e0b;cursor:pointer;
+  font-size:40px;transition:transform .08s;
+  -webkit-tap-highlight-color:transparent;
+  box-shadow:0 0 40px rgba(251,191,36,.25);
+}
+.click-btn:active{transform:scale(.9)}
+.click-btn .label{display:block;font-size:12px;color:#78350f;margin-top:-4px;font-weight:600}
+
+/* 购买模式 */
+.buy-modes{
+  display:flex;justify-content:center;gap:8px;margin:16px 0;
+}
+.mode-btn{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  color:#6a7a95;padding:6px 14px;border-radius:14px;font-size:13px;
+  cursor:pointer;transition:all .15s;
+}
+.mode-btn.active{background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.3);color:#fbbf24}
+
+/* 建筑列表 */
+.buildings{margin:16px 0}
+.building{
+  background:rgba(18,26,42,.8);border:1px solid rgba(255,255,255,.06);
+  border-radius:16px;padding:16px;margin-bottom:10px;
+  display:flex;align-items:center;gap:12px;
+  transition:border-color .2s;
+}
+.building:hover{border-color:rgba(255,255,255,.12)}
+.building .b-icon{font-size:32px;flex-shrink:0}
+.building .b-info{flex:1;min-width:0}
+.building .b-name{font-size:15px;font-weight:600;color:#e0e8f0}
+.building .b-meta{font-size:12px;color:#5a6a85;margin-top:2px}
+.building .b-count{font-size:18px;font-weight:700;color:#a78bfa;min-width:36px;text-align:center}
+.buy-btn{
+  background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.2);
+  color:#fbbf24;padding:8px 16px;border-radius:12px;font-size:14px;
+  cursor:pointer;white-space:nowrap;transition:all .15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.buy-btn:active:not(:disabled){transform:scale(.95)}
+.buy-btn:disabled{opacity:.25;cursor:not-allowed}
+
+/* 底部 */
+.footer{
+  display:flex;justify-content:space-between;align-items:center;
+  flex-wrap:wrap;gap:8px;margin-top:20px;
+}
+.footer .stats{font-size:12px;color:#4a5a75}
+.footer .stats span{color:#7a8aa5}
+.footer-btns{display:flex;gap:8px}
+.footer-btns button{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  color:#6a7a95;padding:6px 12px;border-radius:10px;font-size:12px;cursor:pointer;
+}
+.footer-btns button:active{background:rgba(255,255,255,.1)}
+
+/* 折叠面板 */
+.folded .b-info,.folded .buy-btn{opacity:.35}
+.fold-toggle{
+  color:#4a5a75;font-size:11px;cursor:pointer;text-align:center;
+  padding:8px;transition:color .2s;
+}
+.fold-toggle:hover{color:#7a8aa5}
+</style>
+</head>
+<body>
+<div class="game">
+  <a class="back" href="games.html">← 游戏列表</a>
+
+  <!-- 资源面板 -->
+  <div class="resource-panel">
+    <div class="gold-icon">🪙</div>
+    <div class="gold-amount" id="gold-display">0</div>
+    <div class="gold-rate">每秒 <span id="rate-display">0</span></div>
+  </div>
+
+  <!-- 消息队列 -->
+  <div class="messages" id="messages"></div>
+
+  <!-- 主点击按钮 -->
+  <div class="click-area">
+    <button class="click-btn" id="click-btn">
+      ⛏️
+      <span class="label">点击挖矿</span>
+    </button>
+  </div>
+
+  <!-- 购买模式 -->
+  <div class="buy-modes">
+    <button class="mode-btn active" data-mode="1">×1</button>
+    <button class="mode-btn" data-mode="10">×10</button>
+    <button class="mode-btn" data-mode="25">×25</button>
+    <button class="mode-btn" data-mode="max">MAX</button>
+  </div>
+
+  <!-- 建筑列表 -->
+  <div class="buildings" id="buildings"></div>
+
+  <!-- 底部 -->
+  <div class="footer">
+    <div class="stats">
+      点击: <span id="stat-clicks">0</span> &nbsp;
+      时间: <span id="stat-time">0:00</span>
+    </div>
+    <div class="footer-btns">
+      <button id="btn-export">导出存档</button>
+      <button id="btn-import">导入存档</button>
+      <button id="btn-reset">重置</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  第 5 层：工具库 (Utils)
+// ═══════════════════════════════════════════════════════════
+const SUFFIXES = ['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No',
+  'Dc','UDc','DDc','TDc','QaDc','QiDc','SxDc','SpDc','OcDc','NoDc','Vg'];
+
+function formatNumber(n){
+  if(typeof n!=='number')n=parseFloat(n)||0;
+  if(n<1000)return n<10?n.toFixed(1):n<100?n.toFixed(1):Math.floor(n).toString();
+  let tier=0;
+  while(n>=1000&&tier<SUFFIXES.length-1){n/=1000;tier++}
+  return n.toFixed(n<10?2:n<100?1:0)+SUFFIXES[tier];
+}
+
+function formatTime(seconds){
+  const h=Math.floor(seconds/3600),m=Math.floor((seconds%3600)/60),s=Math.floor(seconds%60);
+  if(h>0)return h+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  return m+':'+String(s).padStart(2,'0');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  第 4 层：配置文件 (Config)
+// ═══════════════════════════════════════════════════════════
+const BUILDINGS_CONFIG = [
+  { id:'cursor',   icon:'⚒️', name:'矿镐',       basePrice:15,       baseProd:0.1,   growth:1.15 },
+  { id:'miner',    icon:'👷', name:'矿工',       basePrice:100,      baseProd:0.5,   growth:1.15 },
+  { id:'drill',    icon:'⛏️', name:'钻机',       basePrice:500,      baseProd:2,     growth:1.15 },
+  { id:'factory',  icon:'🏭', name:'提炼厂',     basePrice:3000,     baseProd:10,    growth:1.15 },
+  { id:'lab',      icon:'🔬', name:'研究所',     basePrice:20000,    baseProd:50,    growth:1.15 },
+  { id:'temple',   icon:'🏛️', name:'黄金神殿',   basePrice:150000,   baseProd:300,   growth:1.15 },
+  { id:'spaceship',icon:'🚀', name:'星际采矿船', basePrice:1200000,  baseProd:2000,  growth:1.15 },
+];
+
+const SAVE_KEY = 'idle_gold_save';
+const CURRENT_VERSION = '1.0.0';
+const AUTO_SAVE_INTERVAL = 20000;  // 20 秒
+const OFFLINE_EFFICIENCY = 0.5;
+const MAX_OFFLINE_SECONDS = 86400; // 24 小时
+
+// ═══════════════════════════════════════════════════════════
+//  第 3 层：核心引擎 (Engine / Formulas)
+// ═══════════════════════════════════════════════════════════
+function getPrice(buildingId, currentCount){
+  const cfg = BUILDINGS_CONFIG.find(b=>b.id===buildingId);
+  return cfg.basePrice * Math.pow(cfg.growth, currentCount);
+}
+
+function getClickPower(state){
+  // 基础 1 + 总产量 × 0.01（点击收益随产量增长）
+  return 1 + getTotalProduction(state) * 0.01;
+}
+
+function getTotalProduction(state){
+  let total = 0;
+  for(const b of state.buildings){
+    const cfg = BUILDINGS_CONFIG.find(c=>c.id===b.id);
+    total += cfg.baseProd * b.count;
+  }
+  return total;
+}
+
+function calcBulkBuy(buildingId, gold, currentCount, mode){
+  if(mode==='max'){
+    let affordable = 0;
+    let nextPrice = getPrice(buildingId, currentCount);
+    let remaining = gold;
+    // 安全上限 1000 次循环
+    for(let i=0;i<1000;i++){
+      if(remaining<nextPrice)break;
+      remaining -= nextPrice;
+      affordable++;
+      nextPrice = getPrice(buildingId, currentCount + affordable);
+    }
+    return { quantity:affordable, cost:gold-remaining };
+  }
+  const qty = parseInt(mode)||1;
+  let totalCost = 0;
+  for(let i=0;i<qty;i++){
+    totalCost += getPrice(buildingId, currentCount + i);
+  }
+  return { quantity:qty, cost:totalCost };
+}
+
+// ═══════════════════════════════════════════════════════════
+//  第 2 层：状态 & 持久化 (State & Persistence)
+// ═══════════════════════════════════════════════════════════
+function createInitialState(){
+  return {
+    version: CURRENT_VERSION,
+    lastSavedAt: Date.now(),
+    resources: { gold: 0 },
+    buildings: BUILDINGS_CONFIG.map(c=>({ id:c.id, count:0 })),
+    stats: { totalClicks:0, totalGoldEarned:0, playTimeSeconds:0 },
+    buyMode: 1,
+    messages: [],
+    renderCache: { gold:'', rate:'', clicks:'', time:'' },
+    folded: false,
+  };
+}
+
+function saveGame(state){
+  state.lastSavedAt = Date.now();
+  try{
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      version: state.version,
+      lastSavedAt: state.lastSavedAt,
+      resources: state.resources,
+      buildings: state.buildings,
+      stats: state.stats,
+      buyMode: state.buyMode,
+    }));
+  }catch(e){ /* quota exceeded, silent fail */ }
+}
+
+function loadGame(){
+  try{
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(!raw)return null;
+    let data = JSON.parse(raw);
+    // 版本迁移（预留）
+    if(!data.version||data.version!==CURRENT_VERSION){
+      data = migrateSave(data);
+    }
+    return data;
+  }catch(e){ return null; }
+}
+
+function migrateSave(data){
+  // v1.0.0 是初始版本，后续如有版本升级在此处理
+  data.version = CURRENT_VERSION;
+  if(!data.stats) data.stats = { totalClicks:0, totalGoldEarned:0, playTimeSeconds:0 };
+  if(!data.buildings){
+    data.buildings = BUILDINGS_CONFIG.map(c=>({ id:c.id, count:0 }));
+  }
+  return data;
+}
+
+function applyOfflineEarnings(state){
+  const now = Date.now();
+  const elapsed = Math.min((now - state.lastSavedAt) / 1000, MAX_OFFLINE_SECONDS);
+  if(elapsed < 5) return; // 小于 5 秒不计算
+  const production = getTotalProduction(state);
+  const earned = production * elapsed * OFFLINE_EFFICIENCY;
+  if(earned > 0){
+    state.resources.gold += earned;
+    state.stats.totalGoldEarned += earned;
+    state.messages.push('离线 '+formatTime(Math.floor(elapsed))+' 获得 💰 '+formatNumber(earned));
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  第 1 层：动作处理 (Actions)
+// ═══════════════════════════════════════════════════════════
+function actionClick(state){
+  const power = getClickPower(state);
+  state.resources.gold += power;
+  state.stats.totalGoldEarned += power;
+  state.stats.totalClicks++;
+  if(power >= 1){
+    state.messages.push('+'+formatNumber(power));
+  }
+  return state;
+}
+
+function actionBuyBuilding(state, buildingId){
+  const bld = state.buildings.find(b=>b.id===buildingId);
+  if(!bld)return state;
+
+  const { quantity, cost } = calcBulkBuy(buildingId, state.resources.gold, bld.count, state.buyMode);
+  if(quantity===0)return state;
+  if(cost > state.resources.gold)return state;
+
+  state.resources.gold -= cost;
+  bld.count += quantity;
+
+  const cfg = BUILDINGS_CONFIG.find(c=>c.id===buildingId);
+  state.messages.push('购买 '+cfg.name+' ×'+quantity+' ('+formatNumber(cost)+')');
+  return state;
+}
+
+function actionChangeBuyMode(state, mode){
+  state.buyMode = (mode==='max')?'max':parseInt(mode)||1;
+  return state;
+}
+
+function actionResetGame(state){
+  const fresh = createInitialState();
+  // 保留版本
+  Object.assign(state, fresh);
+  state.buildings = fresh.buildings.map(b=>({...b}));
+  state.renderCache = {};
+  state.messages = ['游戏已重置'];
+  saveGame(state);
+  return state;
+}
+
+function actionExportSave(state){
+  saveGame(state);
+  const raw = localStorage.getItem(SAVE_KEY);
+  if(raw){
+    navigator.clipboard?.writeText(raw).then(()=>{
+      state.messages.push('存档已复制到剪贴板');
+    }).catch(()=>{
+      state.messages.push('导出失败，请检查浏览器权限');
+    });
+  }
+  return state;
+}
+
+function actionImportSave(state){
+  const text = prompt('请粘贴存档内容：');
+  if(!text)return state;
+  try{
+    const data = JSON.parse(text);
+    if(!data.resources||!data.buildings)throw new Error('无效存档');
+    const migrated = migrateSave(data);
+    state.resources = migrated.resources;
+    state.buildings = migrated.buildings;
+    state.stats = migrated.stats||state.stats;
+    state.lastSavedAt = migrated.lastSavedAt||Date.now();
+    state.messages = ['存档导入成功！'];
+    state.renderCache = {};
+    saveGame(state);
+  }catch(e){
+    state.messages.push('存档格式无效');
+  }
+  return state;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  渲染器 (Renderer) — 脏检查机制
+// ═══════════════════════════════════════════════════════════
+function renderAll(state){
+  renderResources(state);
+  renderBuildings(state);
+  renderStats(state);
+  renderMessages(state);
+  renderBuyModes(state);
+}
+
+function renderResources(state){
+  const gold = formatNumber(state.resources.gold);
+  if(state.renderCache.gold !== gold){
+    document.getElementById('gold-display').textContent = gold;
+    state.renderCache.gold = gold;
+  }
+  const rate = formatNumber(getTotalProduction(state));
+  if(state.renderCache.rate !== rate){
+    document.getElementById('rate-display').textContent = rate;
+    state.renderCache.rate = rate;
+  }
+}
+
+function renderBuildings(state){
+  const container = document.getElementById('buildings');
+  // 首次全量渲染，后续增量更新
+  if(!state._buildingsRendered){
+    container.innerHTML = BUILDINGS_CONFIG.map(cfg=>{
+      const bld = state.buildings.find(b=>b.id===cfg.id);
+      return `<div class="building" id="bld-${cfg.id}">
+        <div class="b-icon">${cfg.icon}</div>
+        <div class="b-info">
+          <div class="b-name">${cfg.name}</div>
+          <div class="b-meta">产量: ${formatNumber(cfg.baseProd)}/秒 · 拥有: <span id="cnt-${cfg.id}">${bld.count}</span></div>
+        </div>
+        <div class="b-count" id="totalprod-${cfg.id}">${formatNumber(cfg.baseProd*bld.count)}</div>
+        <button class="buy-btn" id="buy-${cfg.id}" disabled>¥0</button>
+      </div>`;
+    }).join('');
+    state._buildingsRendered = true;
+  }
+
+  // 增量更新
+  for(const bld of state.buildings){
+    const cfg = BUILDINGS_CONFIG.find(c=>c.id===bld.id);
+    const price = getPrice(bld.id, bld.count);
+    const { cost } = calcBulkBuy(bld.id, state.resources.gold, bld.count, state.buyMode);
+
+    // 更新拥有数量
+    const cntEl = document.getElementById('cnt-'+bld.id);
+    if(cntEl && cntEl.textContent != bld.count) cntEl.textContent = bld.count;
+
+    // 更新总产量
+    const prodEl = document.getElementById('totalprod-'+bld.id);
+    const prod = formatNumber(cfg.baseProd * bld.count);
+    if(prodEl && prodEl.textContent != prod) prodEl.textContent = prod;
+
+    // 更新购买按钮
+    const btn = document.getElementById('buy-'+bld.id);
+    if(btn){
+      const label = state.buyMode==='max'?'MAX':'×'+state.buyMode;
+      const displayCost = state.buyMode==='max'?cost:price;
+      btn.textContent = '买 '+label+' ¥'+formatNumber(displayCost);
+      btn.disabled = cost > state.resources.gold || cost===0;
+    }
+  }
+}
+
+function renderStats(state){
+  const clicks = String(state.stats.totalClicks);
+  if(state.renderCache.clicks !== clicks){
+    document.getElementById('stat-clicks').textContent = clicks;
+    state.renderCache.clicks = clicks;
+  }
+  const time = formatTime(state.stats.playTimeSeconds);
+  if(state.renderCache.time !== time){
+    document.getElementById('stat-time').textContent = time;
+    state.renderCache.time = time;
+  }
+}
+
+function renderMessages(state){
+  const container = document.getElementById('messages');
+  if(!state.messages.length)return;
+  const msgs = state.messages.splice(0); // 消费全部
+  for(const text of msgs){
+    const el = document.createElement('div');
+    el.className = 'msg';
+    el.textContent = text;
+    container.appendChild(el);
+    setTimeout(()=>el.remove(), 1600);
+  }
+}
+
+function renderBuyModes(state){
+  document.querySelectorAll('.mode-btn').forEach(btn=>{
+    const mode = btn.dataset.mode;
+    btn.classList.toggle('active', String(state.buyMode)===mode);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  主循环 & 启动
+// ═══════════════════════════════════════════════════════════
+let state;
+
+function tick(deltaSeconds){
+  const production = getTotalProduction(state);
+  if(production > 0){
+    const earned = production * deltaSeconds;
+    state.resources.gold += earned;
+    state.stats.totalGoldEarned += earned;
+  }
+  state.stats.playTimeSeconds += deltaSeconds;
+  renderAll(state);
+}
+
+function bootstrap(){
+  const saved = loadGame();
+  if(saved){
+    state = createInitialState();
+    state.resources = saved.resources;
+    state.buildings = saved.buildings;
+    state.stats = saved.stats||{ totalClicks:0, totalGoldEarned:0, playTimeSeconds:0 };
+    state.lastSavedAt = saved.lastSavedAt||Date.now();
+    state.buyMode = saved.buyMode||1;
+    state.messages = [];
+    state.renderCache = {};
+    applyOfflineEarnings(state);
+    saveGame(state);
+  }else{
+    state = createInitialState();
+    saveGame(state);
+  }
+  renderAll(state);
+}
+
+// 事件绑定
+document.getElementById('click-btn').addEventListener('pointerdown',(e)=>{
+  e.preventDefault();
+  actionClick(state);
+  renderAll(state);
+});
+
+document.querySelectorAll('.mode-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    actionChangeBuyMode(state, btn.dataset.mode);
+    renderAll(state);
+  });
+});
+
+document.getElementById('buildings').addEventListener('click',(e)=>{
+  const btn = e.target.closest('.buy-btn');
+  if(!btn||btn.disabled)return;
+  const id = btn.id.replace('buy-','');
+  actionBuyBuilding(state, id);
+  renderAll(state);
+});
+
+document.getElementById('btn-export').addEventListener('click',()=>{
+  actionExportSave(state);
+  renderAll(state);
+});
+
+document.getElementById('btn-import').addEventListener('click',()=>{
+  actionImportSave(state);
+  renderAll(state);
+});
+
+document.getElementById('btn-reset').addEventListener('click',()=>{
+  if(confirm('确定要重置游戏吗？所有数据将丢失。')){
+    actionResetGame(state);
+    state._buildingsRendered = false;
+    renderAll(state);
+  }
+});
+
+// 启动
+bootstrap();
+
+// 主循环：每秒 tick + 自动存档计时
+let tickAccum = 0;
+let saveTimer = 0;
+setInterval(()=>{
+  tick(1);
+  saveTimer++;
+  if(saveTimer >= AUTO_SAVE_INTERVAL/1000){
+    saveGame(state);
+    saveTimer = 0;
+  }
+}, 1000);
+
+// 页面隐藏时存档
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden)saveGame(state);
+});
+</script>
+</body>
+</html>
