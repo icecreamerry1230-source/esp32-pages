@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>扫雷</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0b0e1a;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; color: #e0e8f0; padding: 16px;
+            touch-action: manipulation; user-select: none; -webkit-user-select: none;
+        }
+        .container { max-width: 500px; width: 100%; }
+
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 16px;
+        }
+        .title {
+            font-size: 34px; font-weight: 700;
+            background: linear-gradient(135deg, #f87171, #fb923c, #facc15);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; letter-spacing: 2px;
+        }
+        .stats { display: flex; gap: 10px; }
+        .stat-box {
+            background: rgba(18,26,42,0.9); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px; padding: 6px 14px; text-align: center; min-width: 55px;
+        }
+        .stat-label { font-size: 10px; color: #8896b0; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-value { font-size: 20px; font-weight: 600; color: #f0f4ff; font-variant-numeric: tabular-nums; }
+        .stat-value.best { color: #fbbf24; }
+
+        .toolbar {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 12px; gap: 10px; flex-wrap: wrap;
+        }
+        .diff-select {
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+            color: #b0c4e0; padding: 8px 16px; border-radius: 20px;
+            font-size: 13px; cursor: pointer; letter-spacing: 0.5px;
+        }
+        .btn {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            color: #b0c4e0; padding: 8px 18px; border-radius: 30px;
+            font-size: 14px; font-weight: 500; cursor: pointer;
+            letter-spacing: 0.5px; transition: 0.2s; white-space: nowrap;
+        }
+        .btn:hover { background: rgba(251,146,60,0.1); border-color: rgba(251,146,60,0.3); color: #fb923c; }
+        .btn.primary { background: rgba(251,146,60,0.12); border-color: #f97316; color: #fb923c; }
+        .btn.primary:hover { background: rgba(251,146,60,0.25); }
+        .hint { font-size: 11px; color: #5a6a85; }
+
+        .game-wrapper {
+            background: rgba(18,26,42,0.8); border-radius: 16px; padding: 10px;
+            border: 1px solid rgba(255,255,255,0.06);
+            box-shadow: inset 0 0 60px rgba(0,0,0,0.3);
+            display: flex; justify-content: center;
+        }
+
+        .board {
+            display: inline-grid; gap: 2px;
+        }
+
+        .cell {
+            width: 32px; height: 32px;
+            border-radius: 5px;
+            font-size: 14px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: background 0.08s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .cell.hidden { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.04); }
+        .cell.hidden:active { background: rgba(255,255,255,0.12); }
+        .cell.revealed { background: rgba(255,255,255,0.02); border: 1px solid transparent; }
+        .cell.flagged { background: rgba(251,146,60,0.1); border: 1px solid rgba(251,146,60,0.2); }
+        .cell.mine { background: rgba(248,113,113,0.25); border: 1px solid rgba(248,113,113,0.3); }
+        .cell.mine-hit { background: rgba(248,113,113,0.4); border: 1px solid #f87171; }
+
+        .cell .flag-icon { font-size: 16px; }
+
+        .n1 { color: #60a5fa; } .n2 { color: #4ade80; } .n3 { color: #f87171; }
+        .n4 { color: #818cf8; } .n5 { color: #f97316; } .n6 { color: #22d3ee; }
+        .n7 { color: #facc15; } .n8 { color: #94a3b8; }
+
+        .overlay {
+            position: absolute; inset: 0;
+            background: rgba(11,14,26,0.88); border-radius: 16px;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 16px;
+            z-index: 10;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+        .overlay.show { opacity: 1; pointer-events: all; }
+        .overlay .msg { font-size: 32px; font-weight: 700; letter-spacing: 2px; }
+        .overlay .msg.win { color: #fbbf24; }
+        .overlay .msg.lose { color: #f87171; }
+        .overlay .sub { font-size: 14px; color: #8896b0; }
+
+        .flag-toggle {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 14px; border-radius: 20px;
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+            font-size: 13px; color: #8896b0; cursor: pointer;
+        }
+        .flag-toggle.active { background: rgba(251,146,60,0.1); border-color: #f97316; color: #fb923c; }
+
+        @media (max-width: 420px) {
+            .cell { width: 26px; height: 26px; font-size: 12px; border-radius: 3px; }
+            .cell .flag-icon { font-size: 13px; }
+            .title { font-size: 26px; }
+            .board { gap: 1px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div class="title">💣 扫雷</div>
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-label">💣</div>
+                <div class="stat-value" id="minesLeft" style="color:#f87171;">10</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">⏱</div>
+                <div class="stat-value" id="timer">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">🏆</div>
+                <div class="stat-value best" id="best">--</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <select class="diff-select" id="diffSelect">
+            <option value="easy">😊 初级 9×9 · 10雷</option>
+            <option value="medium" selected>😐 中级 16×16 · 40雷</option>
+            <option value="hard">😈 高级 30×16 · 99雷</option>
+        </select>
+        <button class="btn primary" id="restartBtn">⟳ 新游戏</button>
+        <div class="flag-toggle" id="flagToggle">
+            🚩 插旗模式
+        </div>
+    </div>
+
+    <div class="game-wrapper" style="position:relative;">
+        <div class="board" id="board"></div>
+        <div class="overlay" id="overlay">
+            <div class="msg" id="overlayMsg"></div>
+            <div class="sub" id="overlaySub"></div>
+            <button class="btn primary" id="overlayBtn">⟳ 再来一局</button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    'use strict';
+
+    const DIFFS = {
+        easy:   { rows: 9,  cols: 9,  mines: 10 },
+        medium: { rows: 16, cols: 16, mines: 40 },
+        hard:   { rows: 16, cols: 30, mines: 99 },
+    };
+
+    let rows, cols, totalMines;
+    let board, revealed, flagged, mineMap;
+    let gameOver, gameWon, firstClick, minesLeft, timerValue, timerInterval;
+    let flagMode = true;
+
+    const boardEl = document.getElementById('board');
+    const minesLeftEl = document.getElementById('minesLeft');
+    const timerEl = document.getElementById('timer');
+    const bestEl = document.getElementById('best');
+    const overlay = document.getElementById('overlay');
+    const overlayMsg = document.getElementById('overlayMsg');
+    const overlaySub = document.getElementById('overlaySub');
+    const flagToggle = document.getElementById('flagToggle');
+
+    function loadBest(d) { try { const v = localStorage.getItem(`minesweeper_${d}`); return v ? parseInt(v) : null; } catch { return null; } }
+    function saveBest(d, t) { try { localStorage.setItem(`minesweeper_${d}`, t); } catch {} }
+
+    function init(preserveTimer = false) {
+        const diff = document.getElementById('diffSelect').value;
+        const cfg = DIFFS[diff];
+        rows = cfg.rows; cols = cfg.cols; totalMines = cfg.mines;
+        board = Array.from({ length: rows }, () => Array(cols).fill(0));
+        revealed = Array.from({ length: rows }, () => Array(cols).fill(false));
+        flagged = Array.from({ length: rows }, () => Array(cols).fill(false));
+        mineMap = Array.from({ length: rows }, () => Array(cols).fill(false));
+        gameOver = false; gameWon = false; firstClick = true;
+        minesLeft = totalMines;
+        if (!preserveTimer) { timerValue = 0; clearInterval(timerInterval); timerInterval = null; }
+        minesLeftEl.textContent = minesLeft;
+        timerEl.textContent = timerValue;
+        hideOverlay();
+        renderBoard();
+        // 最高分
+        const b = loadBest(diff);
+        bestEl.textContent = b ? `${b}s` : '--';
+    }
+
+    function placeMines(safeR, safeC) {
+        const safe = new Set();
+        for (let dr = -1; dr <= 1; dr++)
+            for (let dc = -1; dc <= 1; dc++) {
+                const r = safeR + dr, c = safeC + dc;
+                if (r >= 0 && r < rows && c >= 0 && c < cols) safe.add(`${r},${c}`);
+            }
+        let placed = 0;
+        while (placed < totalMines) {
+            const r = Math.floor(Math.random() * rows);
+            const c = Math.floor(Math.random() * cols);
+            if (!mineMap[r][c] && !safe.has(`${r},${c}`)) {
+                mineMap[r][c] = true;
+                placed++;
+            }
+        }
+        // 计算数字
+        for (let r = 0; r < rows; r++)
+            for (let c = 0; c < cols; c++) {
+                if (mineMap[r][c]) continue;
+                let count = 0;
+                forEachNeighbor(r, c, (nr, nc) => { if (mineMap[nr][nc]) count++; });
+                board[r][c] = count;
+            }
+    }
+
+    function forEachNeighbor(r, c, fn) {
+        for (let dr = -1; dr <= 1; dr++)
+            for (let dc = -1; dc <= 1; dc++) {
+                if (dr === 0 && dc === 0) continue;
+                const nr = r + dr, nc = c + dc;
+                if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) fn(nr, nc);
+            }
+    }
+
+    function reveal(r, c) {
+        if (r < 0 || r >= rows || c < 0 || c >= cols) return;
+        if (revealed[r][c] || flagged[r][c]) return;
+        revealed[r][c] = true;
+        if (board[r][c] === 0) {
+            forEachNeighbor(r, c, (nr, nc) => reveal(nr, nc));
+        }
+    }
+
+    function chord(r, c) {
+        // 数字格双击：如果周围旗帜数=数字，自动打开周围非旗格
+        if (!revealed[r][c] || board[r][c] === 0) return;
+        let f = 0;
+        forEachNeighbor(r, c, (nr, nc) => { if (flagged[nr][nc]) f++; });
+        if (f !== board[r][c]) return;
+        forEachNeighbor(r, c, (nr, nc) => {
+            if (!flagged[nr][nc] && !revealed[nr][nc]) {
+                reveal(nr, nc);
+                if (mineMap[nr][nc]) endGame(false, nr, nc);
+            }
+        });
+    }
+
+    function handleCell(r, c) {
+        if (gameOver || gameWon) return;
+
+        if (flagMode) {
+            flag(r, c);
+        } else {
+            clickCell(r, c);
+        }
+    }
+
+    function clickCell(r, c) {
+        if (gameOver || gameWon) return;
+        if (revealed[r][c] || flagged[r][c]) {
+            chord(r, c);
+            renderBoard();
+            return;
+        }
+        if (firstClick) {
+            placeMines(r, c);
+            firstClick = false;
+            startTimer();
+        }
+        if (mineMap[r][c]) {
+            endGame(false, r, c);
+            return;
+        }
+        reveal(r, c);
+        checkWin();
+        renderBoard();
+    }
+
+    function flag(r, c) {
+        if (gameOver || gameWon) return;
+        if (revealed[r][c]) return;
+        if (firstClick && !flagged[r][c]) {
+            placeMines(r, c);
+            firstClick = false;
+            startTimer();
+        }
+        flagged[r][c] = !flagged[r][c];
+        minesLeft += flagged[r][c] ? -1 : 1;
+        minesLeftEl.textContent = minesLeft;
+        renderBoard();
+    }
+
+    function startTimer() {
+        if (timerInterval) return;
+        timerInterval = setInterval(() => {
+            timerValue++;
+            timerEl.textContent = timerValue;
+        }, 1000);
+    }
+
+    function checkWin() {
+        for (let r = 0; r < rows; r++)
+            for (let c = 0; c < cols; c++)
+                if (!mineMap[r][c] && !revealed[r][c]) return false;
+        endGame(true);
+        return true;
+    }
+
+    function endGame(won, hitR = -1, hitC = -1) {
+        if (gameOver || gameWon) return;
+        gameWon = won;
+        if (!won) gameOver = true;
+        clearInterval(timerInterval); timerInterval = null;
+
+        // 揭示所有雷
+        for (let r = 0; r < rows; r++)
+            for (let c = 0; c < cols; c++)
+                if (mineMap[r][c]) revealed[r][c] = true;
+
+        renderBoard(hitR, hitC);
+
+        if (won) {
+            const diff = document.getElementById('diffSelect').value;
+            const prev = loadBest(diff);
+            if (!prev || timerValue < prev) saveBest(diff, timerValue);
+            const b = loadBest(diff);
+            bestEl.textContent = b ? `${b}s` : '--';
+            overlayMsg.className = 'msg win';
+            overlayMsg.textContent = '🎉 你赢了！';
+            overlaySub.textContent = `用时 ${timerValue} 秒`;
+        } else {
+            overlayMsg.className = 'msg lose';
+            overlayMsg.textContent = '💥 踩雷了！';
+            overlaySub.textContent = '';
+        }
+        overlay.classList.add('show');
+    }
+
+    function hideOverlay() { overlay.classList.remove('show'); }
+
+    // ===== 渲染 =====
+    function renderBoard(hitR = -1, hitC = -1) {
+        boardEl.style.gridTemplateColumns = `repeat(${cols}, auto)`;
+        boardEl.innerHTML = '';
+
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+
+                if (revealed[r][c]) {
+                    if (mineMap[r][c]) {
+                        cell.className += (r === hitR && c === hitC) ? ' mine-hit' : ' mine';
+                        cell.textContent = '💣';
+                    } else {
+                        cell.className += ' revealed';
+                        const v = board[r][c];
+                        if (v > 0) {
+                            cell.textContent = v;
+                            cell.className += ' n' + v;
+                        }
+                    }
+                } else if (flagged[r][c]) {
+                    cell.className += ' flagged';
+                    cell.innerHTML = '<span class="flag-icon">🚩</span>';
+                } else {
+                    cell.className += ' hidden';
+                }
+
+                cell.addEventListener('click', () => handleCell(r, c));
+                cell.addEventListener('contextmenu', e => { e.preventDefault(); flag(r, c); });
+
+                // 长按插旗（手机）
+                let longTimer;
+                cell.addEventListener('touchstart', () => {
+                    longTimer = setTimeout(() => { flag(r, c); }, 400);
+                });
+                cell.addEventListener('touchend', () => clearTimeout(longTimer));
+                cell.addEventListener('touchmove', () => clearTimeout(longTimer));
+
+                boardEl.appendChild(cell);
+            }
+        }
+    }
+
+    // ===== 事件 =====
+    document.getElementById('diffSelect').addEventListener('change', () => init());
+    document.getElementById('restartBtn').addEventListener('click', () => init());
+    document.getElementById('overlayBtn').addEventListener('click', () => init());
+
+    flagToggle.addEventListener('click', () => {
+        flagMode = !flagMode;
+        flagToggle.classList.toggle('active', flagMode);
+        flagToggle.innerHTML = flagMode ? '🚩 插旗模式' : '👆 挖掘模式';
+    });
+    flagToggle.classList.add('active');
+
+    window.addEventListener('resize', () => renderBoard());
+
+    // ===== 启动 =====
+    init();
+})();
+</script>
+
+</body>
+</html>
