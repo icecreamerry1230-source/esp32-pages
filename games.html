@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏 - 小游戏合集</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0b0e1a;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; color: #e0e8f0; padding: 20px;
+        }
+        .container { text-align: center; max-width: 420px; width: 100%; }
+        .back {
+            display: inline-block; color: #6a7a95; text-decoration: none;
+            font-size: 14px; margin-bottom: 24px; letter-spacing: 1px;
+            transition: color 0.2s;
+        }
+        .back:hover { color: #a78bfa; }
+        h1 {
+            font-size: 28px; font-weight: 300; letter-spacing: 3px;
+            background: linear-gradient(135deg, #7ec8ff, #a78bfa);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 32px;
+        }
+        .card {
+            display: block;
+            background: rgba(18,26,42,0.8);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 20px; padding: 24px 20px; margin-bottom: 14px;
+            text-decoration: none;
+            transition: all 0.25s;
+            text-align: left;
+        }
+        .card:hover { border-color: rgba(120,200,255,0.2); transform: translateY(-2px); }
+        .card .icon { font-size: 32px; display: inline-block; vertical-align: middle; margin-right: 14px; }
+        .card .info { display: inline-block; vertical-align: middle; }
+        .card .name { font-size: 18px; font-weight: 600; color: #e0e8f0; margin-bottom: 4px; }
+        .card .desc { font-size: 13px; color: #5a6a85; }
+        .card .badge {
+            display: inline-block; font-size: 10px; padding: 2px 8px;
+            border-radius: 10px; margin-left: 6px; vertical-align: middle;
+        }
+        .badge-ai { background: rgba(167,139,250,0.15); color: #a78bfa; }
+        .badge-rank { background: rgba(251,191,36,0.15); color: #fbbf24; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <a class="back" href="index.html">← 返回首页</a>
+    <h1>🎮 游戏</h1>
+
+    <a class="card" href="2048.html">
+        <div class="icon">🔲</div>
+        <div class="info"><div class="name">2048 <span class="badge badge-rank">排名</span></div><div class="desc">经典数字游戏 · 滑动合并 · 挑战 2048</div></div>
+    </a>
+    <a class="card" href="snake.html">
+        <div class="icon">🐍</div>
+        <div class="info"><div class="name">贪吃蛇 <span class="badge badge-rank">排名</span></div><div class="desc">经典街机游戏 · 10 级难度递增</div></div>
+    </a>
+    <a class="card" href="tetris.html">
+        <div class="icon">🧱</div>
+        <div class="info"><div class="name">俄罗斯方块 <span class="badge badge-rank">排名</span></div><div class="desc">经典消除游戏 · 旋转硬降 · 自动升级加速</div></div>
+    </a>
+    <a class="card" href="minesweeper.html">
+        <div class="icon">💣</div>
+        <div class="info"><div class="name">扫雷 <span class="badge badge-rank">排名</span></div><div class="desc">经典逻辑游戏 · 插旗推格子 · 三档难度</div></div>
+    </a>
+    <a class="card" href="memory.html">
+        <div class="icon">🧠</div>
+        <div class="info"><div class="name">记忆翻牌 <span class="badge badge-rank">排名</span></div><div class="desc">配对记忆挑战 · 三种难度 · 最少步数</div></div>
+    </a>
+    <a class="card" href="breakout.html">
+        <div class="icon">🏓</div>
+        <div class="info"><div class="name">打砖块 <span class="badge badge-rank">排名</span></div><div class="desc">经典街机 · 滑动挡板消砖得分</div></div>
+    </a>
+    <a class="card" href="shooter.html">
+        <div class="icon">🛸</div>
+        <div class="info"><div class="name">飞机大战 <span class="badge badge-rank">排名</span></div><div class="desc">太空射击 · 拖拽移动 · 自动连射</div></div>
+    </a>
+    <a class="card" href="gomoku.html">
+        <div class="icon">⚫</div>
+        <div class="info"><div class="name">五子棋 <span class="badge badge-ai">AI</span></div><div class="desc">双人对弈 · 人机对战 · AI 攻防</div></div>
+    </a>
+    <a class="card" href="sudoku.html">
+        <div class="icon">🔢</div>
+        <div class="info"><div class="name">数独 <span class="badge badge-rank">排名</span></div><div class="desc">经典逻辑填数 · 三档难度 · 提示纠错</div></div>
+    </a>
+</div>
+</body>
+</html>

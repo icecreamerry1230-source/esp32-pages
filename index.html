@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>导航页</title>
+    <title>工具集</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -12,18 +12,18 @@
             display: flex; justify-content: center; align-items: center;
             min-height: 100vh; color: #e0e8f0; padding: 20px;
         }
-        .container { text-align: center; max-width: 400px; width: 100%; }
+        .container { text-align: center; max-width: 420px; width: 100%; }
         h1 {
             font-size: 28px; font-weight: 300; letter-spacing: 3px;
             background: linear-gradient(135deg, #7ec8ff, #a78bfa);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            margin-bottom: 40px;
+            margin-bottom: 36px;
         }
         .card {
             display: block;
             background: rgba(18,26,42,0.8);
             border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 20px; padding: 28px 24px; margin-bottom: 16px;
+            border-radius: 20px; padding: 28px 24px; margin-bottom: 14px;
             text-decoration: none;
             transition: all 0.25s;
         }
@@ -31,94 +31,48 @@
         .card .icon { font-size: 40px; margin-bottom: 10px; }
         .card .name { font-size: 20px; font-weight: 600; color: #e0e8f0; margin-bottom: 6px; }
         .card .desc { font-size: 13px; color: #6a7a95; }
+        .card .count { font-size: 11px; color: #3a4a65; margin-top: 4px; }
+
+        .card-games { border-color: rgba(120,200,255,0.15); }
+        .card-games:hover { border-color: rgba(120,200,255,0.35); }
+        .card-effects { border-color: rgba(251,191,36,0.15); }
+        .card-effects:hover { border-color: rgba(251,191,36,0.35); }
+        .card-tools { border-color: rgba(167,139,250,0.15); }
+        .card-tools:hover { border-color: rgba(167,139,250,0.35); }
+        .card-rank { border-color: rgba(251,191,36,0.2); background: rgba(251,191,36,0.04); }
+        .card-rank:hover { border-color: rgba(251,191,36,0.4); }
     </style>
 </head>
 <body>
 <div class="container">
     <h1>📊 工具集</h1>
-    <a class="card" href="ranking.html" style="border-color:rgba(251,191,36,0.3);background:rgba(251,191,36,0.05)">
-        <div class="icon">🏆</div>
-        <div class="name">排行榜</div>
-        <div class="desc" style="color:#fbbf24">全游戏实时排名 · 跨设备同步</div>
+
+    <a class="card card-games" href="games.html">
+        <div class="icon">🎮</div>
+        <div class="name">游戏</div>
+        <div class="desc">经典小游戏合集 · 触屏优化</div>
+        <div class="count">9 款游戏</div>
     </a>
 
-    <h2 style="font-size:14px;font-weight:400;color:#5a6a85;letter-spacing:3px;margin:24px 0 12px 8px;text-transform:uppercase">✨ 特效</h2>
-    <a class="card" href="fireworks.html">
-        <div class="icon">🎆</div>
-        <div class="name">粒子烟花</div>
-        <div class="desc">点击绽放烟花 · 粒子爆炸 · 自动连发</div>
-    </a>
-    <a class="card" href="kaleidoscope.html">
-        <div class="icon">🌀</div>
-        <div class="name">万花筒绘画</div>
-        <div class="desc">对称镜像绘图 · 可变花瓣数 · 自动渐变</div>
-    </a>
-    <a class="card" href="fractal.html">
-        <div class="icon">🔮</div>
-        <div class="name">分形探索</div>
-        <div class="desc">Mandelbrot 集合 · 拖拽缩放 · 无限深度</div>
-    </a>
-    <a class="card" href="matrix.html">
-        <div class="icon">💚</div>
-        <div class="name">矩阵雨</div>
-        <div class="desc">黑客帝国代码瀑布 · 可变密度速度</div>
-    </a>
-    <a class="card" href="starfield.html">
+    <a class="card card-effects" href="effects.html">
         <div class="icon">✨</div>
-        <div class="name">粒子星空</div>
-        <div class="desc">引力粒子连线 · 拖拽旋转缩放 · 点击引力</div>
+        <div class="name">特效</div>
+        <div class="desc">视觉互动体验 · 触屏交互</div>
+        <div class="count">2 个特效</div>
     </a>
 
-    <h2 style="font-size:14px;font-weight:400;color:#5a6a85;letter-spacing:3px;margin:24px 0 12px 8px;text-transform:uppercase">🎮 游戏</h2>
-    <a class="card" href="sin.html">
+    <a class="card card-tools" href="sin.html">
         <div class="icon">📐</div>
         <div class="name">三角函数可视化</div>
         <div class="desc">单位圆 · 波形传递 · 动态相位</div>
+        <div class="count">数学工具</div>
     </a>
-    <a class="card" href="2048.html">
-        <div class="icon">🎮</div>
-        <div class="name">2048</div>
-        <div class="desc">经典数字游戏 · 滑动合并 · 挑战 2048</div>
-    </a>
-    <a class="card" href="snake.html">
-        <div class="icon">🐍</div>
-        <div class="name">贪吃蛇</div>
-        <div class="desc">经典街机游戏 · 方向键滑动按钮 · 10级难度</div>
-    </a>
-    <a class="card" href="tetris.html">
-        <div class="icon">🧱</div>
-        <div class="name">俄罗斯方块</div>
-        <div class="desc">经典消除游戏 · 旋转硬降 · 自动升级加速</div>
-    </a>
-    <a class="card" href="minesweeper.html">
-        <div class="icon">💣</div>
-        <div class="name">扫雷</div>
-        <div class="desc">经典逻辑游戏 · 插旗推格子 · 三档难度</div>
-    </a>
-    <a class="card" href="memory.html">
-        <div class="icon">🧠</div>
-        <div class="name">记忆翻牌</div>
-        <div class="desc">配对记忆挑战 · 三种难度 · 最少步数</div>
-    </a>
-    <a class="card" href="breakout.html">
-        <div class="icon">🏓</div>
-        <div class="name">打砖块</div>
-        <div class="desc">经典街机 · 鼠标手指移动挡板 · 消砖得分</div>
-    </a>
-    <a class="card" href="shooter.html">
-        <div class="icon">🛸</div>
-        <div class="name">飞机大战</div>
-        <div class="desc">太空射击 · 拖拽移动 · 自动连射</div>
-    </a>
-    <a class="card" href="gomoku.html">
-        <div class="icon">⚫</div>
-        <div class="name">五子棋</div>
-        <div class="desc">双人对弈 · 人机对战 · AI攻防</div>
-    </a>
-    <a class="card" href="sudoku.html">
-        <div class="icon">🔢</div>
-        <div class="name">数独</div>
-        <div class="desc">经典逻辑填数 · 三档难度 · 提示纠错</div>
+
+    <a class="card card-rank" href="ranking.html">
+        <div class="icon">🏆</div>
+        <div class="name">排行榜</div>
+        <div class="desc">全游戏实时排名 · 跨设备同步</div>
+        <div class="count">30 秒自动刷新</div>
     </a>
 </div>
 </body>
