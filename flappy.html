@@ -4,54 +4,61 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no"><title>Flappy Bird</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#0b0e1a;display:flex;justify-content:center;align-items:center;min-height:100vh;overflow:hidden;touch-action:manipulation;user-select:none;-webkit-user-select:none}
-.game-wrap{position:relative;width:100%;max-width:420px}
-canvas{display:block;width:100%;border-radius:16px;background:linear-gradient(180deg,#4dc9f6,#87CEEB 60%,#8FBC8F 60%,#6B8E6B)}
-.back{position:absolute;top:12px;left:16px;color:rgba(255,255,255,.8);text-decoration:none;font-size:13px;z-index:2;text-shadow:0 1px 2px rgba(0,0,0,.3)}
+body{
+  background:#0b0e1a;display:flex;justify-content:center;align-items:center;
+  min-height:100vh;overflow:hidden;touch-action:manipulation;
+  user-select:none;-webkit-user-select:none;
+}
+.game-wrap{position:relative;width:100%;max-width:760px}
+canvas{display:block;width:100%;height:auto;border-radius:12px}
+.back{position:absolute;top:8px;left:12px;color:rgba(255,255,255,.85);text-decoration:none;font-size:12px;z-index:2;text-shadow:0 1px 2px rgba(0,0,0,.3)}
 .overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
-.overlay .title{font-size:36px;font-weight:800;color:#fff;text-shadow:2px 2px 0 #000;margin-bottom:8px}
-.overlay .score{font-size:48px;color:#ffd700;text-shadow:2px 2px 0 #000}
-.overlay .best{font-size:16px;color:rgba(255,255,255,.7);margin-bottom:16px}
-.overlay button{pointer-events:all;background:#ffd700;border:none;color:#333;padding:12px 36px;border-radius:24px;font-size:18px;font-weight:700;cursor:pointer;box-shadow:0 4px 0 #b8960f;transition:transform .1s}
+.overlay .title{font-size:30px;font-weight:800;color:#fff;text-shadow:2px 2px 0 #000;margin-bottom:8px}
+.overlay .score{font-size:40px;color:#ffd700;text-shadow:2px 2px 0 #000}
+.overlay .best{font-size:14px;color:rgba(255,255,255,.7);margin-bottom:12px}
+.overlay button{pointer-events:all;background:#ffd700;border:none;color:#333;padding:10px 32px;border-radius:20px;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 4px 0 #b8960f;transition:transform .1s}
 .overlay button:active{transform:translateY(2px);box-shadow:0 2px 0 #b8960f}
-.tap-hint{color:rgba(255,255,255,.6);font-size:14px;margin-top:12px;animation:blink 1s infinite}
-@keyframes blink{50%{opacity:.3}}
+.tap-hint{color:rgba(255,255,255,.5);font-size:12px;margin-top:8px;animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.2}}
 </style>
 </head>
 <body>
 <div class="game-wrap">
   <a class="back" href="games.html">← 游戏</a>
   <canvas id="c"></canvas>
-  <div class="overlay" id="overlay">
-    <div class="title">Flappy Bird</div>
-    <button id="btn-start">开始游戏</button>
-    <div class="tap-hint">点击屏幕或按空格飞行</div>
-  </div>
+  <div class="overlay" id="overlay"></div>
 </div>
 
 <script>
 const c=document.getElementById('c'),ctx=c.getContext('2d');
-// 固定游戏分辨率，自适应显示
-const GW=360,GH=600;
-let scale=1;
+// ── 横屏游戏分辨率 ──
+const GW=600,GH=400;
 
 function resize(){
   const wrap=c.parentElement;
-  const w=Math.min(wrap.clientWidth,420);
-  scale=w/GW;
-  c.style.width=w+'px';
-  c.style.height=(GH*scale)+'px';
+  const maxW=Math.min(wrap.clientWidth,760);
+  // 设置真实画布分辨率（决定绘图清晰度）
+  c.width=GW;
+  c.height=GH;
+  // CSS 缩放适配屏幕宽度
+  c.style.width=maxW+'px';
+  c.style.height=(maxW*GH/GW)+'px';
 }
 resize();window.addEventListener('resize',resize);
+// 横屏提示
+window.addEventListener('orientationchange',()=>setTimeout(resize,300));
 
 // ═══════════ 音频 ═══════════
 let audioCtx;
-function initA(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume()}
+function initA(){
+  if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  if(audioCtx.state==='suspended')audioCtx.resume();
+}
 function sndFlap(){
   if(!audioCtx)return;const t=audioCtx.currentTime;
   const o=audioCtx.createOscillator(),g=audioCtx.createGain();
   o.type='sine';o.frequency.setValueAtTime(300,t);o.frequency.linearRampToValueAtTime(600,t+.05);
-  g.gain.setValueAtTime(0.15,t);g.gain.exponentialRampToValueAtTime(0.001,t+.06);
+  g.gain.setValueAtTime(0.12,t);g.gain.exponentialRampToValueAtTime(0.001,t+.06);
   o.connect(g);g.connect(audioCtx.destination);o.start(t);o.stop(t+.08);
 }
 function sndScore(){
@@ -59,25 +66,28 @@ function sndScore(){
   [800,1200].forEach((f,i)=>{
     const o=audioCtx.createOscillator(),g=audioCtx.createGain();
     o.type='sine';o.frequency.setValueAtTime(f,t+i*.06);
-    g.gain.setValueAtTime(0.18,t+i*.06);g.gain.exponentialRampToValueAtTime(0.001,t+i*.06+.12);
+    g.gain.setValueAtTime(0.15,t+i*.06);g.gain.exponentialRampToValueAtTime(0.001,t+i*.06+.12);
     o.connect(g);g.connect(audioCtx.destination);o.start(t+i*.06);o.stop(t+i*.06+.14);
   });
 }
 function sndDie(){
   if(!audioCtx)return;const t=audioCtx.currentTime;
   const o=audioCtx.createOscillator(),g=audioCtx.createGain();
-  o.type='sawtooth';o.frequency.setValueAtTime(200,t);o.frequency.exponentialRampToValueAtTime(50,t+.3);
-  g.gain.setValueAtTime(0.2,t);g.gain.exponentialRampToValueAtTime(0.001,t+.35);
+  o.type='sawtooth';o.frequency.setValueAtTime(200,t);o.frequency.exponentialRampToValueAtTime(40,t+.3);
+  g.gain.setValueAtTime(0.18,t);g.gain.exponentialRampToValueAtTime(0.001,t+.35);
   o.connect(g);g.connect(audioCtx.destination);o.start(t);o.stop(t+.4);
 }
 
-// ═══════════ 游戏状态 ═══════════
-const GRAVITY=0.45,FLAP_VEL=-7.2,PIPE_W=50,PIPE_GAP=140,PIPE_SPEED=2.5,PIPE_SPACING=180;
+// ═══════════ 游戏常量 ═══════════
+const GRAVITY=0.5,FLAP_VEL=-7.5;
+const PIPE_W=52,PIPE_GAP=130,PIPE_SPEED=2.8,PIPE_SPACING=220;
+const GROUND_H=60;  // 地面高度
+
 let bird,best=parseInt(localStorage.getItem('flappy_best')||'0');
 let pipes=[],score,playing,frame,pipeTimer;
 
 function resetGame(){
-  bird={x:80,y:GH/2,vy:0,r:14};
+  bird={x:120,y:GH/2-30,vy:0,r:12};
   pipes=[];score=0;pipeTimer=0;playing=false;
 }
 
@@ -89,90 +99,120 @@ function jump(){
 function update(){
   if(!playing)return;
   bird.vy+=GRAVITY;bird.y+=bird.vy;
-  // 边界
+
+  // 天顶 / 地面
   if(bird.y-bird.r<0){bird.y=bird.r;bird.vy=0}
-  if(bird.y+bird.r>GH*0.6){bird.y=GH*0.6-bird.r;die()}
+  if(bird.y+bird.r>GH-GROUND_H){bird.y=GH-GROUND_H-bird.r;die();return}
 
   // 管道生成
   pipeTimer++;
   if(pipeTimer>PIPE_SPACING/PIPE_SPEED){
     pipeTimer=0;
-    const gapY=100+Math.random()*(GH*0.6-PIPE_GAP-100);
+    const minY=50+Math.random()*40;
+    const maxY=GH-GROUND_H-20;
+    const gapY=minY+Math.random()*(maxY-minY-PIPE_GAP);
     pipes.push({x:GW,gapY,scored:false});
   }
 
-  // 管道移动+碰撞
+  // 管道移动 + 碰撞
   for(let i=pipes.length-1;i>=0;i--){
     pipes[i].x-=PIPE_SPEED;
-    // 得分
-    if(!pipes[i].scored&&pipes[i].x+PIPE_W<bird.x){
-      pipes[i].scored=true;score++;sndScore();
-    }
-    // 碰撞
     const p=pipes[i];
+    // 得分
+    if(!p.scored&&p.x+PIPE_W<bird.x){p.scored=true;score++;sndScore()}
+    // 碰撞（圆形 vs 矩形）
     if(bird.x+bird.r>p.x&&bird.x-bird.r<p.x+PIPE_W){
       if(bird.y-bird.r<p.gapY||bird.y+bird.r>p.gapY+PIPE_GAP)die();
     }
-    if(p.x<-PIPE_W)pipes.splice(i,1);
+    if(p.x<-PIPE_W-20)pipes.splice(i,1);
   }
 }
 
 function die(){
+  if(!playing)return;
   playing=false;sndDie();
   if(score>best){best=score;localStorage.setItem('flappy_best',best)}
   showOverlay(false);
 }
 
+// ═══════════ 绘制 ═══════════
 function draw(){
-  ctx.clearRect(0,0,GW,GH);
+  // 天空渐变
+  const sky=ctx.createLinearGradient(0,0,0,GH-GROUND_H);
+  sky.addColorStop(0,'#4dc9f6');sky.addColorStop(.5,'#87CEEB');sky.addColorStop(1,'#c8e8f8');
+  ctx.fillStyle=sky;ctx.fillRect(0,0,GW,GH-GROUND_H);
 
-  // 地面
-  const groundY=GH*0.6;
-  ctx.fillStyle='#6B8E6B';ctx.fillRect(0,groundY,GW,GH-groundY);
-  ctx.fillStyle='#5a7d5a';ctx.fillRect(0,groundY,GW,3);
+  // 远景云
+  ctx.fillStyle='rgba(255,255,255,.25)';
+  drawCloud(80,60,1);drawCloud(280,90,.7);drawCloud(480,40,.9);
 
   // 管道
   for(const p of pipes){
-    // 上管
+    // 上管身
     const gradUp=ctx.createLinearGradient(p.x,0,p.x+PIPE_W,0);
-    gradUp.addColorStop(0,'#5a9e3e');gradUp.addColorStop(.5,'#7bc74d');gradUp.addColorStop(1,'#4a8a2e');
-    ctx.fillStyle=gradUp;
-    ctx.fillRect(p.x,0,PIPE_W,p.gapY);
-    ctx.fillStyle='#3d7a22';ctx.fillRect(p.x-4,p.gapY-20,PIPE_W+8,20);
-    ctx.fillStyle='#7bc74d';ctx.fillRect(p.x-4,p.gapY-20,PIPE_W+8,3);
+    gradUp.addColorStop(0,'#4a8a2e');gradUp.addColorStop(.4,'#6bc74d');gradUp.addColorStop(1,'#3d7a22');
+    ctx.fillStyle=gradUp;ctx.fillRect(p.x,0,PIPE_W,p.gapY);
+    // 上管口
+    ctx.fillStyle='#3d7a22';ctx.fillRect(p.x-3,p.gapY-22,PIPE_W+6,22);
+    ctx.fillStyle='#7bc74d';ctx.fillRect(p.x-3,p.gapY-22,PIPE_W+6,4);
 
-    // 下管
+    // 下管身
     const gradDown=ctx.createLinearGradient(p.x,0,p.x+PIPE_W,0);
-    gradDown.addColorStop(0,'#5a9e3e');gradDown.addColorStop(.5,'#7bc74d');gradDown.addColorStop(1,'#4a8a2e');
+    gradDown.addColorStop(0,'#4a8a2e');gradDown.addColorStop(.4,'#6bc74d');gradDown.addColorStop(1,'#3d7a22');
     ctx.fillStyle=gradDown;
-    ctx.fillRect(p.x,p.gapY+PIPE_GAP,PIPE_W,groundY-p.gapY-PIPE_GAP);
-    ctx.fillStyle='#3d7a22';ctx.fillRect(p.x-4,p.gapY+PIPE_GAP,PIPE_W+8,20);
-    ctx.fillStyle='#7bc74d';ctx.fillRect(p.x-4,p.gapY+PIPE_GAP,PIPE_W+8,3);
+    const pipeBot=p.gapY+PIPE_GAP;
+    ctx.fillRect(p.x,pipeBot,PIPE_W,GH-GROUND_H-pipeBot);
+    // 下管口
+    ctx.fillStyle='#3d7a22';ctx.fillRect(p.x-3,pipeBot,PIPE_W+6,22);
+    ctx.fillStyle='#7bc74d';ctx.fillRect(p.x-3,pipeBot,PIPE_W+6,4);
+  }
+
+  // 地面
+  const groundGrad=ctx.createLinearGradient(0,GH-GROUND_H,0,GH);
+  groundGrad.addColorStop(0,'#8FBC8F');groundGrad.addColorStop(.1,'#d4a76a');groundGrad.addColorStop(1,'#c4956a');
+  ctx.fillStyle=groundGrad;ctx.fillRect(0,GH-GROUND_H,GW,GROUND_H);
+  ctx.fillStyle='#7aaf7a';ctx.fillRect(0,GH-GROUND_H,GW,3);
+  // 草地纹理
+  ctx.fillStyle='#a0d0a0';
+  for(let i=0;i<GW;i+=30){
+    ctx.beginPath();ctx.moveTo(i,GH-GROUND_H);ctx.lineTo(i+6,GH-GROUND_H-8);ctx.lineTo(i+12,GH-GROUND_H);ctx.fill();
   }
 
   // 鸟
   ctx.save();ctx.translate(bird.x,bird.y);
-  const tilt=Math.min(Math.max(bird.vy*3,-30),30);
+  const tilt=Math.min(Math.max(bird.vy*3.5,-30),30);
   ctx.rotate(tilt*Math.PI/180);
   // 身体
-  ctx.fillStyle='#ffd700';ctx.beginPath();ctx.arc(0,0,bird.r,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#ff8c00';ctx.beginPath();ctx.arc(2,-2,bird.r*.7,0,Math.PI*2);ctx.fill();
-  // 眼
-  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(4,-6,bird.r*.35,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#000';ctx.beginPath();ctx.arc(6,-6,bird.r*.15,0,Math.PI*2);ctx.fill();
+  const bodyGrad=ctx.createRadialGradient(0,-2,bird.r*.3,0,0,bird.r);
+  bodyGrad.addColorStop(0,'#ffe066');bodyGrad.addColorStop(1,'#f59e0b');
+  ctx.fillStyle=bodyGrad;ctx.beginPath();ctx.arc(0,0,bird.r,0,Math.PI*2);ctx.fill();
+  // 腹部
+  ctx.fillStyle='#fef3c7';ctx.beginPath();ctx.arc(0,3,bird.r*.65,0,Math.PI*2);ctx.fill();
+  // 眼白
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(5,-5,bird.r*.38,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#111';ctx.beginPath();ctx.arc(7,-5,bird.r*.16,0,Math.PI*2);ctx.fill();
   // 嘴
-  ctx.fillStyle='#ff4444';ctx.beginPath();ctx.moveTo(bird.r*.8,-2);ctx.lineTo(bird.r*1.6,0);ctx.lineTo(bird.r*.8,4);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#ff5e3a';ctx.beginPath();ctx.moveTo(bird.r*.7,-1);ctx.lineTo(bird.r*1.6,1);ctx.lineTo(bird.r*.7,5);ctx.closePath();ctx.fill();
   // 翅膀
-  ctx.fillStyle='#ffa500';ctx.beginPath();ctx.ellipse(-5,4,10,5,-.3,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#e5900b';ctx.beginPath();ctx.ellipse(-4,2,9,4,-.3,0,Math.PI*2);ctx.fill();
   ctx.restore();
 
   // 分数
-  ctx.fillStyle='#fff';ctx.font='bold 48px sans-serif';ctx.textAlign='center';
-  ctx.shadowColor='rgba(0,0,0,.5)';ctx.shadowBlur=4;
-  ctx.fillText(score,GW/2,60);
+  ctx.fillStyle='#fff';ctx.font='bold 44px sans-serif';ctx.textAlign='center';
+  ctx.shadowColor='rgba(0,0,0,.4)';ctx.shadowBlur=3;
+  ctx.fillText(score,GW/2,56);
   ctx.shadowBlur=0;
 }
 
+function drawCloud(cx,cy,s){
+  ctx.beginPath();ctx.arc(cx,cy,20*s,0,Math.PI*2);
+  ctx.arc(cx+22*s,cy-8*s,16*s,0,Math.PI*2);
+  ctx.arc(cx+40*s,cy,18*s,0,Math.PI*2);
+  ctx.arc(cx+16*s,cy+4*s,14*s,0,Math.PI*2);
+  ctx.fill();
+}
+
+// ═══════════ 游戏循环 ═══════════
 function loop(){
   update();draw();
   frame=requestAnimationFrame(loop);
@@ -181,7 +221,7 @@ function loop(){
 function showOverlay(isStart){
   const ov=document.getElementById('overlay');
   if(isStart){
-    ov.innerHTML=`<div class="title">Flappy Bird</div><button id="btn-start">开始游戏</button><div class="tap-hint">点击屏幕或按空格飞行</div>`;
+    ov.innerHTML=`<div class="title">Flappy Bird</div><button id="btn-start">开始游戏</button><div class="tap-hint">点击屏幕 · 空格键飞行</div>`;
   }else{
     ov.innerHTML=`<div class="score">${score}</div><div class="best">最高分: ${best}</div><button id="btn-start">再来一次</button>`;
   }
@@ -189,15 +229,25 @@ function showOverlay(isStart){
 }
 
 function startGame(){
-  initA();resetGame();playing=true;pipeTimer=PIPE_SPACING/PIPE_SPEED-10;
+  initA();resetGame();playing=true;
+  pipeTimer=PIPE_SPACING/PIPE_SPEED-5;
   document.getElementById('overlay').innerHTML='';
   if(!frame)loop();
 }
 
-// 事件
-c.addEventListener('pointerdown',(e)=>{e.preventDefault();if(!playing)startGame();else jump()});
-document.addEventListener('keydown',(e)=>{if(e.code==='Space'){e.preventDefault();if(!playing)startGame();else jump()}});
+// ═══════════ 事件 ═══════════
+c.addEventListener('pointerdown',(e)=>{
+  e.preventDefault();
+  if(!playing)startGame();else jump();
+});
+document.addEventListener('keydown',(e)=>{
+  if(e.code==='Space'){
+    e.preventDefault();
+    if(!playing)startGame();else jump();
+  }
+});
 
+// 启动
 resetGame();draw();showOverlay(true);
 </script>
 </body>
