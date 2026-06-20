@@ -132,7 +132,21 @@
 
     <div class="toolbar">
         <button class="btn primary" id="restartBtn">⟳ 重新开始</button>
-        <span class="hint">方向键 / 滑动 / 按钮</span>
+        <div class="control-item">
+            <label>难度</label>
+            <select id="diffSelect" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:#b0c4e0;padding:6px 12px;border-radius:20px;font-size:13px;cursor:pointer;">
+                <option value="1">1 · 入门</option>
+                <option value="2">2 · 简单</option>
+                <option value="3">3 · 普通</option>
+                <option value="4" selected>4 · 中等</option>
+                <option value="5">5 · 进阶</option>
+                <option value="6">6 · 困难</option>
+                <option value="7">7 · 极难</option>
+                <option value="8">8 · 噩梦</option>
+                <option value="9">9 · 地狱</option>
+                <option value="10">10 · 不可能</option>
+            </select>
+        </div>
     </div>
 
     <div class="game-wrapper" id="gameWrapper">
@@ -174,9 +188,10 @@
     const CELL = 20;
     const COLS = 20;
     const ROWS = 20;
-    const BASE_SPEED = 100;
+    // 难度 1→200ms, 5→120ms, 10→60ms
+    function speedForDiff(d) { return Math.round(220 - (d - 1) * 18); }
 
-    let snake, food, direction, nextDirection, score, bestScore, gameOver, paused, gameLoop, speed;
+    let snake, food, direction, nextDirection, score, bestScore, gameOver, paused, gameLoop, speed, difficulty;
 
     // ===== localStorage =====
     function loadBest() { try { return parseInt(localStorage.getItem('snake_best')) || 0; } catch { return 0; } }
@@ -184,6 +199,7 @@
 
     // ===== 初始化 =====
     function init() {
+        difficulty = parseInt(document.getElementById('diffSelect').value);
         const mid = Math.floor(COLS / 2);
         snake = [
             { x: mid, y: Math.floor(ROWS / 2) },
@@ -195,7 +211,7 @@
         score = 0;
         gameOver = false;
         paused = false;
-        speed = BASE_SPEED;
+        speed = speedForDiff(difficulty);
         placeFood();
         updateScore();
         hideOverlay();
@@ -246,7 +262,8 @@
                 score += 10;
                 placeFood();
                 updateScore();
-                speed = Math.max(40, BASE_SPEED - Math.floor(score / 50) * 5);
+                const base = speedForDiff(difficulty);
+                speed = Math.max(30, base - Math.floor(score / 50) * 3);
             } else {
                 snake.pop();
             }
