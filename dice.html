@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>骰子工具箱</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0b0e1a;font-family:system-ui,sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;color:#e0e8f0;padding:20px;user-select:none}
+.c{max-width:400px;width:100%;text-align:center}
+.back{color:#6a7a95;text-decoration:none;font-size:13px;letter-spacing:1px;display:inline-block;margin-bottom:20px}
+.back:hover{color:#a78bfa}
+h1{font-size:20px;font-weight:300;letter-spacing:3px;color:#a78bfa;margin-bottom:16px}
+.results{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:16px 0;min-height:60px;align-items:center}
+.die-res{width:50px;height:50px;background:linear-gradient(135deg,#f5f5f5,#ddd);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#333;box-shadow:0 3px 8px rgba(0,0,0,.3);animation:pop .2s ease}
+@keyframes pop{0%{transform:scale(1.5)}100%{transform:scale(1)}}
+.total{font-size:18px;color:#fbbf24;min-height:24px}
+.btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:12px 0}
+.dice-btn{width:60px;height:60px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);cursor:pointer;font-size:24px;transition:all .15s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.dice-btn:active{transform:scale(.9);background:rgba(255,255,255,.1)}
+.dice-btn .l{font-size:9px;color:#6a7a95}
+.custom{display:flex;gap:8px;justify-content:center;align-items:center;margin:8px 0}
+.custom input{width:50px;background:rgba(18,26,42,.8);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:8px;color:#e0e8f0;font-size:14px;text-align:center}
+.custom button{background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.2);color:#a78bfa;padding:8px 14px;border-radius:10px;font-size:13px;cursor:pointer}
+.coin{font-size:60px;cursor:pointer;transition:transform .3s}
+.coin:active{transform:scale(.8)}
+.coin.flip{animation:flip .6s ease}
+@keyframes flip{0%{transform:rotateY(0)}100%{transform:rotateY(720deg)}}
+</style>
+</head>
+<body>
+<div class="c">
+  <a class="back" href="tools.html">← 工具</a>
+  <h1>🎲 骰子工具箱</h1>
+  <div class="results" id="results"></div>
+  <div class="total" id="total"></div>
+  <div class="btns">
+    <button class="dice-btn" onclick="roll(4)"><span class="l">D4</span>⚃</button>
+    <button class="dice-btn" onclick="roll(6)"><span class="l">D6</span>⚅</button>
+    <button class="dice-btn" onclick="roll(8)"><span class="l">D8</span>🎱</button>
+    <button class="dice-btn" onclick="roll(10)"><span class="l">D10</span>🔟</button>
+    <button class="dice-btn" onclick="roll(12)"><span class="l">D12</span>🕛</button>
+    <button class="dice-btn" onclick="roll(20)"><span class="l">D20</span>💎</button>
+  </div>
+  <div class="custom">
+    <input type="number" id="sides" value="100" min="2" max="999"> 面骰
+    <button onclick="roll(parseInt(document.getElementById('sides').value)||6)">🎯 掷</button>
+  </div>
+  <div style="margin-top:10px">
+    <span class="coin" onclick="flipCoin()" id="coin">🪙</span>
+    <div style="font-size:12px;color:#6a7a95;margin-top:4px" id="coin-res">点击硬币</div>
+  </div>
+  <div class="btns" style="margin-top:10px">
+    <button onclick="randNum()">🔢 随机数</button>
+    <button onclick="shuffleList()">🔀 乱序</button>
+  </div>
+</div>
+<script>
+let lastRolls=[];
+function roll(sides){
+  const r=Math.floor(Math.random()*sides)+1;
+  lastRolls=[r];
+  showResults(sides);
+}
+function showResults(sides){
+  document.getElementById('results').innerHTML=lastRolls.map(r=>`<div class="die-res">${r}</div>`).join('');
+  document.getElementById('total').textContent=lastRolls.length>1?'总和: '+lastRolls.reduce((a,b)=>a+b,0):'';
+}
+function flipCoin(){
+  const r=Math.random()<.5?'正面':'反面';
+  document.getElementById('coin-res').textContent=r;
+  const el=document.getElementById('coin');el.classList.remove('flip');void el.offsetWidth;el.classList.add('flip');
+}
+function randNum(){
+  const min=parseInt(prompt('最小值:',1))||1;
+  const max=parseInt(prompt('最大值:',100))||100;
+  const r=Math.floor(Math.random()*(max-min+1))+min;
+  lastRolls=[r];showResults();
+  document.getElementById('total').textContent='随机数: '+r;
+}
+function shuffleList(){
+  const items=prompt('输入要乱序的内容，用逗号分隔:','A,B,C,D,E');
+  if(!items)return;
+  const arr=items.split(',').map(s=>s.trim());
+  for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]]}
+  alert('乱序结果:\n'+arr.join(', '));
+}
+</script>
+</body>
+</html>

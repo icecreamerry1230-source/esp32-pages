@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>抽奖转盘</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0b0e1a;font-family:system-ui,sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;color:#e0e8f0;padding:20px}
+.c{max-width:400px;width:100%;text-align:center}
+.back{color:#6a7a95;text-decoration:none;font-size:13px;letter-spacing:1px;display:inline-block;margin-bottom:12px}
+.back:hover{color:#a78bfa}
+canvas{display:block;margin:0 auto}
+.result{font-size:22px;font-weight:600;margin:10px 0;min-height:32px;color:#fbbf24}
+.btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+button{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:#c0c8d0;padding:8px 16px;border-radius:12px;font-size:13px;cursor:pointer}
+button:active{transform:scale(.95)}
+.btn-spin{background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.25);color:#fbbf24;font-size:16px;padding:10px 28px}
+textarea{width:100%;height:60px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#c0c8d0;padding:8px;font-size:12px;margin:8px 0;resize:none;font-family:inherit}
+</style>
+</head>
+<body>
+<div class="c">
+  <a class="back" href="tools.html">← 工具</a>
+  <h1 style="font-size:20px;font-weight:300;letter-spacing:3px;color:#a78bfa;margin-bottom:8px">🎰 抽奖转盘</h1>
+  <canvas id="cv" width="360" height="360"></canvas>
+  <div class="result" id="res">点击转盘或下方按钮开始</div>
+  <div class="btns">
+    <button class="btn-spin" onclick="spin()">🎯 转动</button>
+    <button onclick="reset()">🔄 重置</button>
+  </div>
+  <textarea id="ta" onchange="buildItems()" placeholder="每行一个选项&#10;例如：&#10;火锅&#10;烧烤&#10;日料&#10;汉堡">火锅
+烧烤
+日料
+汉堡
+披萨
+麻辣烫</textarea>
+</div>
+<script>
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+let items=[],angle=0,spinning=false,speed=0;
+const colors=['#ef4444','#f97316','#fbbf24','#4ade80','#60a5fa','#a78bfa','#f472b6','#34d399','#fb923c','#818cf8'];
+
+function buildItems(){
+  items=document.getElementById('ta').value.split('\n').filter(l=>l.trim());
+  draw();
+}
+function draw(){
+  const cx=180,cy=180,r=160;
+  ctx.clearRect(0,0,360,360);
+  if(items.length===0)return;
+  const slice=Math.PI*2/items.length;
+  for(let i=0;i<items.length;i++){
+    ctx.beginPath();ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,angle+slice*i,angle+slice*(i+1));
+    ctx.closePath();ctx.fillStyle=colors[i%colors.length];ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.3)';ctx.lineWidth=2;ctx.stroke();
+    ctx.save();ctx.translate(cx,cy);ctx.rotate(angle+slice*(i+.5));
+    ctx.fillStyle='#fff';ctx.font='bold 14px sans-serif';ctx.textAlign='center';
+    ctx.fillText(items[i].length>6?items[i].slice(0,6)+'..':items[i],r*.55,5);
+    ctx.restore();
+  }
+  // 指针
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(cx+r-10,cy-5);ctx.lineTo(cx+r+15,cy);ctx.lineTo(cx+r-10,cy+5);ctx.closePath();ctx.fill();
+}
+function spin(){
+  if(spinning||items.length<2)return;
+  spinning=true;speed=8+Math.random()*12;
+  document.getElementById('res').textContent='转动中...';
+  requestAnimationFrame(animSpin);
+}
+function animSpin(){
+  if(!spinning)return;
+  angle+=speed;speed*=.985;draw();
+  if(speed<.1){spinning=false;const slice=Math.PI*2/items.length;
+    const ang=((Math.PI*2-angle)%(Math.PI*2));
+    const idx=items.length-1-Math.floor(ang/slice);
+    document.getElementById('res').textContent='🎉 '+items[idx%items.length]+'！';
+  }else requestAnimationFrame(animSpin);
+}
+function reset(){angle=0;spinning=false;document.getElementById('res').textContent='点击转盘开始';draw()}
+cv.addEventListener('click',spin);
+buildItems();
+</script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>像素画板</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0b0e1a;font-family:system-ui,sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;color:#e0e8f0;padding:10px;user-select:none;touch-action:manipulation}
+.c{text-align:center}
+.back{color:#6a7a95;text-decoration:none;font-size:13px;letter-spacing:1px;display:inline-block;margin-bottom:8px}
+.back:hover{color:#a78bfa}
+canvas{display:block;margin:0 auto;border:1px solid rgba(255,255,255,.1);cursor:crosshair;image-rendering:pixelated;image-rendering:crisp-edges}
+.btns{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:8px 0}
+button{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:#c0c8d0;padding:6px 12px;border-radius:10px;font-size:12px;cursor:pointer}
+button:active{transform:scale(.95)}
+.palette{display:flex;gap:4px;justify-content:center;flex-wrap:wrap;margin:4px 0}
+.swatch{width:22px;height:22px;border-radius:4px;cursor:pointer;border:2px solid transparent}
+.swatch.on{border-color:#fff}
+</style>
+</head>
+<body>
+<div class="c">
+  <a class="back" href="tools.html">← 工具</a>
+  <canvas id="cv"></canvas>
+  <div class="palette" id="pal"></div>
+  <div class="btns">
+    <button onclick="clearGrid()">🗑 清空</button>
+    <button onclick="save()">💾 导出</button>
+    <button onclick="load()">📂 导入</button>
+    <button onclick="changeSize()">📏 尺寸</button>
+  </div>
+</div>
+<script>
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const PALETTE=['#fff','#000','#ef4444','#f97316','#fbbf24','#4ade80','#60a5fa','#a78bfa','#f472b6','#8B5CF6','#ddd','#888','#555','#6B3A20','#ff9999','#99ccff'];
+let grid=[],sz=16,cellW,curColor='#fff',drawing=false;
+
+function initGrid(){
+  grid=[];for(let r=0;r<sz;r++){grid[r]=Array(sz).fill(null)}
+  cellW=Math.floor(Math.min(360,window.innerWidth-40)/sz);
+  cv.width=cv.height=cellW*sz;
+  cv.style.width=cv.style.height=cellW*sz+'px';
+}
+function drawGrid(){
+  for(let r=0;r<sz;r++)for(let c=0;c<sz;c++){
+    ctx.fillStyle=grid[r][c]||'#1a2542';
+    ctx.fillRect(c*cellW,r*cellW,cellW,cellW);
+  }
+  // 网格线
+  ctx.strokeStyle='rgba(255,255,255,.04)';ctx.lineWidth=.5;
+  for(let i=0;i<=sz;i++){ctx.beginPath();ctx.moveTo(i*cellW,0);ctx.lineTo(i*cellW,sz*cellW);ctx.stroke();ctx.beginPath();ctx.moveTo(0,i*cellW);ctx.lineTo(sz*cellW,i*cellW);ctx.stroke()}
+}
+function paint(e){
+  const rect=cv.getBoundingClientRect();const x=e.clientX-rect.left,y=e.clientY-rect.top;
+  const col=Math.floor(x/cellW),row=Math.floor(y/cellW);
+  if(col>=0&&col<sz&&row>=0&&row<sz){grid[row][col]=curColor;drawGrid()}
+}
+cv.addEventListener('pointerdown',e=>{drawing=true;paint(e)});
+cv.addEventListener('pointermove',e=>{if(drawing)paint(e)});
+cv.addEventListener('pointerup',()=>drawing=false);
+document.getElementById('pal').innerHTML=PALETTE.map((c,i)=>`<div class="swatch${i===0?' on':''}" style="background:${c}" data-c="${c}" onclick="pick(this)"></div>`).join('');
+function pick(el){curColor=el.dataset.c;document.querySelectorAll('.swatch').forEach(s=>s.classList.toggle('on',s===el))}
+function clearGrid(){grid=[];for(let r=0;r<sz;r++){grid[r]=Array(sz).fill(null)}drawGrid()}
+function save(){
+  initGrid();drawGrid();const a=document.createElement('a');a.download='pixel.png';a.href=cv.toDataURL();a.click();initGrid();
+  for(let r=0;r<sz;r++)for(let c=0;c<sz;c++)grid[r][c]=null;
+  initGrid();drawGrid();
+}
+function load(){const input=document.createElement('input');input.type='file';input.accept='image/*';input.onchange=e=>{const file=e.target.files[0];if(!file)return;const img=new Image();img.onload=()=>{const tmp=document.createElement('canvas');tmp.width=sz;tmp.height=sz;const tctx=tmp.getContext('2d');tctx.drawImage(img,0,0,sz,sz);const data=tctx.getImageData(0,0,sz,sz).data;grid=[];for(let r=0;r<sz;r++){grid[r]=[];for(let c=0;c<sz;c++){const i=(r*sz+c)*4;const hex='#'+[data[i],data[i+1],data[i+2]].map(v=>v.toString(16).padStart(2,'0')).join('');grid[r][c]=PALETTE.includes(hex)?hex:null}}initGrid();drawGrid()};img.src=URL.createObjectURL(file)};input.click()}
+function changeSize(){const s=prompt('格数 (8-32):',sz);if(s){sz=Math.max(8,Math.min(32,parseInt(s)||16));initGrid();drawGrid()}}
+initGrid();drawGrid();
+</script>
+</body>
+</html>

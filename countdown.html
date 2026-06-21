@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>倒计时器</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0b0e1a;font-family:system-ui,sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;color:#e0e8f0;padding:20px;user-select:none}
+.c{max-width:400px;width:100%;text-align:center}
+.back{color:#6a7a95;text-decoration:none;font-size:13px;letter-spacing:1px;display:inline-block;margin-bottom:20px}
+.back:hover{color:#a78bfa}
+h1{font-size:20px;font-weight:300;letter-spacing:3px;color:#a78bfa;margin-bottom:20px}
+.big{font-size:56px;font-weight:300;letter-spacing:2px;margin:20px 0}
+.big .unit{font-size:14px;color:#6a7a95;margin:0 4px}
+.label{font-size:14px;color:#6a7a95;margin-bottom:12px}
+.picker{display:flex;gap:6px;justify-content:center;margin:12px 0}
+.picker input{width:60px;background:rgba(18,26,42,.8);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:8px;color:#e0e8f0;font-size:16px;text-align:center}
+.picker span{color:#6a7a95;line-height:36px}
+.btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+button{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:#c0c8d0;padding:10px 20px;border-radius:12px;font-size:14px;cursor:pointer}
+button:active{transform:scale(.95)}
+.btn-go{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.25);color:#ef4444}
+.presets{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:12px 0}
+.presets button{font-size:11px;padding:5px 12px}
+.presets button.on{background:rgba(167,139,250,.1);border-color:rgba(167,139,250,.25);color:#a78bfa}
+</style>
+</head>
+<body>
+<div class="c">
+  <a class="back" href="tools.html">← 工具</a>
+  <h1>⏱️ 倒计时器</h1>
+  <div class="big" id="big">00<span class="unit">天</span>00<span class="unit">时</span>00<span class="unit">分</span>00<span class="unit">秒</span></div>
+  <div class="label" id="lbl">设定目标时间</div>
+  <div class="picker">
+    <input type="datetime-local" id="dt" onchange="update()">
+  </div>
+  <div class="btns">
+    <button class="btn-go" id="btn" onclick="toggle()">▶ 开始</button>
+    <button onclick="rst()">🔄 重置</button>
+  </div>
+  <div class="presets">
+    <button onclick="setPreset(1)">1分钟</button>
+    <button onclick="setPreset(5)">5分钟</button>
+    <button onclick="setPreset(25)">25分钟</button>
+    <button onclick="setPreset(60)">1小时</button>
+  </div>
+</div>
+<script>
+let target=null,intv=null,running=false;
+function update(){
+  const v=document.getElementById('dt').value;
+  if(v)target=new Date(v).getTime();
+  refresh();
+}
+function refresh(){
+  if(!target){document.getElementById('big').innerHTML='00<span class="unit">天</span>00<span class="unit">时</span>00<span class="unit">分</span>00<span class="unit">秒</span>';return}
+  const diff=Math.max(0,target-Date.now());
+  if(diff<=0&&running){stop();beep();document.getElementById('lbl').textContent='⏰ 时间到！';return}
+  const d=Math.floor(diff/86400000),h=Math.floor((diff%86400000)/3600000),m=Math.floor((diff%3600000)/60000),s=Math.floor((diff%60000)/1000);
+  document.getElementById('big').innerHTML=`${String(d).padStart(2,'0')}<span class="unit">天</span>${String(h).padStart(2,'0')}<span class="unit">时</span>${String(m).padStart(2,'0')}<span class="unit">分</span>${String(s).padStart(2,'0')}<span class="unit">秒</span>`;
+  document.getElementById('lbl').textContent=target?new Date(target).toLocaleString():'';
+}
+function toggle(){
+  if(!target){alert('请先设定目标时间');return}
+  if(running){stop();return}
+  running=true;document.getElementById('btn').textContent='⏸ 暂停';intv=setInterval(refresh,200);
+}
+function stop(){running=false;clearInterval(intv);document.getElementById('btn').textContent='▶ 开始'}
+function rst(){stop();target=null;document.getElementById('dt').value='';refresh();document.getElementById('lbl').textContent='设定目标时间'}
+function setPreset(min){
+  target=Date.now()+min*60000;running=false;stop();
+  document.getElementById('dt').value=new Date(target).toISOString().slice(0,16);
+  refresh();toggle();
+}
+function beep(){
+  try{const a=new(window.AudioContext||window.webkitAudioContext)();const o=a.createOscillator(),g=a.createGain();o.type='sine';o.frequency.setValueAtTime(800,a.currentTime);g.gain.setValueAtTime(.2,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.5);o.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+.5)}catch(e){}
+}
+refresh();
+</script>
+</body>
+</html>

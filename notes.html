@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>便签墙</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#1a1520;font-family:system-ui,sans-serif;min-height:100vh;color:#e0e8f0;padding:16px;user-select:none}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.back{color:#6a7a95;text-decoration:none;font-size:13px;letter-spacing:1px}
+.back:hover{color:#a78bfa}
+button{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:#c0c8d0;padding:8px 16px;border-radius:10px;font-size:13px;cursor:pointer}
+button:active{transform:scale(.95)}
+.wall{display:flex;flex-wrap:wrap;gap:12px}
+.note{width:160px;min-height:140px;padding:14px;border-radius:4px 4px 12px 4px;position:relative;cursor:move;box-shadow:3px 3px 8px rgba(0,0,0,.3);transition:box-shadow .2s}
+.note:hover{box-shadow:5px 5px 16px rgba(0,0,0,.5)}
+.note textarea{width:100%;height:100px;background:transparent;border:none;outline:none;resize:none;font-size:13px;color:rgba(0,0,0,.7);font-family:inherit;line-height:1.5}
+.note .del{position:absolute;top:4px;right:8px;cursor:pointer;opacity:.4;font-size:16px}
+.note .del:hover{opacity:1}
+.colors{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.color{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2px solid transparent}
+.color.on{border-color:#fff}
+</style>
+</head>
+<body>
+<div class="top">
+  <a class="back" href="tools.html">← 工具</a>
+  <h1 style="font-size:18px;font-weight:300;letter-spacing:2px;color:#a78bfa">📝 便签墙</h1>
+  <button onclick="add()">+ 新建便签</button>
+</div>
+<div class="colors" id="colors"></div>
+<div class="wall" id="wall"></div>
+<script>
+const CLRS=['#fef3c7','#fce7f3','#dbeafe','#d1fae5','#fef9c3','#ede9fe','#ffe4e6'];
+let notes=JSON.parse(localStorage.getItem('sticky_notes')||'[{"c":0,"t":"双击编辑文字","x":0,"y":0}]');
+let curColor=0;
+function save(){localStorage.setItem('sticky_notes',JSON.stringify(notes))}
+function render(){
+  const w=document.getElementById('wall');
+  w.innerHTML=notes.map((n,i)=>`<div class="note" style="background:${CLRS[n.c||0]};transform:translate(${n.x||0}px,${n.y||0}px)" data-i="${i}">
+    <span class="del" onclick="del(${i})">×</span>
+    <textarea onchange="edit(${i},this.value)" onblur="save()">${n.t||''}</textarea>
+  </div>`).join('');
+  // 拖拽
+  document.querySelectorAll('.note').forEach(el=>{
+    let dx,dy,startX,startY;
+    el.addEventListener('pointerdown',e=>{if(e.target.tagName==='TEXTAREA')return;el.setPointerCapture(e.pointerId);dx=el.getBoundingClientRect().left-e.clientX;dy=el.getBoundingClientRect().top-e.clientY});
+    el.addEventListener('pointermove',e=>{if(!el.hasPointerCapture(e.pointerId))return;const nx=e.clientX+dx,ny=e.clientY+dy;const i=parseInt(el.dataset.i);notes[i].x=Math.round(nx);notes[i].y=Math.round(ny);el.style.transform=`translate(${notes[i].x}px,${notes[i].y}px)`});
+    el.addEventListener('pointerup',e=>{el.releasePointerCapture(e.pointerId);save()});
+  });
+}
+document.getElementById('colors').innerHTML=CLRS.map((c,i)=>`<div class="color${i===curColor?' on':''}" style="background:${c}" onclick="curColor=${i};renderColors();render()"></div>`).join('');
+function renderColors(){document.querySelectorAll('.color').forEach((el,i)=>el.classList.toggle('on',i===curColor))}
+function add(){notes.push({c:curColor,t:'',x:Math.random()*20,y:Math.random()*20});save();render()}
+function del(i){notes.splice(i,1);save();render()}
+function edit(i,v){notes[i].t=v;save()}
+renderColors();render();
+</script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>番茄钟</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0b0e1a;font-family:system-ui,sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;color:#e0e8f0;padding:20px;user-select:none}
+.c{max-width:400px;width:100%;text-align:center}
+.back{color:#6a7a95;text-decoration:none;font-size:13px;letter-spacing:1px;display:inline-block;margin-bottom:20px}
+.back:hover{color:#a78bfa}
+.ring{width:200px;height:200px;border-radius:50%;margin:0 auto 20px;border:4px solid rgba(239,68,68,.2);display:flex;align-items:center;justify-content:center;position:relative}
+.ring::before{content:'';position:absolute;inset:-4px;border-radius:50%;border:4px solid #ef4444;border-top-color:transparent;animation:spin 2s linear infinite;opacity:0;transition:opacity .3s}
+.ring.on::before{opacity:1}
+@keyframes spin{to{transform:rotate(360deg)}}
+.time{font-size:48px;font-weight:300;letter-spacing:2px;font-variant-numeric:tabular-nums}
+.label{font-size:14px;color:#6a7a95;margin-bottom:12px}
+.btns{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+button{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:#c0c8d0;padding:10px 20px;border-radius:14px;font-size:14px;cursor:pointer;transition:all .15s}
+button:active{transform:scale(.95)}
+.btn-go{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.25);color:#ef4444;font-size:18px;padding:12px 36px}
+.btn-go.break{background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.25);color:#4ade80}
+.sessions{margin-top:16px;font-size:12px;color:#5a6a85}
+.sessions span{font-size:20px;color:#fbbf24;margin:0 4px}
+.presets{display:flex;gap:6px;justify-content:center;margin:10px 0}
+.presets button{font-size:11px;padding:4px 10px}
+.presets button.on{background:rgba(167,139,250,.12);border-color:rgba(167,139,250,.25);color:#a78bfa}
+</style>
+</head>
+<body>
+<div class="c">
+  <a class="back" href="tools.html">← 工具</a>
+  <h1 style="font-size:20px;font-weight:300;letter-spacing:3px;color:#a78bfa;margin-bottom:20px">🍅 番茄钟</h1>
+  <div class="ring" id="ring"><div class="time" id="time">25:00</div></div>
+  <div class="label" id="label">专注时间</div>
+  <div class="presets">
+    <button class="on" onclick="setDur(25)">25分</button>
+    <button onclick="setDur(45)">45分</button>
+    <button onclick="setDur(15)">15分</button>
+  </div>
+  <div class="btns">
+    <button class="btn-go" id="btn" onclick="toggle()">▶ 开始</button>
+    <button onclick="reset()">↺ 重置</button>
+  </div>
+  <div class="sessions">今日完成 <span id="cnt">0</span> 个番茄</div>
+</div>
+<script>
+let dur=25*60,left=dur,on=false,sess=parseInt(localStorage.getItem('pomo_today')||'0'),date=localStorage.getItem('pomo_date');
+const today=new Date().toDateString();
+if(date!==today){sess=0;localStorage.setItem('pomo_date',today);localStorage.setItem('pomo_today','0')}
+let intv;
+let audioCtx;
+function beep(){
+  try{
+    if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    const t=audioCtx.currentTime;
+    [800,1000,1200].forEach((f,i)=>setTimeout(()=>{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sine';o.frequency.setValueAtTime(f,audioCtx.currentTime);g.gain.setValueAtTime(.15,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.3);o.connect(g);g.connect(audioCtx.destination);o.start(audioCtx.currentTime);o.stop(audioCtx.currentTime+.35)},i*300));
+  }catch(e){}
+}
+function tick(){
+  if(left<=0){stop();beep();sess++;localStorage.setItem('pomo_today',sess);document.getElementById('cnt').textContent=sess;document.getElementById('label').textContent='✅ 完成！休息一下吧';return}
+  left--;updateTime();
+}
+function updateTime(){const m=Math.floor(left/60),s=left%60;document.getElementById('time').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')}
+function toggle(){
+  if(on){stop();return}
+  on=true;document.getElementById('ring').classList.add('on');document.getElementById('btn').textContent='⏸ 暂停';document.getElementById('btn').classList.add('break');intv=setInterval(tick,1000);
+}
+function stop(){on=false;clearInterval(intv);document.getElementById('ring').classList.remove('on');document.getElementById('btn').textContent='▶ 开始';document.getElementById('btn').classList.remove('break')}
+function reset(){stop();left=dur;updateTime();document.getElementById('label').textContent='专注时间'}
+function setDur(d){dur=d*60;reset();document.querySelectorAll('.presets button').forEach(b=>b.classList.toggle('on',b.textContent===d+'分'))}
+document.getElementById('cnt').textContent=sess;
+updateTime();
+</script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>记账本</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0b0e1a;font-family:system-ui,sans-serif;min-height:100vh;color:#e0e8f0;padding:16px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.back{color:#6a7a95;text-decoration:none;font-size:13px;letter-spacing:1px}
+.back:hover{color:#a78bfa}
+h1{font-size:18px;font-weight:300;letter-spacing:2px;color:#a78bfa}
+.summary{display:flex;gap:12px;margin-bottom:12px}
+.sum{flex:1;background:rgba(18,26,42,.8);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:12px;text-align:center}
+.sum .n{font-size:22px;font-weight:600}.sum .t{font-size:11px;color:#6a7a95;margin-top:2px}
+.in{color:#4ade80}.out{color:#ef4444}
+.add-row{display:flex;gap:8px;margin-bottom:8px}
+.add-row input,.add-row select{background:rgba(18,26,42,.8);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px;color:#e0e8f0;font-size:13px;outline:none}
+.add-row input:nth-child(2){flex:1}
+.add-row button{background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.2);color:#4ade80;padding:10px 16px;border-radius:10px;font-size:13px;cursor:pointer}
+.list{max-height:50vh;overflow-y:auto}
+.item{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.03);font-size:13px}
+.item .cat{font-size:10px;color:#6a7a95;margin-right:8px}
+.item .amt{font-weight:600}
+.item .del{cursor:pointer;opacity:.3;font-size:14px}
+.item .del:hover{opacity:1}
+</style>
+</head>
+<body>
+<div class="top">
+  <a class="back" href="tools.html">← 工具</a>
+  <h1>📊 记账本</h1>
+</div>
+<div class="summary">
+  <div class="sum"><div class="n in" id="inc">0</div><div class="t">收入</div></div>
+  <div class="sum"><div class="n out" id="exp">0</div><div class="t">支出</div></div>
+  <div class="sum"><div class="n" id="bal">0</div><div class="t">结余</div></div>
+</div>
+<div class="add-row">
+  <select id="type"><option value="out">💸 支出</option><option value="in">💰 收入</option></select>
+  <input type="number" id="amount" placeholder="金额" step="0.01" min="0.01">
+  <input id="desc" placeholder="备注">
+  <select id="cat"><option>🍜 餐饮</option><option>🚌 交通</option><option>🏠 住房</option><option>🎮 娱乐</option><option>🛒 购物</option><option>💊 医疗</option><option>📚 学习</option><option>🎁 其他</option></select>
+  <button onclick="add()">+</button>
+</div>
+<div class="list" id="list"></div>
+<script>
+let records=JSON.parse(localStorage.getItem('expense_book')||'[]');
+function save(){localStorage.setItem('expense_book',JSON.stringify(records))}
+function add(){
+  const amt=parseFloat(document.getElementById('amount').value);
+  if(!amt||amt<=0)return;
+  records.push({
+    type:document.getElementById('type').value,
+    amt,
+    desc:document.getElementById('desc').value||'无备注',
+    cat:document.getElementById('cat').value,
+    date:new Date().toISOString().slice(0,10)
+  });
+  document.getElementById('amount').value='';document.getElementById('desc').value='';
+  save();render();
+}
+function del(i){records.splice(i,1);save();render()}
+function render(){
+  let inc=0,out=0;
+  document.getElementById('list').innerHTML=records.map((r,i)=>{
+    if(r.type==='in')inc+=r.amt;else out+=r.amt;
+    return`<div class="item">
+      <span><span class="cat">${r.cat}</span>${r.desc}</span>
+      <span><span class="amt" style="color:${r.type==='in'?'#4ade80':'#ef4444'}">${r.type==='in'?'+':'-'}¥${r.amt.toFixed(2)}</span>
+      <span class="del" onclick="del(${i})">×</span></span>
+    </div>`;
+  }).join('');
+  document.getElementById('inc').textContent='¥'+inc.toFixed(2);
+  document.getElementById('exp').textContent='¥'+out.toFixed(2);
+  document.getElementById('bal').textContent='¥'+(inc-out).toFixed(2);
+}
+render();
+</script>
+</body>
+</html>

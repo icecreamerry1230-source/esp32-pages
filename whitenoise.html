@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>白噪音</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0b0e1a;font-family:system-ui,sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;color:#e0e8f0;padding:20px;user-select:none}
+.c{max-width:400px;width:100%;text-align:center}
+.back{color:#6a7a95;text-decoration:none;font-size:13px;letter-spacing:1px;display:inline-block;margin-bottom:20px}
+.back:hover{color:#a78bfa}
+h1{font-size:20px;font-weight:300;letter-spacing:3px;color:#a78bfa;margin-bottom:16px}
+.sounds{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.sound{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:14px;cursor:pointer;transition:all .2s}
+.sound:hover{border-color:rgba(255,255,255,.15)}
+.sound.on{border-color:rgba(167,139,250,.4);background:rgba(167,139,250,.06)}
+.sound .icon{font-size:32px}
+.sound .name{font-size:14px;margin-top:4px}
+.sound .vol{width:100%;margin-top:6px;accent-color:#a78bfa;cursor:pointer}
+.master{margin:12px 0;display:flex;align-items:center;gap:8px}
+.master label{font-size:13px;color:#6a7a95}
+.master input{flex:1;accent-color:#a78bfa;cursor:pointer}
+button{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#ef4444;padding:8px 20px;border-radius:10px;font-size:13px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="c">
+  <a class="back" href="tools.html">← 工具</a>
+  <h1>🔊 白噪音</h1>
+  <div class="master"><label>🔈</label><input type="range" min="0" max="100" value="50" id="master-vol" oninput="setMaster()"><label>🔊</label></div>
+  <div class="sounds" id="sounds"></div>
+  <button onclick="stopAll()">⏹ 全部停止</button>
+</div>
+<script>
+let actx=null,nodes={};
+function initA(){if(!actx)actx=new(window.AudioContext||window.webkitAudioContext)();if(actx.state==='suspended')actx.resume()}
+
+const SOUNDS=[
+  {id:'rain',icon:'🌧️',name:'雨声',type:'noise',filter:'lowpass',freq:800},
+  {id:'fire',icon:'🔥',name:'篝火',type:'noise',filter:'bandpass',freq:400},
+  {id:'cafe',icon:'☕',name:'咖啡馆',type:'brown',filter:'lowpass',freq:600},
+  {id:'wind',icon:'💨',name:'风声',type:'noise',filter:'highpass',freq:300},
+  {id:'ocean',icon:'🌊',name:'海浪',type:'brown',filter:'lowpass',freq:200},
+  {id:'forest',icon:'🌲',name:'森林',type:'noise',filter:'bandpass',freq:1000},
+];
+
+let masterVol=0.5;
+
+function toggleSound(id){
+  initA();
+  if(nodes[id]){
+    nodes[id].gain.gain.setValueAtTime(0,actx.currentTime);
+    nodes[id].stop();delete nodes[id];
+  }else{
+    const s=SOUNDS.find(x=>x.id===id);
+    const ctx=actx;
+    // 创建噪声缓冲
+    const len=ctx.sampleRate*2;
+    const buf=ctx.createBuffer(1,len,ctx.sampleRate);
+    const data=buf.getChannelData(0);
+    let lastOut=0;
+    for(let i=0;i<len;i++){
+      const white=Math.random()*2-1;
+      if(s.type==='brown'){lastOut=(lastOut+white*0.02);data[i]=Math.max(-1,Math.min(1,lastOut*3.5))}
+      else data[i]=white;
+    }
+    const src=ctx.createBufferSource();src.buffer=buf;src.loop=true;
+    const filter=ctx.createBiquadFilter();filter.type=s.filter;filter.frequency.setValueAtTime(s.freq,ctx.currentTime);
+    const gain=ctx.createGain();gain.gain.setValueAtTime(0,ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(masterVol*.8,ctx.currentTime+.5);
+    src.connect(filter);filter.connect(gain);gain.connect(ctx.destination);
+    const node={src,filter,gain,stop:()=>{try{src.stop()}catch(e){}}};
+    src.start();
+    nodes[id]=node;
+  }
+  updateUI();
+}
+
+function stopAll(){
+  for(const[id,node]of Object.entries(nodes)){node.gain.gain.setValueAtTime(0,actx.currentTime);node.stop();delete nodes[id]}
+  updateUI();
+}
+
+function setMaster(){
+  masterVol=parseInt(document.getElementById('master-vol').value)/100;
+  for(const[id,node]of Object.entries(nodes))node.gain.gain.setValueAtTime(masterVol*.8,actx.currentTime);
+}
+
+function updateUI(){
+  const el=document.getElementById('sounds');
+  el.innerHTML=SOUNDS.map(s=>`<div class="sound${nodes[s.id]?' on':''}" onclick="toggleSound('${s.id}')">
+    <div class="icon">${s.icon}</div><div class="name">${s.name}</div>
+  </div>`).join('');
+}
+updateUI();
+</script>
+</body>
+</html>

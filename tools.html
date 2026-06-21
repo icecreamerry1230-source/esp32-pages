@@ -1,68 +1,50 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>工具</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background: #0b0e1a;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            display: flex; justify-content: center; align-items: center;
-            min-height: 100vh; color: #e0e8f0; padding: 20px;
-        }
-        .container { text-align: center; max-width: 420px; width: 100%; }
-        .back {
-            display: inline-block; color: #6a7a95; text-decoration: none;
-            font-size: 14px; margin-bottom: 24px; letter-spacing: 1px;
-            transition: color 0.2s;
-        }
-        .back:hover { color: #a78bfa; }
-        h1 {
-            font-size: 28px; font-weight: 300; letter-spacing: 3px;
-            background: linear-gradient(135deg, #a78bfa, #f97316);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            margin-bottom: 32px;
-        }
-        .card {
-            display: block;
-            background: rgba(18,26,42,0.8);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 20px; padding: 28px 24px; margin-bottom: 14px;
-            text-decoration: none;
-            transition: all 0.25s;
-        }
-        .card:hover { border-color: rgba(167,139,250,0.35); transform: translateY(-2px); }
-        .card .icon { font-size: 44px; margin-bottom: 10px; }
-        .card .name { font-size: 20px; font-weight: 600; color: #e0e8f0; margin-bottom: 6px; }
-        .card .desc { font-size: 13px; color: #6a7a95; }
-        .card .tip { font-size: 11px; color: #4a5a75; margin-top: 8px; }
-    </style>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>工具</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0b0e1a;font-family:system-ui,sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;color:#e0e8f0;padding:20px}
+.c{text-align:center;max-width:440px;width:100%}
+.back{display:inline-block;color:#6a7a95;text-decoration:none;font-size:14px;margin-bottom:24px;letter-spacing:1px;transition:color .2s}
+.back:hover{color:#a78bfa}
+h1{font-size:28px;font-weight:300;letter-spacing:3px;background:linear-gradient(135deg,#a78bfa,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:32px}
+h2{font-size:12px;font-weight:400;color:#5a6a85;letter-spacing:3px;margin:20px 0 12px;text-transform:uppercase}
+.card{display:block;background:rgba(18,26,42,.8);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:20px 18px;margin-bottom:10px;text-decoration:none;transition:all .25s;text-align:left}
+.card:hover{border-color:rgba(167,139,250,.35);transform:translateY(-2px)}
+.card .i{font-size:28px;display:inline-block;vertical-align:middle;margin-right:12px}
+.card .n{display:inline-block;vertical-align:middle}
+.card .nm{font-size:15px;font-weight:600;color:#e0e8f0;margin-bottom:2px}
+.card .d{font-size:11px;color:#6a7a95}
+</style>
 </head>
 <body>
-<div class="container">
-    <a class="back" href="index.html">← 返回首页</a>
-    <h1>🔧 工具</h1>
+<div class="c">
+  <a class="back" href="index.html">← 首页</a>
+  <h1>🔧 工具</h1>
 
-    <a class="card" href="muyu.html" style="border-color:rgba(251,191,36,0.15);">
-        <div class="icon">🪵</div>
-        <div class="name">电子木鱼</div>
-        <div class="desc">积攒功德 · 仿真敲击音效 · 自动敲击</div>
-        <div class="tip">点击木鱼或按空格键敲击</div>
-    </a>
-    <a class="card" href="calculator.html">
-        <div class="icon">🧮</div>
-        <div class="name">计算器</div>
-        <div class="desc">四则运算 · 百分比 · 正负号</div>
-        <div class="tip">支持连续运算</div>
-    </a>
-    <a class="card" href="sin.html">
-        <div class="icon">📐</div>
-        <div class="name">三角函数可视化</div>
-        <div class="desc">单位圆 · 波形传递 · 动态相位</div>
-        <div class="tip">数学教学演示</div>
-    </a>
+  <h2>⏱ 时间效率</h2>
+  <a class="card" href="pomodoro.html"><div class="i">🍅</div><div class="n"><div class="nm">番茄钟</div><div class="d">25分钟专注 · 休息计时 · 今日计数</div></div></a>
+  <a class="card" href="countdown.html"><div class="i">⏱️</div><div class="n"><div class="nm">倒计时器</div><div class="d">设定目标时间 · 实时倒计时</div></div></a>
+
+  <h2>🎲 决策随机</h2>
+  <a class="card" href="wheel.html"><div class="i">🎰</div><div class="n"><div class="nm">抽奖转盘</div><div class="d">自定义选项 · 转盘动画 · 一键抽取</div></div></a>
+  <a class="card" href="dice.html"><div class="i">🎲</div><div class="n"><div class="nm">骰子工具箱</div><div class="d">D4~D20 · 硬币 · 随机数 · 乱序</div></div></a>
+
+  <h2>📝 记录创作</h2>
+  <a class="card" href="notes.html"><div class="i">📝</div><div class="n"><div class="nm">便签墙</div><div class="d">彩色便签 · 拖拽排版 · 自动保存</div></div></a>
+  <a class="card" href="pixel.html"><div class="i">🎨</div><div class="n"><div class="nm">像素画板</div><div class="d">方格画布 · 选色绘制 · 可导出</div></div></a>
+  <a class="card" href="expense.html"><div class="i">📊</div><div class="n"><div class="nm">记账本</div><div class="d">收支记录 · 分类统计 · 自动汇总</div></div></a>
+
+  <h2>🔢 实用计算</h2>
+  <a class="card" href="calculator.html"><div class="i">🧮</div><div class="n"><div class="nm">计算器</div><div class="d">四则运算 · 百分比 · 正负号</div></div></a>
+  <a class="card" href="converter.html"><div class="i">📏</div><div class="n"><div class="nm">单位换算</div><div class="d">长度 · 重量 · 温度 · 面积 · 数据</div></div></a>
+  <a class="card" href="sin.html"><div class="i">📐</div><div class="n"><div class="nm">三角函数可视化</div><div class="d">单位圆 · 波形传递 · 动态相位</div></div></a>
+  <a class="card" href="password.html"><div class="i">🔐</div><div class="n"><div class="nm">密码生成器</div><div class="d">可调长度 · 字符类型 · 强度检测</div></div></a>
+
+  <h2>🧘 放松专注</h2>
+  <a class="card" href="whitenoise.html"><div class="i">🔊</div><div class="n"><div class="nm">白噪音</div><div class="d">雨声 · 篝火 · 海浪 · 咖啡馆</div></div></a>
+  <a class="card" href="muyu.html"><div class="i">🪵</div><div class="n"><div class="nm">电子木鱼</div><div class="d">积攒功德 · 仿真音效 · 自动敲击</div></div></a>
 </div>
 </body>
 </html>
