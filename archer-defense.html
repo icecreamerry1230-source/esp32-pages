@@ -78,9 +78,9 @@ const C={
 };
 
 const T0=[
-  {id:C.R,icon:'🏹',d:'均衡射手，远程箭术精准',hp:100,atk:10,spd:700,cr:5,cd:1.5},
-  {id:C.S,icon:'⚔️',d:'近战勇士，高血量，怪物近身挥剑',hp:180,atk:15,spd:1100,cr:8,cd:2},
-  {id:C.M,icon:'🔮',d:'远程施法，低血量高伤害',hp:70,atk:20,spd:900,cr:3,cd:2.5},
+  {id:C.R,icon:'🏹',d:'均衡射手，远程箭术精准，新手推荐',hp:120,atk:18,spd:650,cr:8,cd:1.8},
+  {id:C.S,icon:'⚔️',d:'近战勇士，高血量，怪物近身挥剑',hp:220,atk:25,spd:1000,cr:10,cd:2.2},
+  {id:C.M,icon:'🔮',d:'远程施法，低血量高伤害',hp:85,atk:30,spd:800,cr:5,cd:3},
 ];
 
 const T1={
@@ -129,7 +129,7 @@ const T3={
 let P={
   hp:100,mhp:100,atk:10,spd:700,cr:5,cd:1.5,career:C.R,dodge:0,shield:0,ls:0,
   lv:1,exp:0,xn:20,gold:0,soul:0,pts:0,
-  t1:null,t2:null,t3:null,wv:1,wm:5,ma:0,kills:0
+  t1:null,t2:null,t3:null,wv:1,wm:3,ma:0,kills:0
 };
 
 // ═══ 池 ═══
@@ -138,8 +138,10 @@ let cd=0,hold=false,paused=false,lsTime=0;
 let px=50,gy=0;
 
 function spM(w){
-  const hp=Math.floor((8+Math.pow(w,1.15)*5)*(1+Math.pow(w,1.12)*0.08));
-  const sp=Math.min(1+w*0.06,3);
+  // 难度温和化：Wave1=12HP, Wave10≈80HP, Wave30≈500HP
+  const hp=Math.floor(10+Math.pow(w,1.08)*3);
+  // 速度缓慢递增，上限2.5
+  const sp=Math.min(0.6+w*0.04,2.5);
   mons.push({x:W-10,y:gy-30,h:hp,mh:hp,sp,fr:0,frT:0,frP:0});
 }
 function spA(){
@@ -209,7 +211,7 @@ function upd(dt){
     const t1=T1[bc()]?.find(x=>x.id===P.t1);
     if(t1&&t1.ex===C.CAN){m.x-=sp*0.3}
     if(m.x<px+14){
-      let dmg=Math.floor(3+Math.pow(P.wv,1.05)*1.5);
+      let dmg=Math.floor(2+Math.pow(P.wv,1.02)*0.8);
       if(P.dodge>0&&Math.random()*100<P.dodge){prts.push({x:m.x,y:m.y,t:.5,tx:'闪避',c:'#ff0'});mons.splice(i,1);P.ma--;continue}
       if(P.shield>0){const b=Math.min(P.shield,dmg);P.shield-=b;dmg-=b}
       P.hp-=dmg;prts.push({x:m.x,y:m.y,t:.5,tx:'-'+dmg,c:'#f44'});
@@ -410,7 +412,10 @@ ab.addEventListener('touchend',e=>{e.preventDefault();up()});
 const SK='ad_save';
 function save(){localStorage.setItem(SK,JSON.stringify({P}))}
 function load(){try{const d=JSON.parse(localStorage.getItem(SK));if(d&&d.P)Object.assign(P,d.P)}catch(e){}}
-function rst(){P={hp:100,mhp:100,atk:10,spd:700,cr:5,cd:1.5,career:C.R,dodge:0,shield:0,ls:0,lv:1,exp:0,xn:20,gold:0,soul:0,pts:0,t1:null,t2:null,t3:null,wv:1,wm:5,ma:0,kills:0};mons=[];arrs=[];prts=[];cd=0;paused=false;for(let i=0;i<5;i++)spM(1);P.wm=0;hide();save()}
+function rst(){
+  mons=[];arrs=[];prts=[];cd=0;paused=true;hide();
+  showCareerSelect();
+}
 
 // ═══ 循环 ═══
 let lt2=0;
@@ -422,9 +427,39 @@ function loop(t){
   requestAnimationFrame(loop);
 }
 
-load();if(!P.career){P={hp:100,mhp:100,atk:10,spd:700,cr:5,cd:1.5,career:C.R,dodge:0,shield:0,ls:0,lv:1,exp:0,xn:20,gold:0,soul:0,pts:0,t1:null,t2:null,t3:null,wv:1,wm:5,ma:0,kills:0};mons=[];arrs=[];prts=[];cd=0;paused=false}
-for(let i=0;i<Math.min(P.wm||5,20);i++)spM(P.wv);P.wm=0;
+load();
+if(!P.career||!fc(P.career)){
+  // 首次进入：显示职业选择
+  showCareerSelect();
+} else {
+  for(let i=0;i<Math.min(P.wm||3,15);i++)spM(P.wv);P.wm=0;
+}
 rs();draw();requestAnimationFrame(loop);
+
+function showCareerSelect(){
+  paused=true;
+  let h='<h2>⚔️ 选择初始职业</h2>';
+  for(const s of T0){
+    h+=`<div class="cc" onclick="pickStarter('${s.id}')">
+      <div class="n">${s.icon} ${s.id}</div>
+      <div class="d">${s.d}</div>
+      <div class="x">❤${s.hp} 🏹${s.atk} ⚡${s.spd}ms 暴${s.cr}%</div>
+    </div>`;
+  }
+  document.getElementById('mc').innerHTML=h;
+  document.getElementById('mb').classList.add('show');
+}
+
+function pickStarter(id){
+  const s=T0.find(x=>x.id===id);
+  if(!s)return;
+  P.career=s.id;P.hp=s.hp;P.mhp=s.hp;P.atk=s.atk;P.spd=s.spd;P.cr=s.cr;P.cd=s.cd;
+  P.dodge=0;P.shield=0;P.ls=0;P.lv=1;P.exp=0;P.xn=20;P.gold=0;P.soul=0;P.pts=0;
+  P.t1=null;P.t2=null;P.t3=null;P.wv=1;P.wm=3;P.ma=0;P.kills=0;
+  mons=[];arrs=[];prts=[];cd=0;paused=false;
+  for(let i=0;i<3;i++)spM(1);P.wm=0;
+  hide();save();
+}
 </script>
 </body>
 </html>
