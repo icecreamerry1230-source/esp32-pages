@@ -326,6 +326,12 @@ function resetData(){
   }
 }
 
+function toggleFold(bldId){
+  if(!S._foldState)S._foldState={};
+  S._foldState[bldId]=!S._foldState[bldId];
+  render();
+}
+
 // 加载设置
 soundOn=localStorage.getItem('star_sound')!=='0';
 document.getElementById('toggle-sound').classList.toggle('on',soundOn);
@@ -349,14 +355,14 @@ const TRAITS=[
 ];
 
 const BUILDINGS=[
-  {id:'collector',icon:'🌠',name:'星尘收集器',baseCost:10,baseProd:0.2,growth:1.12},
-  {id:'incubator',icon:'🥚',name:'星灵保育箱',baseCost:80,baseProd:0.8,growth:1.12},
-  {id:'garden',icon:'🌙',name:'月光花圃',baseCost:400,baseProd:3,growth:1.12},
-  {id:'fountain',icon:'⛲',name:'星泉喷池',baseCost:2500,baseProd:15,growth:1.12},
-  {id:'spindle',icon:'🎡',name:'星云纺车',baseCost:15000,baseProd:70,growth:1.12},
-  {id:'windmill',icon:'🌌',name:'银河风车',baseCost:100000,baseProd:400,growth:1.12},
-  {id:'altar',icon:'🔮',name:'星座祭坛',baseCost:800000,baseProd:2500,growth:1.12},
-  {id:'forge',icon:'💥',name:'超新星熔炉',baseCost:6000000,baseProd:18000,growth:1.12},
+  {id:'collector',icon:'🌠',name:'星尘收集器',baseCost:10,baseProd:0.2,growth:1.12,role:'漂浮的小网兜，自动捕捉飘散的星尘'},
+  {id:'incubator',icon:'🥚',name:'星灵保育箱',baseCost:80,baseProd:0.8,growth:1.12,role:'温暖的保育箱，刚孵化的星灵在里面安心成长'},
+  {id:'garden',icon:'🌙',name:'月光花圃',baseCost:400,baseProd:3,growth:1.12,role:'种满发光花朵的花圃，星灵们最爱来此采蜜嬉戏'},
+  {id:'fountain',icon:'⛲',name:'星泉喷池',baseCost:2500,baseProd:15,growth:1.12,role:'喷涌星尘的魔法喷泉，是星灵们的能量补给站'},
+  {id:'spindle',icon:'🎡',name:'星云纺车',baseCost:15000,baseProd:70,growth:1.12,role:'巨大的纺车将松散星云纺成致密星纱'},
+  {id:'windmill',icon:'🌌',name:'银河风车',baseCost:100000,baseProd:400,growth:1.12,role:'矗立在银河边缘，搅动浩瀚星海产出澎湃能量'},
+  {id:'altar',icon:'🔮',name:'星座祭坛',baseCost:800000,baseProd:2500,growth:1.12,role:'十二星座轮流在此祈福，降下古老的星辰祝福'},
+  {id:'forge',icon:'💥',name:'超新星熔炉',baseCost:6000000,baseProd:18000,growth:1.12,role:'将衰老恒星重铸为璀璨星辉的终极熔炉'},
 ];
 
 const EVO_STAGES=[
@@ -564,18 +570,27 @@ function render(){
   document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('on',String(S.buyMode)===b.dataset.m));
 
   const bldDiv=document.getElementById('bld-section');
-  bldDiv.classList.add('show'); // 始终可见
+  bldDiv.classList.add('show');
   let bhtml='';
   for(const b of BUILDINGS){
     const baseCount=totalBldCount(b.id);
     const entries=S.buildings[b.id]||[];
-    for(const e of entries){
-      if(e.count===0)continue;
-      const prod=getBldProduction(e);
-      bhtml+=`<div class="bld-card rare-${e.rarity}"><div class="bld-icon">${b.icon}${e.rarity>0?`<div class="rare-glow" style="color:${RARITY_COLORS[e.rarity]}"></div>`:''}</div><div class="bld-info"><div class="bld-name">${b.name} <span class="rare-tag rare-${e.rarity}">${RARITY_STARS[e.rarity]}</span>${e.trait?`<span class="trait-tag">${TRAITS.find(t=>t.id===e.trait).icon} ${TRAITS.find(t=>t.id===e.trait).name}</span>`:''}</div><div class="bld-meta">产量: ${fmt(prod)}/秒</div></div><div class="bld-btns"><div class="bld-count">×${e.count}</div></div></div>`;
-    }
-    const price=getPrice(b.id,baseCount);const canBuy=price<=S.dust;
-    bhtml+=`<div class="bld-card" style="opacity:${canBuy?'.85':'.45'}"><div class="bld-icon">${b.icon}</div><div class="bld-info"><div class="bld-name">${b.name}</div><div class="bld-meta">持有: ${baseCount}</div></div><div class="bld-btns"><button class="bld-buy" ${canBuy?'':'disabled'} onclick="doBuy('${b.id}')">¥${fmt(price)}</button></div></div>`;
+    const totalProd=entries.reduce((s,e)=>s+getBldProduction(e),0);
+    const isOpen=S._foldState&&S._foldState[b.id];
+    bhtml+=`<div class="bld-card" style="border-color:rgba(255,255,255,${isOpen?'.12':'.05'})">
+      <div class="bld-icon" onclick="toggleFold('${b.id}')">${b.icon}</div>
+      <div class="bld-info" onclick="toggleFold('${b.id}')">
+        <div class="bld-name">${b.name} <span style="font-size:10px;color:rgba(255,255,255,.25)">${isOpen?'▲':'▼'}</span></div>
+        <div class="bld-meta">${b.role}</div>
+        <div class="bld-meta" style="color:rgba(255,255,255,.25)">持有: ${baseCount} · 总产: ${fmt(totalProd)}/秒</div>
+        ${!isOpen&&entries.length>0?`<div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:4px">${entries.filter(e=>e.count>0).map(e=>`<span class="rare-tag rare-${e.rarity}">${RARITY_STARS[e.rarity]} ×${e.count}${e.trait?' '+TRAITS.find(t=>t.id===e.trait).icon:''}</span>`).join('')}</div>`:''}
+        ${isOpen?entries.filter(e=>e.count>0).map(e=>`<div style="margin-top:3px;padding:4px 8px;border-radius:8px;background:rgba(255,255,255,.02);font-size:11px;display:flex;align-items:center;gap:8px"><span class="rare-tag rare-${e.rarity}">${RARITY_STARS[e.rarity]}</span>${e.trait?`<span class="trait-tag">${TRAITS.find(t=>t.id===e.trait).icon} ${TRAITS.find(t=>t.id===e.trait).name}</span>`:'<span style="color:rgba(255,255,255,.2)">无特质</span>'}<span style="color:rgba(255,255,255,.3);margin-left:auto">×${e.count} · ${fmt(getBldProduction(e))}/秒</span></div>`).join(''):''}
+      </div>
+      <div class="bld-btns">
+        ${entries.length>0?`<div class="bld-count" style="font-size:11px">${fmt(totalProd)}/s</div>`:''}
+        <button class="bld-buy" ${getPrice(b.id,baseCount)<=S.dust?'':'disabled'} onclick="doBuy('${b.id}')">¥${fmt(getPrice(b.id,baseCount))}</button>
+      </div>
+    </div>`;
   }
   bldDiv.innerHTML=bhtml;
   document.getElementById('panels').classList.toggle('show',S.unlocked.panels);
