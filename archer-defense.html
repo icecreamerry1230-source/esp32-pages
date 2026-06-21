@@ -1,466 +1,430 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no"><title>箭矢守护</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"><title>箭矢守护</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#1a1020;display:flex;justify-content:center;align-items:center;min-height:100vh;overflow:hidden;touch-action:manipulation;user-select:none;-webkit-user-select:none;font-family:system-ui,sans-serif}
-canvas{display:block;width:100vw;height:auto;max-height:100vh;background:linear-gradient(180deg,#2d1b3d,#4a2860,#2d1b3d)}
-.ui-overlay{position:fixed;inset:0;pointer-events:none;z-index:2}
-.ui-overlay>*{pointer-events:all}
-/* 顶部栏 */
-.top-bar{position:absolute;top:4px;left:4px;right:4px;display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#fff;gap:4px;flex-wrap:wrap}
-.top-bar .t-item{background:rgba(0,0,0,.4);padding:3px 10px;border-radius:10px;white-space:nowrap}
-.gold{color:#fbbf24}.soul{color:#a78bfa}.wave{color:#f97316}
-/* 底部操作 */
-.ctrl-bar{position:absolute;bottom:0;left:0;right:0;display:flex;align-items:flex-end;justify-content:space-between;padding:8px}
-.atk-btn{width:100px;height:100px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#f97316,#c2410c);border:3px solid #fb923c;font-size:14px;color:#fff;font-weight:700;box-shadow:0 0 30px rgba(249,115,22,.4);cursor:pointer;display:flex;align-items:center;justify-content:center}
-.atk-btn:active{transform:scale(.9)}
-.atk-btn.auto{background:radial-gradient(circle at 40% 35%,#a78bfa,#7c3aed);border-color:#a78bfa;box-shadow:0 0 40px rgba(167,139,250,.5)}
-/* 菜单按钮 */
-.menu-group{display:flex;flex-direction:column;gap:6px}
-.menu-btn{background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7);padding:8px 12px;border-radius:12px;font-size:11px;cursor:pointer;text-align:center;white-space:nowrap}
-/* 弹窗 */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:10;justify-content:center;align-items:center}
-.modal-overlay.show{display:flex}
-.modal{background:#1e1640;border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:20px;max-width:380px;width:90%;max-height:80vh;overflow-y:auto;color:#c0b8d0;font-size:13px}
-.modal h2{font-size:18px;color:#fbbf24;margin-bottom:12px;text-align:center}
-.modal h3{font-size:14px;color:#a78bfa;margin:10px 0 6px}
-.career-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:10px;margin:6px 0;cursor:pointer;transition:all .15s}
-.career-card:hover{border-color:rgba(251,191,36,.3)}
-.career-card.chosen{border-color:#fbbf24;background:rgba(251,191,36,.08)}
-.career-card .c-name{font-size:14px;font-weight:600;color:#e8e0f0}
-.career-card .c-desc{font-size:11px;color:rgba(255,255,255,.4);margin:2px 0}
-.career-card .c-stats{font-size:10px;color:rgba(255,255,255,.3)}
-.modal button{
-  background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.2);
-  color:#fbbf24;padding:8px 20px;border-radius:12px;font-size:13px;cursor:pointer;margin:4px
-}
-.modal button:active{transform:scale(.95)}
-.close-btn{position:absolute;top:8px;right:12px;background:none;border:none;color:#fff;font-size:20px;cursor:pointer}
+body{background:#1a1028;display:flex;justify-content:center;align-items:center;min-height:100vh;overflow:hidden;touch-action:manipulation;user-select:none;-webkit-user-select:none;font-family:system-ui,sans-serif}
+canvas{display:block;width:100vw;height:auto;max-height:100vh}
+.overlay{position:fixed;inset:0;pointer-events:none;z-index:2}
+.overlay>*{pointer-events:all}
+.top{position:absolute;top:2px;left:4px;right:4px;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#fff;gap:3px;flex-wrap:wrap}
+.top span{background:rgba(0,0,0,.45);padding:2px 8px;border-radius:8px;white-space:nowrap}
+.g{color:#fbbf24}.s{color:#a78bfa}.w{color:#f97316}.r{color:#ef4444}
+.btm{position:absolute;bottom:6px;left:4px;right:4px;display:flex;align-items:flex-end;justify-content:space-between}
+.btns{display:flex;flex-direction:column;gap:4px}
+.btns button{pointer-events:all;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.65);padding:6px 10px;border-radius:10px;font-size:10px;cursor:pointer;text-align:center}
+.atk{pointer-events:all;width:80px;height:80px;border-radius:50%;background:rgba(239,68,68,.25);border:2px solid rgba(239,68,68,.4);color:#fff;font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation}
+.atk.on{background:rgba(249,115,22,.35);border-color:rgba(249,115,22,.5);box-shadow:0 0 24px rgba(249,115,22,.3)}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:10;justify-content:center;align-items:center}
+.modal-bg.show{display:flex}
+.modal{background:#1a1040;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:16px;max-width:360px;width:92%;max-height:78vh;overflow-y:auto;color:#c0b8d0;font-size:12px}
+.modal h2{font-size:16px;color:#fbbf24;margin-bottom:10px;text-align:center}
+.modal h3{font-size:13px;color:#a78bfa;margin:8px 0 5px}
+.cc{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:8px;margin:5px 0;cursor:pointer}
+.cc:hover{border-color:rgba(251,191,36,.25)}
+.cc .n{font-size:13px;font-weight:600;color:#e8e0f0}
+.cc .d{font-size:10px;color:rgba(255,255,255,.35);margin:2px 0}
+.cc .x{font-size:9px;color:rgba(255,255,255,.25)}
+.modal button{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.2);color:#fbbf24;padding:7px 16px;border-radius:10px;font-size:12px;cursor:pointer;margin:3px}
+.modal button:active{transform:scale(.94)}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
-<div class="ui-overlay">
-  <!-- 顶部状态栏 -->
-  <div class="top-bar">
-    <span class="t-item wave" id="wave-text">Wave 1</span>
-    <span class="t-item gold">💰 <span id="gold-text">0</span></span>
-    <span class="t-item soul">💎 <span id="soul-text">0</span></span>
-    <span class="t-item" id="lvl-text">Lv.1 游侠</span>
-    <span class="t-item" id="exp-text">EXP 0/20</span>
-    <span class="t-item" id="hp-text">❤️ 100</span>
+<div class="overlay">
+  <div class="top">
+    <span class="w" id="wt">Wave 1</span>
+    <span class="g">💰<b id="gt">0</b></span>
+    <span class="s">💎<b id="st">0</b></span>
+    <span id="lt">Lv.1 游侠</span>
+    <span id="et">EXP 0/20</span>
+    <span class="r" id="ht">❤100</span>
   </div>
-
-  <!-- 底部控制 -->
-  <div class="ctrl-bar">
-    <div class="menu-group">
-      <button class="menu-btn" onclick="openModal('career')">🏛 转职</button>
-      <button class="menu-btn" onclick="openModal('stats')">📈 属性</button>
-      <button class="menu-btn" onclick="openModal('skills')">✨ 技能</button>
-      <button class="menu-btn" onclick="saveGame();closeModal()">💾 存档</button>
+  <div class="btm">
+    <div class="btns">
+      <button onclick="show('career')">🏛转职</button>
+      <button onclick="show('stats')">📈属性</button>
+      <button onclick="show('skills')">✨技能</button>
+      <button onclick="save()">💾存档</button>
     </div>
-    <button class="atk-btn" id="atk-btn" onpointerdown="onAtkDown()" onpointerup="onAtkUp()" onpointerleave="onAtkUp()">🏹<br>射击</button>
+    <button class="atk" id="ab" onpointerdown="down()" onpointerup="up()" onpointerleave="up()">🏹<br>射击</button>
   </div>
 </div>
-
-<!-- 弹窗 -->
-<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
-  <div class="modal" id="modal-content"></div>
-</div>
+<div class="modal-bg" id="mb" onclick="if(event.target===this)hide()"><div class="modal" id="mc"></div></div>
 
 <script>
-// ═══════════════ Canvas ═══════════════
-const c=document.getElementById('c'),ctx=c.getContext('2d');
+// ═══ Canvas ═══
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
 let W=800,H=400;
-
-function resizeCanvas(){
-  W=c.width=Math.min(window.innerWidth,1200);
-  H=c.height=Math.min(window.innerHeight,W*0.5);
+function rs(){
+  W=cv.width=Math.min(window.innerWidth,1200);
+  H=cv.height=Math.min(window.innerHeight,W*0.5);
 }
-resizeCanvas();window.addEventListener('resize',()=>{resizeCanvas();renderGround()});
+rs();window.addEventListener('resize',()=>{rs();drawGround()});
+window.addEventListener('orientationchange',()=>setTimeout(rs,200));
 
-// ═══════════════ 职业数据 ═══════════════
-const C3={RANGER:'游侠',SWORDSMAN:'剑士',MAGE:'法师',
-  // 一阶
-  CANNONEER:'重炮手',REPEATER:'连弩手',MAGIC_ARCHER:'魔箭手',
-  BERSERKER:'狂战士',PALADIN:'圣骑士',ASSASSIN:'暗影刺客',
-  ELEMENTALIST:'元素使',SUMMONER:'召唤师',CHRONOMANCER:'时空法师',
-  // 二阶
-  SNIPER:'狙击大师',BARRAGER:'弹幕专家',CURSED:'咒术射手',
-  WARLORD:'战神',GUARDIAN:'守护天使',REAPER:'死神',
-  PYROMANCER:'炎术士',BEASTMASTER:'兽王',VOIDMAGE:'虚空行者',
-  // 三阶
-  TIME_LORD:'时间法则',THUNDER_GOD:'雷神',PHANTOM:'幻影射手',
-  DRAGON_KNIGHT:'龙骑士',NECROMANCER:'死灵君主',ARCANE_ARCHON:'奥术大君'
+// ═══ 职业 ═══
+const C={
+  R:'游侠',S:'剑士',M:'法师',
+  CAN:'重炮手',REP:'连弩手',MA:'魔箭手',
+  BER:'狂战士',PAL:'圣骑士',ASN:'暗影刺客',
+  ELE:'元素使',SUM:'召唤师',CHR:'时空法师',
+  SNI:'狙击大师',BAR:'弹幕专家',CUR:'咒术射手',
+  WAR:'战神',GUA:'守护天使',REA:'死神',
+  PYR:'炎术士',BEA:'兽王',VOI:'虚空行者',
+  TIM:'时间法则',THU:'雷神',PHA:'幻影射手',
+  DRG:'龙骑士',NEC:'死灵君主',ARC:'奥术大君'
 };
 
-const STARTERS=[
-  {id:C3.RANGER,icon:'🏹',desc:'均衡的远程射手，箭术精准',hp:100,atk:10,spd:800,rate:0.05,cdmg:1.5},
-  {id:C3.SWORDSMAN,icon:'⚔️',desc:'近战勇士，高生命值，怪物近身时挥剑斩击',hp:180,atk:15,spd:1200,rate:0.08,cdmg:2},
-  {id:C3.MAGE,icon:'🔮',desc:'远程施法者，低生命但法术伤害高',hp:70,atk:18,spd:1000,rate:0.03,cdmg:2.5},
+const T0=[
+  {id:C.R,icon:'🏹',d:'均衡射手，远程箭术精准',hp:100,atk:10,spd:700,cr:5,cd:1.5},
+  {id:C.S,icon:'⚔️',d:'近战勇士，高血量，怪物近身挥剑',hp:180,atk:15,spd:1100,cr:8,cd:2},
+  {id:C.M,icon:'🔮',d:'远程施法，低血量高伤害',hp:70,atk:20,spd:900,cr:3,cd:2.5},
 ];
 
-const TIER1={
-  [C3.RANGER]:[
-    {id:C3.CANNONEER,icon:'💣',desc:'攻速-50%，攻击力×3，箭矢击退怪物',atkMul:3,spdMul:0.5,extra:'击退'},
-    {id:C3.REPEATER,icon:'🏹',desc:'攻击力-20%，每击射出3支箭',atkMul:0.8,spdMul:1,multi:3,extra:'三重箭'},
-    {id:C3.MAGIC_ARCHER,icon:'🔥',desc:'箭矢附带灼烧，每秒5%目标最大生命',atkMul:1,spdMul:1,burn:0.05,extra:'灼烧'},
+const T1={
+  [C.R]:[
+    {id:C.CAN,icon:'💣',d:'攻速-50%，攻击力×3，箭矢击退',atk:3,spd:0.5,ex:'击退重型箭'},
+    {id:C.REP,icon:'🏹',d:'攻击-20%，每次3支箭',atk:0.8,multi:3,ex:'三重散射'},
+    {id:C.MA,icon:'🔥',d:'箭矢灼烧(5%HP/秒)',burn:5,ex:'火焰灼烧'},
   ],
-  [C3.SWORDSMAN]:[
-    {id:C3.BERSERKER,icon:'🪓',desc:'攻击力×2.5，击杀回复10%生命',atkMul:2.5,spdMul:0.8,lifesteal:0.1,extra:'吸血'},
-    {id:C3.PALADIN,icon:'🛡️',desc:'生命×2，每10秒获得护盾吸收伤害',atkMul:1.2,spdMul:1,hpMul:2,shield:30,extra:'圣盾'},
-    {id:C3.ASSASSIN,icon:'🗡️',desc:'暴击率×3，闪避20%',atkMul:1.5,spdMul:0.6,critMul:3,dodge:0.2,extra:'暗杀'},
+  [C.S]:[
+    {id:C.BER,icon:'🪓',d:'攻击×2.5，击杀回10%血',atk:2.5,lifesteal:10,ex:'嗜血狂怒'},
+    {id:C.PAL,icon:'🛡️',d:'HP×2，每8秒获得30护盾',atk:1.2,hp:2,shield:30,ex:'神圣庇护'},
+    {id:C.ASN,icon:'🗡️',d:'暴击率×3，25%闪避',atk:1.5,spd:0.6,crMul:3,dodge:25,ex:'暗影步法'},
   ],
-  [C3.MAGE]:[
-    {id:C3.ELEMENTALIST,icon:'❄️',desc:'范围冰冻，减速50%+溅射伤害',atkMul:1.5,spdMul:1,freeze:0.5,splash:3,extra:'冰冻溅射'},
-    {id:C3.SUMMONER,icon:'🐉',desc:'召唤2只精灵自动攻击',atkMul:0.7,spdMul:1,minions:2,extra:'召唤'},
-    {id:C3.CHRONOMANCER,icon:'⏳',desc:'全屏怪物减速30%，持续存在',atkMul:1,spdMul:0.8,slowAll:0.3,extra:'时空减速'},
-  ],
-};
-
-const TIER2={
-  [C3.CANNONEER]:[
-    {id:C3.SNIPER,icon:'🎯',desc:'暴击率100%，暴击伤害150%，必中无视防御',atkMul:4,spdMul:0.5,critFix:1,critDmgFix:1.5,extra:'必暴'},
-  ],
-  [C3.REPEATER]:[
-    {id:C3.BARRAGER,icon:'🌪️',desc:'每次5支箭+分裂一次(×2)',atkMul:0.9,spdMul:1,multi:10,extra:'弹幕'},
-  ],
-  [C3.MAGIC_ARCHER]:[
-    {id:C3.CURSED,icon:'💀',desc:'灼烧→冰冻爆炸，范围溅射50%伤害',atkMul:1.5,spdMul:1,freeze:0.5,splash:0.5,burn:0.08,extra:'冰爆'},
-  ],
-  [C3.BERSERKER]:[
-    {id:C3.WARLORD,icon:'⚡',desc:'每次击杀+5%攻击力(最高叠10层)',atkMul:3,spdMul:0.7,rampage:0.05,extra:'狂怒叠加'},
-  ],
-  [C3.PALADIN]:[
-    {id:C3.GUARDIAN,icon:'👼',desc:'队友全体回复10%HP/秒，护盾翻倍',atkMul:1.5,spdMul:1,hpMul:3,shield:60,extra:'全体回复'},
-  ],
-  [C3.ASSASSIN]:[
-    {id:C3.REAPER,icon:'☠️',desc:'对半血以下目标伤害×3',atkMul:2,spdMul:0.6,execute:3,extra:'处决'},
-  ],
-  [C3.ELEMENTALIST]:[
-    {id:C3.PYROMANCER,icon:'🌋',desc:'灼烧+冰冻同时生效，目标每秒10%HP',atkMul:2,spdMul:1,burn:0.1,freeze:0.3,extra:'炎冰双修'},
-  ],
-  [C3.SUMMONER]:[
-    {id:C3.BEASTMASTER,icon:'🦅',desc:'召唤4只强化精灵，每只-50%伤害但自带暴击',atkMul:1,spdMul:1,minions:4,extra:'强化召唤'},
-  ],
-  [C3.CHRONOMANCER]:[
-    {id:C3.VOIDMAGE,icon:'🕳️',desc:'全屏减速60%，每15秒黑洞吸入秒杀低血怪物',atkMul:2,spdMul:0.8,slowAll:0.6,blackHole:15,extra:'黑洞'},
+  [C.M]:[
+    {id:C.ELE,icon:'❄️',d:'冰冻减速50%+溅射3目标',atk:1.5,freeze:50,splash:3,ex:'冰霜溅射'},
+    {id:C.SUM,icon:'🐉',d:'召唤2只精灵自动攻击',atk:0.7,minions:2,ex:'精灵召唤'},
+    {id:C.CHR,icon:'⏳',d:'全屏怪物减速30%',atk:1,slow:30,ex:'时空扭曲'},
   ],
 };
 
-const TIER3={
-  [C3.SNIPER]:[{id:C3.TIME_LORD,icon:'⏰',desc:'全屏怪物速度-80%，攻击必暴×3',atkMul:6,spdMul:0.4,slowAll:0.8,critFix:1,critDmgFix:3,extra:'时间法则'}],
-  [C3.BARRAGER]:[{id:C3.THUNDER_GOD,icon:'⚡',desc:'箭矢变为贯穿闪电，无限穿透+连锁',atkMul:2,spdMul:1,multi:10,chain:true,extra:'雷霆万钧'}],
-  [C3.CURSED]:[{id:C3.PHANTOM,icon:'👻',desc:'每3秒自动释放全屏冰冻+灼烧',atkMul:3,spdMul:1,freeze:0.8,burn:0.15,autoSkill:3,extra:'幻影诅咒'}],
-  [C3.WARLORD]:[{id:C3.DRAGON_KNIGHT,icon:'🐲',desc:'攻击变为龙息，全屏穿透+击飞',atkMul:5,spdMul:0.5,chain:true,extra:'龙息'}],
-  [C3.GUARDIAN]:[{id:C3.DRAGON_KNIGHT,icon:'🐲',desc:'同上',atkMul:5,spdMul:0.5,chain:true,extra:'龙息'}],
-  [C3.REAPER]:[{id:C3.NECROMANCER,icon:'💀',desc:'击杀怪物复活为骷髅兵作战',atkMul:3,spdMul:0.5,necromancy:true,extra:'死灵术'}],
-  [C3.PYROMANCER]:[{id:C3.ARCANE_ARCHON,icon:'🌟',desc:'全屏持续伤害=20%HP/秒+无限穿透',atkMul:4,spdMul:1,burn:0.2,splash:999,extra:'奥术风暴'}],
-  [C3.BEASTMASTER]:[{id:C3.ARCANE_ARCHON,icon:'🌟',desc:'同上',atkMul:4,spdMul:1,burn:0.2,splash:999,extra:'奥术风暴'}],
-  [C3.VOIDMAGE]:[{id:C3.ARCANE_ARCHON,icon:'🌟',desc:'同上',atkMul:4,spdMul:1,burn:0.2,splash:999,extra:'奥术风暴'}],
+const T2={
+  [C.CAN]:[{id:C.SNI,icon:'🎯',d:'暴击100%，暴伤150%，必中',atk:4,spd:0.5,crFix:100,cdFix:150,ex:'必暴狙击'}],
+  [C.REP]:[{id:C.BAR,icon:'🌪️',d:'10支箭+每箭分裂',atk:0.9,multi:10,ex:'弹幕风暴'}],
+  [C.MA]:[{id:C.CUR,icon:'💀',d:'灼烧→冰爆，范围50%溅射',atk:1.5,freeze:50,burn:8,splash:50,ex:'冰火双爆'}],
+  [C.BER]:[{id:C.WAR,icon:'⚡',d:'击杀+5%攻(叠10层)',atk:3,spd:0.7,rampage:5,ex:'狂怒叠加'}],
+  [C.PAL]:[{id:C.GUA,icon:'👼',d:'HP×3，全体每秒回5HP',atk:1.5,hp:3,regen:5,ex:'全体回复'}],
+  [C.ASN]:[{id:C.REA,icon:'☠️',d:'半血以下目标×3伤害',atk:2,spd:0.6,execute:3,ex:'死亡处决'}],
+  [C.ELE]:[{id:C.PYR,icon:'🌋',d:'灼烧10%HP+冻30%',atk:2,burn:10,freeze:30,ex:'炎冰双修'}],
+  [C.SUM]:[{id:C.BEA,icon:'🦅',d:'召唤4只暴击精灵',atk:1,minions:4,ex:'兽群召唤'}],
+  [C.CHR]:[{id:C.VOI,icon:'🕳️',d:'全屏减速60%+黑洞秒杀',atk:2,slow:60,hole:15,ex:'虚空黑洞'}],
 };
 
-// ═══════════════ 游戏状态 ═══════════════
-let P={hp:100,maxHp:100,atk:10,spd:800,rate:0.05,cdmg:1.5,career:C3.RANGER,dodge:0,shield:0,lifesteal:0,
-       lvl:1,exp:0,expNeed:20,gold:0,soul:0,points:0,
-       tier1:null,tier2:null,tier3:null,
-       wave:1,waveMons:0,monstersAlive:0,kills:0};
+const T3={
+  [C.SNI]:[{id:C.TIM,icon:'⏰',d:'全屏减速80%+必暴×3',atk:6,spd:0.4,slow:80,crFix:100,cdFix:300,ex:'时间法则'}],
+  [C.BAR]:[{id:C.THU,icon:'⚡',d:'无限贯穿闪电连锁',atk:2,multi:10,chain:1,ex:'雷霆万钧'}],
+  [C.CUR]:[{id:C.PHA,icon:'👻',d:'每3秒全屏冰冻+灼烧',atk:3,freeze:80,burn:15,autoSkill:3,ex:'幻影诅咒'}],
+  [C.WAR]:[{id:C.DRG,icon:'🐲',d:'龙息贯穿全屏+击飞',atk:5,spd:0.5,chain:1,ex:'龙息灭世'}],
+  [C.GUA]:[{id:C.DRG,icon:'🐲',d:'同上',atk:5,spd:0.5,chain:1,ex:'同上'}],
+  [C.REA]:[{id:C.NEC,icon:'💀',d:'杀敌复活骷髅作战',atk:3,spd:0.5,necro:1,ex:'死灵大军'}],
+  [C.PYR]:[{id:C.ARC,icon:'🌟',d:'全屏20%HP/秒+无限穿透',atk:4,burn:20,splash:99,ex:'奥术风暴'}],
+  [C.BEA]:[{id:C.ARC,icon:'🌟',d:'同上',atk:4,burn:20,splash:99,ex:'同上'}],
+  [C.VOI]:[{id:C.ARC,icon:'🌟',d:'同上',atk:4,burn:20,splash:99,ex:'同上'}],
+};
 
-// ═══════════════ 怪物/箭矢池 ═══════════════
-let monsters=[],arrows=[],particles=[],minions=[];
-let atkCD=0,atkHolding=false,gamePaused=false,lastSave=0;
-let playerX=40,groundY=0;
+// ═══ 状态 ═══
+let P={
+  hp:100,mhp:100,atk:10,spd:700,cr:5,cd:1.5,career:C.R,dodge:0,shield:0,ls:0,
+  lv:1,exp:0,xn:20,gold:0,soul:0,pts:0,
+  t1:null,t2:null,t3:null,wv:1,wm:5,ma:0,kills:0
+};
 
-function spawnMonster(w){
-  const baseHp=8+Math.floor(Math.pow(w,1.15)*5);
-  const speed=Math.min(1.2+w*0.06,3.5);
-  const hp=Math.floor(baseHp*(1+Math.pow(w,1.12)*0.08));
-  monsters.push({x:W-20,y:groundY-28,w:20,h:40,hp,hpMax:hp,speed,type:Math.floor(w/5),flash:0,freeze:0,burn:0,burnTick:0});
+// ═══ 池 ═══
+let mons=[],arrs=[],prts=[];
+let cd=0,hold=false,paused=false,lsTime=0;
+let px=50,gy=0;
+
+function spM(w){
+  const hp=Math.floor((8+Math.pow(w,1.15)*5)*(1+Math.pow(w,1.12)*0.08));
+  const sp=Math.min(1+w*0.06,3);
+  mons.push({x:W-10,y:gy-30,h:hp,mh:hp,sp,fr:0,frT:0,frP:0});
 }
-
-function spawnArrow(){
-  const multi=getMulti(),atk=getATK();
-  for(let i=0;i<multi;i++){
-    const spread=(i-(multi-1)/2)*4;
-    arrows.push({x:playerX+24,y:groundY-30+spread,spd:6+getStat('spd')*0.001,atk,chain:false,hit:[]});
+function spA(){
+  const mul=mulCnt(),atk=atkVal();
+  for(let i=0;i<mul;i++){
+    const yoff=(i-(mul-1)/2)*5;
+    arrs.push({x:px+20,y:gy-32+yoff,sp:7,atk,h:[]});
   }
 }
 
-// ═══════════════ 属性计算 ═══════════════
-function getStat(k){
-  let v=P[k]||0;
-  const career=findCareer(P.career);
-  if(career){
-    if(career.atkMul)v*=(k==='atk'?career.atkMul:1);
-    if(career.spdMul&&k==='spd')v*=career.spdMul;
-    if(career.hpMul&&k==='maxHp')v*=career.hpMul;
-  }
-  if(P.tier1){const t=TIER1[findBaseCareer()]?.find(c=>c.id===P.tier1);if(t)applyCareer(t,k,v)}
-  if(P.tier2){const t=TIER2[P.tier1]?.[0];if(t)applyCareer(t,k,v)}
-  if(P.tier3){const t=TIER3[P.tier2]?.[0];if(t)applyCareer(t,k,v)}
-  return v;
-}
-function findCareer(name){
-  for(const s of STARTERS)if(s.id===name)return s;
-  for(const k of Object.values(TIER1))for(const c of k)if(c.id===name)return c;
-  for(const k of Object.values(TIER2))for(const c of k)if(c.id===name)return c;
-  for(const k of Object.values(TIER3))for(const c of k)if(c.id===name)return c;
+// ═══ 查职业 ═══
+function fc(id){
+  for(const s of T0)if(s.id===id)return s;
+  for(const k of Object.values(T1))for(const c of k)if(c.id===id)return c;
+  for(const k of Object.values(T2))for(const c of k)if(c.id===id)return c;
+  for(const k of Object.values(T3))for(const c of k)if(c.id===id)return c;
   return null;
 }
-function findBaseCareer(){
-  for(const s of STARTERS)if(s.id===P.career)return s.id;
-  if(Object.values(TIER1).some(arr=>arr.some(c=>c.id===P.career))){
-    for(const[k,arr]of Object.entries(TIER1))if(arr.some(c=>c.id===P.career))return k;
-  }
-  return C3.RANGER;
-}
-function applyCareer(t,k,v){}
-function getATK(){let a=P.atk;const c=findCareer(P.career);if(c&&c.atkMul)a*=c.atkMul;if(P.tier1){const t=TIER1[findBaseCareer()]?.find(x=>x.id===P.tier1);if(t&&t.atkMul)a*=t.atkMul}if(P.tier2){const t=TIER2[P.tier1]?.[0];if(t&&t.atkMul)a*=t.atkMul}if(P.tier3){const t=TIER3[P.tier2]?.[0];if(t&&t.atkMul)a*=t.atkMul}return Math.floor(a)}
-function getMulti(){let m=1;if(P.tier1){const t=TIER1[findBaseCareer()]?.find(x=>x.id===P.tier1);if(t&&t.multi)m=t.multi}if(P.tier2){const t=TIER2[P.tier1]?.[0];if(t&&t.multi)m=t.multi}if(P.tier3){const t=TIER3[P.tier2]?.[0];if(t&&t.multi)m=t.multi}return m}
-function getATKSpeed(){let s=P.spd;const c=findCareer(P.career);if(c&&c.spdMul)s*=c.spdMul;if(P.tier1){const t=TIER1[findBaseCareer()]?.find(x=>x.id===P.tier1);if(t&&t.spdMul)s*=t.spdMul}return Math.max(s,200)}
+function bc(){for(const s of T0)if(s.id===P.career)return s.id;for(const[k,v]of Object.entries(T1))if(v.some(c=>c.id===P.career))return k;return C.R}
+function atkVal(){let a=P.atk;const t1=T1[bc()]?.find(x=>x.id===P.t1);const t2=T2[P.t1]?.[0];const t3=T3[P.t2]?.[0];[t1,t2,t3].forEach(t=>{if(t&&t.atk)a=Math.floor(a*t.atk)});return a}
+function mulCnt(){let m=1;const t1=T1[bc()]?.find(x=>x.id===P.t1);const t2=T2[P.t1]?.[0];const t3=T3[P.t2]?.[0];[t1,t2,t3].forEach(t=>{if(t&&t.multi)m=t.multi});return m}
+function spdVal(){let s=P.spd;const t1=T1[bc()]?.find(x=>x.id===P.t1);if(t1&&t1.spd)s=Math.floor(s*t1.spd);return Math.max(s,200)}
+function crVal(){const t2=T2[P.t1]?.[0];if(t2&&t2.crFix)return t2.crFix/100;const t3=T3[P.t2]?.[0];if(t3&&t3.crFix)return t3.crFix/100;return P.cr/100}
+function cdVal(){const t2=T2[P.t1]?.[0];if(t2&&t2.cdFix)return t2.cdFix/100;const t3=T3[P.t2]?.[0];if(t3&&t3.cdFix)return t3.cdFix/100;return P.cd}
+function slowPct(){let s=0;const t1=T1[bc()]?.find(x=>x.id===P.t1);const t2=T2[P.t1]?.[0];const t3=T3[P.t2]?.[0];[t1,t2,t3].forEach(t=>{if(t&&t.slow)s=Math.max(s,t.slow)});return s/100}
+function burnPct(){let b=0;const t1=T1[bc()]?.find(x=>x.id===P.t1);const t2=T2[P.t1]?.[0];const t3=T3[P.t2]?.[0];[t1,t2,t3].forEach(t=>{if(t&&t.burn)b=Math.max(b,t.burn)});return b/100}
+function splashCnt(){let s=0;const t1=T1[bc()]?.find(x=>x.id===P.t1);const t2=T2[P.t1]?.[0];const t3=T3[P.t2]?.[0];[t1,t2,t3].forEach(t=>{if(t&&t.splash)s=Math.max(s,t.splash)});return s}
 
-// ═══════════════ 游戏逻辑 ═══════════════
-function update(dt){
-  if(gamePaused)return;
-  // 攻击冷却
-  if(atkCD>0)atkCD-=dt;
-  if(atkHolding&&atkCD<=0){spawnArrow();atkCD=getATKSpeed()}
+// ═══ 逻辑 ═══
+function upd(dt){
+  if(paused)return;
+  // 火力
+  cd-=dt;
+  if(hold&&cd<=0){spA();cd=spdVal()/1000}
 
-  // 更新箭矢
-  for(let i=arrows.length-1;i>=0;i--){
-    const a=arrows[i];a.x+=a.spd;
-    if(a.x>W+20){arrows.splice(i,1);continue}
-    for(let j=monsters.length-1;j>=0;j--){
-      const m=monsters[j];
-      if(Math.abs(a.x-m.x)<16&&Math.abs(a.y-m.y)<24&&!a.hit.includes(j)){
-        let dmg=Math.floor(a.atk*(0.8+Math.random()*0.4));
-        // 暴击
-        let cr=getCritRate();
-        if(Math.random()<cr){dmg=Math.floor(dmg*getCritDmg());particles.push({x:m.x,y:m.y,t:0.3,text:'💥'+dmg,color:'#ff4444'})}
-        m.hp-=dmg;m.flash=0.08;a.hit.push(j);
-        if(m.hp<=0){killMonster(j)}
-        if(!P.tier2||findCareer(P.tier2)?.id!==C3.BARRAGER){arrows.splice(i,1);break}
+  // 箭矢
+  for(let i=arrs.length-1;i>=0;i--){
+    const a=arrs[i];a.x+=a.sp;
+    if(a.x>W+10){arrs.splice(i,1);continue}
+    let hitC=0;
+    for(let j=mons.length-1;j>=0;j--){
+      const m=mons[j];
+      if(Math.abs(a.x-m.x)<14&&Math.abs(a.y-m.y)<28&&!a.h.includes(j)){
+        a.h.push(j);
+        let d=Math.floor(a.atk*(0.85+Math.random()*0.3));
+        if(Math.random()<crVal()){d=Math.floor(d*cdVal());prts.push({x:m.x,y:m.y,t:.35,tx:'💥'+d,c:'#ff4444'})}
+        m.h-=d;m.fr=0.06;
+        if(m.h<=0){kill(j)}
+        hitC++;
+        const spl=splashCnt();
+        if(spl>0&&hitC<spl+1)continue; // 溅射继续
+        arrs.splice(i,1);break;
       }
     }
   }
 
-  // 更新怪物
-  for(let i=monsters.length-1;i>=0;i--){
-    const m=monsters[i];
-    if(m.freeze>0){m.freeze-=dt;continue}
-    m.x-=m.speed*(1-(P.tier1&&findCareer(P.tier1)?.id===C3.CHRONOMANCER?0.3:0))*(1-(P.tier2&&findCareer(P.tier2)?.id===C3.VOIDMAGE?0.6:0))*(1-(P.tier3&&findCareer(P.tier3)?.id===C3.TIME_LORD?0.8:0));
-    if(m.burn>0){m.burn-=dt;m.hp-=Math.floor(m.hpMax*m.burn*10*dt);if(m.hp<=0){killMonster(i);continue}}
-    if(m.x<playerX+20){
-      let dmg=Math.floor(5+Math.pow(P.wave,1.1)*2);
-      if(P.dodge>0&&Math.random()<P.dodge){particles.push({x:m.x,y:m.y,t:.5,text:'闪避!',color:'#ff0'});monsters.splice(i,1);P.monstersAlive--;continue}
+  // 怪物
+  const sl=slowPct();
+  for(let i=mons.length-1;i>=0;i--){
+    const m=mons[i];
+    m.frT-=dt;if(m.frT<=0)m.fr=0;
+    const sp=m.sp*(1-sl);
+    m.x-=sp;
+    const bp=burnPct();
+    if(bp>0){m.frP-=dt;if(m.frP<=0){m.h-=Math.floor(m.mh*bp);m.frP=0.5;if(m.h<=0){kill(i);continue}}}
+    // 击退
+    const t1=T1[bc()]?.find(x=>x.id===P.t1);
+    if(t1&&t1.ex===C.CAN){m.x-=sp*0.3}
+    if(m.x<px+14){
+      let dmg=Math.floor(3+Math.pow(P.wv,1.05)*1.5);
+      if(P.dodge>0&&Math.random()*100<P.dodge){prts.push({x:m.x,y:m.y,t:.5,tx:'闪避',c:'#ff0'});mons.splice(i,1);P.ma--;continue}
       if(P.shield>0){const b=Math.min(P.shield,dmg);P.shield-=b;dmg-=b}
-      P.hp-=dmg;particles.push({x:m.x,y:m.y,t:.5,text:'-'+dmg,color:'#f44'});
-      monsters.splice(i,1);P.monstersAlive--;
-      if(P.hp<=0){gameOver()}
+      P.hp-=dmg;prts.push({x:m.x,y:m.y,t:.5,tx:'-'+dmg,c:'#f44'});
+      mons.splice(i,1);P.ma--;
+      if(P.hp<=0)die();
     }
   }
 
   // 粒子
-  for(let i=particles.length-1;i>=0;i--){particles[i].t-=dt;if(particles[i].t<=0)particles.splice(i,1)}
+  for(let i=prts.length-1;i>=0;i--){prts[i].t-=dt;if(prts[i].t<=0)prts.splice(i,1)}
 
   // 波次
-  P.monstersAlive=monsters.length;
-  if(P.monstersAlive===0&&P.waveMons<=0&&atkCD<=100){
-    P.wave++;P.waveMons=Math.floor(3+P.wave*0.5);
-    for(let i=0;i<Math.min(P.waveMons,15);i++)setTimeout(()=>spawnMonster(P.wave),i*400);
-    P.waveMons=0;
+  P.ma=mons.length;
+  if(P.ma===0&&P.wm<=0){
+    P.wv++;P.wm=Math.floor(3+P.wv*0.5);
+    for(let i=0;i<Math.min(P.wm,20);i++)setTimeout(()=>spM(P.wv),i*350);
+    P.wm=0;
   }
 }
 
-function killMonster(i){
-  const m=monsters[i];P.gold+=1+Math.floor(P.wave/3);P.soul+=Math.random()<0.1?1:0;
-  P.exp+=1+Math.floor(P.wave/5);P.kills++;P.monstersAlive--;
-  if(P.lifesteal>0)P.hp=Math.min(P.maxHp,P.hp+Math.floor(P.maxHp*P.lifesteal));
-  particles.push({x:m.x,y:m.y,t:.3,text:'+'+Math.floor(1+P.wave/3)+'💰',color:'#fb0'});
-  monsters.splice(i,1);
-  if(P.exp>=P.expNeed)levelUp();
+function kill(i){
+  const m=mons[i];P.gold+=1+Math.floor(P.wv/3);P.soul+=Math.random()<0.08?1:0;
+  P.exp+=1+Math.floor(P.wv/5);P.kills++;P.ma--;
+  if(P.ls>0)P.hp=Math.min(P.mhp,P.hp+Math.floor(P.mhp*P.ls/100));
+  const t1=T1[bc()]?.find(x=>x.id===P.t1);
+  if(t1&&t1.lifesteal)P.hp=Math.min(P.mhp,P.hp+Math.floor(P.mhp*t1.lifesteal/100));
+  prts.push({x:m.x,y:m.y,t:.3,tx:'+'+Math.floor(1+P.wv/3)+'💰',c:'#fb0'});
+  mons.splice(i,1);
+  if(P.exp>=P.xn)lvUp();
 }
 
-function levelUp(){
-  P.lvl++;P.exp-=P.expNeed;P.expNeed=Math.floor(P.expNeed*1.5);
-  P.atk+=2;P.maxHp+=10;P.hp=Math.min(P.maxHp+10,P.hp+10);P.points++;
-  particles.push({x:playerX,y:groundY-60,t:1,text:'Lv Up!',color:'#ff0'});
-  if(P.lvl>=10&&!P.tier1)msgModal('你可以进行一转了！打开转职大厅选择职业。');
-  if(P.lvl>=30&&P.tier1&&!P.tier2)msgModal('你可以进行二转了！');
-  if(P.lvl>=60&&P.tier2&&!P.tier3)msgModal('你可以进行三转了！终极职业等你！');
+function lvUp(){
+  P.lv++;P.exp-=P.xn;P.xn=Math.floor(P.xn*1.5);
+  P.atk+=2;P.mhp+=10;P.hp=Math.min(P.mhp+10,P.hp+10);P.pts++;
+  prts.push({x:px,y:gy-50,t:1,tx:'⬆Lv'+P.lv+'!',c:'#ff0'});
+  if(P.lv>=10&&!P.t1){msg('⚡ Lv.10! 可进行一转了！','career')}
+  if(P.lv>=30&&P.t1&&!P.t2)msg('⚡ Lv.30! 可进行二转了！','career')
+  if(P.lv>=60&&P.t2&&!P.t3)msg('⚡ Lv.60! 终极转职！','career')
 }
 
-function gameOver(){
-  gamePaused=true;P.hp=0;saveGame();
-  document.getElementById('modal-content').innerHTML=`<h2>💀 战败</h2><p>Wave ${P.wave} · 击杀 ${P.kills}</p><button onclick="resetGame()">重新开始</button>`;
-  document.getElementById('modal-overlay').classList.add('show');
-}
-function msgModal(msg){document.getElementById('modal-content').innerHTML=`<p style="text-align:center">${msg}</p><button onclick="openModal('career');closeModal()">前往</button><button onclick="closeModal()">稍后</button>`;document.getElementById('modal-overlay').classList.add('show')}
+function die(){paused=true;P.hp=0;save();document.getElementById('mc').innerHTML='<h2>💀 战败</h2><p>Wave '+P.wv+' · Kills '+P.kills+'</p><button onclick="rst()">重新开始</button>';document.getElementById('mb').classList.add('show')}
+function msg(t,type){document.getElementById('mc').innerHTML='<p style="text-align:center;font-size:14px">'+t+'</p><button onclick="show(\''+type+'\');hide()">前往</button><button onclick="hide()">稍后</button>';document.getElementById('mb').classList.add('show')}
 
-// ═══════════════ 职业变更 ═══════════════
-function chooseCareer(id){
-  const career=findCareer(id);
-  if(!career)return;
+// ═══ 职业变更 ═══
+function choose(id){
+  const c=fc(id);if(!c)return;
   P.career=id;
-  if(career.atkMul)P.atk=Math.floor(P.atk*career.atkMul);
-  if(career.spdMul)P.spd=Math.floor(P.spd*career.spdMul);
-  if(career.hpMul){P.maxHp=Math.floor(P.maxHp*career.hpMul);P.hp=P.maxHp}
-  if(career.shield)P.shield=career.shield;
-  if(career.lifesteal)P.lifesteal=career.lifesteal;
-  if(career.dodge)P.dodge=career.dodge;
-
-  // 确定tier
-  for(const s of STARTERS)if(s.id===id){P.tier1=null;P.tier2=null;P.tier3=null;break}
-  for(const[k,arr]of Object.entries(TIER1))if(arr.some(c=>c.id===id)){P.tier1=id;break}
-  for(const[k,arr]of Object.entries(TIER2))if(arr.some(c=>c.id===id)){P.tier2=id;break}
-  for(const[k,arr]of Object.entries(TIER3))if(arr.some(c=>c.id===id)){P.tier3=id;break}
-
-  closeModal();saveGame();
+  if(c.atk)P.atk=Math.floor(P.atk*c.atk);
+  if(c.spd)P.spd=Math.floor(P.spd*c.spd);
+  if(c.hp){P.mhp=Math.floor(P.mhp*c.hp);P.hp=P.mhp}
+  if(c.shield)P.shield=c.shield;
+  if(c.lifesteal)P.ls=c.lifesteal;
+  if(c.dodge)P.dodge=c.dodge;
+  if(c.crMul)P.cr*=c.crMul;
+  for(const s of T0)if(s.id===id){P.t1=null;P.t2=null;P.t3=null;break}
+  for(const[k,v]of Object.entries(T1))if(v.some(x=>x.id===id)){P.t1=id;break}
+  for(const[k,v]of Object.entries(T2))if(v.some(x=>x.id===id)){P.t2=id;break}
+  for(const[k,v]of Object.entries(T3))if(v.some(x=>x.id===id)){P.t3=id;break}
+  hide();save();
 }
 
-// ═══════════════ 绘制 ═══════════════
+// ═══ 绘制(火柴人) ═══
+function drawGround(){}
 function draw(){
   ctx.clearRect(0,0,W,H);
-  groundY=H*0.7;
+  gy=Math.floor(H*0.72);
+  // 天空
+  const sky=ctx.createLinearGradient(0,0,0,gy);
+  sky.addColorStop(0,'#1a1030');sky.addColorStop(.6,'#3a2060');sky.addColorStop(1,'#5a3880');
+  ctx.fillStyle=sky;ctx.fillRect(0,0,W,gy);
   // 地面
-  const gg=ctx.createLinearGradient(0,groundY,0,H);
-  gg.addColorStop(0,'#3a2050');gg.addColorStop(1,'#1a0a20');
-  ctx.fillStyle=gg;ctx.fillRect(0,groundY,W,H-groundY);
-  ctx.fillStyle='rgba(255,255,255,.05)';ctx.fillRect(0,groundY,W,2);
+  ctx.fillStyle='#2a1840';ctx.fillRect(0,gy,W,H-gy);
+  ctx.fillStyle='#3a2850';ctx.fillRect(0,gy,W,2);
+  // 星星
+  ctx.fillStyle='rgba(255,255,255,.3)';
+  for(let i=0;i<20;i++){const sx=(i*173+37)%W,sy=(i*89+23)%(gy-20);ctx.beginPath();ctx.arc(sx,sy,1+Math.random()*1.5,0,Math.PI*2);ctx.fill()}
 
-  // 玩家
-  const px=playerX,py=groundY-28;
-  ctx.fillStyle='#4ade80';ctx.beginPath();ctx.arc(px,py,16,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#fff';ctx.font='20px sans-serif';ctx.textAlign='center';
-  ctx.fillText('🧝',px,py+6);
-  // 护盾
-  if(P.shield>0){ctx.strokeStyle='rgba(59,130,246,.6)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(px,py,20,0,Math.PI*2);ctx.stroke()}
+  // ── 火柴人玩家 ──
+  const px2=px+10,py2=gy-14;
+  ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.lineCap='round';
+  // 头
+  ctx.beginPath();ctx.arc(px2,py2-12,6,0,Math.PI*2);ctx.stroke();
+  // 身体
+  ctx.beginPath();ctx.moveTo(px2,py2-6);ctx.lineTo(px2,py2+10);ctx.stroke();
+  // 腿
+  ctx.beginPath();ctx.moveTo(px2,py2+10);ctx.lineTo(px2-6,py2+18);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(px2,py2+10);ctx.lineTo(px2+6,py2+18);ctx.stroke();
+  // 弓手手臂(前伸持弓)
+  ctx.beginPath();ctx.moveTo(px2,py2-2);ctx.lineTo(px2+14,py2-10);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(px2,py2-2);ctx.lineTo(px2+10,py2+4);ctx.stroke();
+  // 弓
+  ctx.strokeStyle='#daa520';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(px2+14,py2-6,10,-1.2,1.2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(px2+14,py2-16);ctx.lineTo(px2+14,py2+4);ctx.stroke();
+  // HP
+  const hpP=P.hp/P.mhp;
+  ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillRect(px2-15,py2-24,30,5);
+  ctx.fillStyle=hpP>.5?'#4ade80':hpP>.25?'#fbbf24':'#ef4444';
+  ctx.fillRect(px2-15,py2-24,30*hpP,5);
+  ctx.fillStyle='#fff';ctx.font='9px sans-serif';ctx.textAlign='center';
+  ctx.fillText('🧝 '+P.career,px2,py2-28);
 
-  // 怪物
-  for(const m of monsters){
+  // ── 火柴人怪物 ──
+  for(const m of mons){
+    ctx.strokeStyle=m.fr>0?'#fff':'#ef4444';ctx.lineWidth=2;ctx.lineCap='round';
     const mx=m.x,my=m.y;
-    ctx.fillStyle=m.freeze>0?'#88ccff':m.flash>0?'#fff':'#ef4444';
-    ctx.fillRect(mx-10,my-20,20,40);
-    ctx.fillStyle='rgba(0,0,0,.3)';ctx.fillRect(mx-10,my-20,20,3);
-    // 血条
-    const hpPct=m.hp/m.hpMax;
-    ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(mx-12,my-24,24,4);
-    ctx.fillStyle=hpPct>.5?'#4ade80':hpPct>.25?'#fbbf24':'#ef4444';
-    ctx.fillRect(mx-12,my-24,24*hpPct,4);
+    // 头
+    ctx.beginPath();ctx.arc(mx,my-10,5,0,Math.PI*2);ctx.stroke();
+    // 身体
+    ctx.beginPath();ctx.moveTo(mx,my-5);ctx.lineTo(mx,my+8);ctx.stroke();
+    // 腿
+    ctx.beginPath();ctx.moveTo(mx,my+8);ctx.lineTo(mx-5,my+15);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(mx,my+8);ctx.lineTo(mx+5,my+15);ctx.stroke();
+    // 手臂(前伸抓)
+    ctx.beginPath();ctx.moveTo(mx,my);ctx.lineTo(mx-8,my-4);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(mx,my);ctx.lineTo(mx+8,my-4);ctx.stroke();
+    // 眼(红)
+    ctx.fillStyle='#f44';ctx.beginPath();ctx.arc(mx-2,my-11,1.5,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(mx+2,my-11,1.5,0,Math.PI*2);ctx.fill();
+    // 冰冻色
+    if(P.freeze>0){ctx.strokeStyle='rgba(100,200,255,.4)';ctx.beginPath();ctx.arc(mx,my,12,0,Math.PI*2);ctx.stroke()}
+    // HP条
+    const hpP2=m.h/m.mh;
+    ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(mx-12,my-22,24,3);
+    ctx.fillStyle=hpP2>.5?'#4ade80':hpP2>.25?'#fb0':'#f44';
+    ctx.fillRect(mx-12,my-22,24*hpP2,3);
   }
 
-  // 箭矢
-  ctx.fillStyle='#ffd700';
-  for(const a of arrows){ctx.fillRect(a.x-6,a.y-1,12,2);ctx.fillStyle='#ffd700'}
+  // ── 箭矢 ──
+  ctx.strokeStyle='#ffd700';ctx.lineWidth=2;
+  for(const a of arrs){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(a.x-8,a.y);ctx.stroke();ctx.fillStyle='#f44';ctx.beginPath();ctx.arc(a.x,a.y,2,0,Math.PI*2);ctx.fill()}
 
-  // 粒子
-  for(const p of particles){
-    ctx.fillStyle=p.color;ctx.font='12px sans-serif';ctx.textAlign='center';
-    ctx.globalAlpha=Math.max(0,p.t/(p.t+.1));ctx.fillText(p.text,p.x,p.y);ctx.globalAlpha=1;
+  // ── 粒子 ──
+  for(const p of prts){
+    ctx.fillStyle=p.c;ctx.font='11px sans-serif';ctx.textAlign='center';
+    ctx.globalAlpha=Math.max(0,p.t/(p.t+.1));
+    ctx.fillText(p.tx,p.x,p.y);ctx.globalAlpha=1;
   }
 
-  // UI文字
-  document.getElementById('gold-text').textContent=P.gold;
-  document.getElementById('soul-text').textContent=P.soul;
-  document.getElementById('wave-text').textContent='Wave '+P.wave;
-  document.getElementById('lvl-text').textContent='Lv.'+P.lvl+' '+P.career;
-  document.getElementById('exp-text').textContent='EXP '+P.exp+'/'+P.expNeed;
-  document.getElementById('hp-text').textContent='❤️ '+Math.max(0,P.hp)+'/'+P.maxHp+(P.shield>0?' 🛡'+P.shield:'');
+  // UI
+  document.getElementById('gt').textContent=P.gold;
+  document.getElementById('st').textContent=P.soul;
+  document.getElementById('wt').textContent='Wave '+P.wv;
+  document.getElementById('lt').textContent='Lv.'+P.lv+' '+P.career;
+  document.getElementById('et').textContent='EXP '+P.exp+'/'+P.xn;
+  document.getElementById('ht').textContent='❤'+Math.max(0,P.hp)+'/'+P.mhp+(P.shield>0?' 🛡'+P.shield:'');
+  document.getElementById('ab').classList.toggle('on',hold);
 }
 
-// ═══════════════ 弹窗 ═══════════════
-function openModal(type){
-  const mc=document.getElementById('modal-content');let h='';
-  if(type==='career'){
-    h='<h2>🏛 转职大厅</h2><p style="font-size:11px;color:rgba(255,255,255,.4);text-align:center">当前: '+P.career+' Lv.'+P.lvl+'</p>';
-    if(!P.tier1&&P.lvl<10)h+='<p style="text-align:center;color:#fbbf24">Lv.10 解锁一转</p>';
-    if(P.tier1&&!P.tier2&&P.lvl<30)h+='<p style="text-align:center;color:#fbbf24">Lv.30 解锁二转</p>';
-    if(P.tier2&&!P.tier3&&P.lvl<60)h+='<p style="text-align:center;color:#fbbf24">Lv.60 解锁三转</p>';
-    if(!P.tier1&&P.lvl>=10){h+=renderCareerCards(TIER1[findBaseCareer()]||[],'一转');}
-    if(P.tier1&&!P.tier2&&P.lvl>=30){h+=renderCareerCards(TIER2[P.tier1]||[],'二转');}
-    if(P.tier2&&!P.tier3&&P.lvl>=60){h+=renderCareerCards(TIER3[P.tier2]||[],'三转');}
-    if(P.tier1)h+=`<div style="margin-top:12px;font-size:11px;color:rgba(255,255,255,.3);text-align:center">转职不可逆，请谨慎选择</div>`;
-  }else if(type==='stats'){
-    h=`<h2>📈 属性面板</h2>
-      <div style="line-height:2.2">
-      <div>🏹 攻击力: ${getATK()} (基础${P.atk})</div>
-      <div>⚡ 攻速: ${getATKSpeed()}ms</div>
-      <div>💥 暴击率: ${Math.floor(getCritRate()*100)}%</div>
-      <div>💢 暴伤: ${Math.floor(getCritDmg()*100)}%</div>
-      <div>❤️ 生命: ${P.maxHp}</div>
-      <div>🛡️ 护盾: ${P.shield||0}</div>
-      <div>💨 闪避: ${Math.floor((P.dodge||0)*100)}%</div>
-      <div>🩸 吸血: ${Math.floor((P.lifesteal||0)*100)}%</div>
-      <div>🔢 多重箭: ×${getMulti()}</div>
-      <div>⭐ 属性点: ${P.points} <button onclick="usePoint()" ${P.points<1?'disabled':''}>加点(+2攻)</button></div></div>`;
-  }else if(type==='skills'){
-    h='<h2>✨ 职业技能</h2><p style="font-size:11px;color:rgba(255,255,255,.4)">当前职业: '+P.career+'</p>';
-    const c=findCareer(P.career);
-    if(c&&c.extra)h+=`<div style="padding:8px;background:rgba(255,255,255,.03);border-radius:8px;margin:4px 0">🎯 ${c.extra}: <span style="color:rgba(255,255,255,.5)">已激活</span></div>`;
-    if(P.tier1)h+=renderSkillCard(P.tier1,'一转');
-    if(P.tier2)h+=renderSkillCard(P.tier2,'二转');
-    if(P.tier3)h+=renderSkillCard(P.tier3,'三转');
+// ═══ 弹窗 ═══
+function show(t){
+  const mc=document.getElementById('mc');let h='';
+  if(t==='career'){
+    h='<h2>🏛 转职大厅</h2><p style="font-size:10px;color:rgba(255,255,255,.35);text-align:center">当前: '+P.career+' Lv.'+P.lv+'</p>';
+    const cur=bc();
+    if(!P.t1&&P.lv<10)h+='<p style="text-align:center;color:#fb0">Lv.10 解锁一转</p>';
+    if(P.t1&&!P.t2&&P.lv<30)h+='<p style="text-align:center;color:#fb0">Lv.30 解锁二转</p>';
+    if(P.t2&&!P.t3&&P.lv<60)h+='<p style="text-align:center;color:#fb0">Lv.60 解锁三转</p>';
+    if(!P.t1&&P.lv>=10)h+=renderList(T1[cur]||[],'一转');
+    if(P.t1&&!P.t2&&P.lv>=30)h+=renderList(T2[P.t1]||[],'二转');
+    if(P.t2&&!P.t3&&P.lv>=60)h+=renderList(T3[P.t2]||[],'三转');
+    if(P.t1)h+='<p style="font-size:10px;color:rgba(255,255,255,.2);text-align:center">转职不可逆</p>';
+  }else if(t==='stats'){
+    h=`<h2>📈 属性</h2><div style="line-height:2.2">
+      <div>🏹 攻击力: <b style="color:#fb0">${atkVal()}</b> (基础${P.atk})</div>
+      <div>⚡ 攻速: <b style="color:#fb0">${spdVal()}ms</b></div>
+      <div>💥 暴击率: <b style="color:#fb0">${Math.floor(crVal()*100)}%</b></div>
+      <div>💢 暴伤: <b style="color:#fb0">${Math.floor(cdVal()*100)}%</b></div>
+      <div>🔢 多重箭: <b style="color:#a78bfa">×${mulCnt()}</b></div>
+      <div>❤️ 生命: <b style="color:#4ade80">${P.mhp}</b></div>
+      <div>🛡 护盾: ${P.shield||0} | 💨 闪避: ${P.dodge||0}% | 🩸 吸血: ${P.ls||0}%</div>
+      <div>💎 灵魂: ${P.soul} | ⭐ 属点: ${P.pts}
+        <button onclick="addPt()" ${P.pts<1?'disabled':''}>+2攻</button></div></div>`;
+  }else if(t==='skills'){
+    h='<h2>✨ 技能</h2><p style="font-size:10px;color:rgba(255,255,255,.35)">职业: '+P.career+'</p>';
+    const c=fc(P.career);if(c&&c.ex)h+=`<div style="padding:6px;background:rgba(255,255,255,.03);border-radius:8px;margin:4px 0">🎯 <b>${c.ex}</b><br><span style="font-size:10px;color:rgba(255,255,255,.4)">${c.d}</span></div>`;
+    if(P.t1)h+=skillCard(P.t1,'一转');
+    if(P.t2)h+=skillCard(P.t2,'二转');
+    if(P.t3)h+=skillCard(P.t3,'三转');
   }
-  mc.innerHTML=h;document.getElementById('modal-overlay').classList.add('show');
+  mc.innerHTML=h;document.getElementById('mb').classList.add('show');
 }
-function renderCareerCards(list,tier){
-  return `<h3>${tier}职业:</h3>`+list.map(c=>`<div class="career-card" onclick="chooseCareer('${c.id}')"><div class="c-name">${c.icon} ${c.id}</div><div class="c-desc">${c.desc}</div><div class="c-stats">🔑 ${c.extra}</div></div>`).join('');
+function renderList(list,tier){
+  return`<h3>${tier}:</h3>`+list.map(c=>`<div class="cc" onclick="choose('${c.id}')"><div class="n">${c.icon} ${c.id}</div><div class="d">${c.d}</div><div class="x">🔑 ${c.ex}</div></div>`).join('');
 }
-function renderSkillCard(id,tier){
-  const c=findCareer(id);if(!c)return'';
-  return `<div style="padding:8px;background:rgba(167,139,250,.08);border-radius:8px;margin:4px 0"><b>${tier}: ${c.icon} ${id}</b><br><span style="font-size:11px;color:rgba(255,255,255,.4)">${c.extra} · ${c.desc}</span></div>`;
-}
-function closeModal(){document.getElementById('modal-overlay').classList.remove('show')}
-function usePoint(){if(P.points>0){P.points--;P.atk+=2;openModal('stats')}}
+function skillCard(id,tier){const c=fc(id);if(!c)return'';return`<div style="padding:6px;background:rgba(167,139,250,.06);border-radius:8px;margin:4px 0"><b>${tier}: ${c.icon} ${id}</b><br><span style="font-size:10px;color:rgba(255,255,255,.35)">${c.ex} · ${c.d}</span></div>`}
+function hide(){document.getElementById('mb').classList.remove('show')}
+function addPt(){if(P.pts>0){P.pts--;P.atk+=2;show('stats')}}
 
-function getCritRate(){let r=P.rate;if(P.tier2){const t=TIER2[P.tier1]?.[0];if(t&&t.critFix===1)return 1}return r}
-function getCritDmg(){let d=P.cdmg;if(P.tier2){const t=TIER2[P.tier1]?.[0];if(t&&t.critDmgFix)return t.critDmgFix}return d}
+// ═══ 控制 ═══
+function down(){hold=true;paused=false;}
+function up(){hold=false}
+const ab=document.getElementById('ab');
+ab.addEventListener('touchstart',e=>{e.preventDefault();down()});
+ab.addEventListener('touchend',e=>{e.preventDefault();up()});
 
-// ═══════════════ 控制 ═══════════════
-function onAtkDown(){atkHolding=true;gamePaused=false}
-function onAtkUp(){atkHolding=false}
-document.getElementById('atk-btn').addEventListener('touchstart',e=>{e.preventDefault();onAtkDown()});
-document.getElementById('atk-btn').addEventListener('touchend',e=>{e.preventDefault();onAtkUp()});
+// ═══ 存档 ═══
+const SK='ad_save';
+function save(){localStorage.setItem(SK,JSON.stringify({P}))}
+function load(){try{const d=JSON.parse(localStorage.getItem(SK));if(d&&d.P)Object.assign(P,d.P)}catch(e){}}
+function rst(){P={hp:100,mhp:100,atk:10,spd:700,cr:5,cd:1.5,career:C.R,dodge:0,shield:0,ls:0,lv:1,exp:0,xn:20,gold:0,soul:0,pts:0,t1:null,t2:null,t3:null,wv:1,wm:5,ma:0,kills:0};mons=[];arrs=[];prts=[];cd=0;paused=false;for(let i=0;i<5;i++)spM(1);P.wm=0;hide();save()}
 
-// ═══════════════ 存档 ═══════════════
-const SAVE_KEY='archer_def_save';
-function saveGame(){localStorage.setItem(SAVE_KEY,JSON.stringify({P}))}
-function loadGame(){try{const d=JSON.parse(localStorage.getItem(SAVE_KEY));if(d&&d.P)Object.assign(P,d.P)}catch(e){}}
-function resetGame(){
-  if(confirm('确定重来？')){
-    initGame();saveGame();closeModal();gamePaused=false;
-    document.getElementById('modal-overlay').classList.remove('show');
-  }
-}
-
-function initGame(){
-  P={hp:100,maxHp:100,atk:10,spd:800,rate:0.05,cdmg:1.5,career:C3.RANGER,dodge:0,shield:0,lifesteal:0,
-     lvl:1,exp:0,expNeed:20,gold:0,soul:0,points:0,
-     tier1:null,tier2:null,tier3:null,wave:1,waveMons:5,monstersAlive:0,kills:0};
-  monsters=[];arrows=[];particles=[];atkCD=0;gamePaused=false;
-  for(let i=0;i<5;i++)spawnMonster(1);
-  P.waveMons=0;
-}
-
-// ═══════════════ 主循环 ═══════════════
-let lastTime=0;
+// ═══ 循环 ═══
+let lt2=0;
 function loop(t){
-  const dt=Math.min((t-lastTime)/1000,0.1);
-  lastTime=t;
-  update(dt);draw();
-  if(t-lastSave>10000){saveGame();lastSave=t}
+  const dt=Math.min((t-lt2)/1000,0.1);
+  lt2=t;
+  upd(dt);draw();
+  if(t-lsTime>10000){save();lsTime=t}
   requestAnimationFrame(loop);
 }
 
-// 启动
-loadGame();
-if(!P.career)initGame();
-resizeCanvas();draw();
-for(let i=0;i<Math.min(P.waveMons||5,15);i++)spawnMonster(P.wave);
-P.waveMons=0;
-requestAnimationFrame(loop);
+load();if(!P.career){P={hp:100,mhp:100,atk:10,spd:700,cr:5,cd:1.5,career:C.R,dodge:0,shield:0,ls:0,lv:1,exp:0,xn:20,gold:0,soul:0,pts:0,t1:null,t2:null,t3:null,wv:1,wm:5,ma:0,kills:0};mons=[];arrs=[];prts=[];cd=0;paused=false}
+for(let i=0;i<Math.min(P.wm||5,20);i++)spM(P.wv);P.wm=0;
+rs();draw();requestAnimationFrame(loop);
 </script>
 </body>
 </html>
