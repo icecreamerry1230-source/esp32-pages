@@ -487,17 +487,22 @@ function doClick(){
   updateUnlocks();render();
 }
 
-function doBuy(bldId,rarity,trait){
+function doBuy(bldId){
+  const rarity=rollRarity();
+  const trait=rollTrait(rarity);
   const {count,cost}=calcBulk(bldId,S.dust,rarity,trait,String(S.buyMode));
   if(count===0||cost>S.dust)return;
   aInit();
   S.dust-=cost;
   const entry=ensureBldEntry(bldId,rarity,trait);
   entry.count+=count;
-  if(rarity>0)sndRare(rarity);else sndBuy();
+  if(rarity>0){if(trait)sndRare(rarity);else sndBuy()}
+  else sndBuy();
   if(!S.traitSeen.includes(trait)&&trait)S.traitSeen.push(trait);
-  msg('购买 '+RARITY_STARS[rarity]+' ×'+count+(trait?' '+TRAITS.find(t=>t.id===trait).icon:''));
+  const tag=RARITY_STARS[rarity]+' ×'+count+(trait?' '+TRAITS.find(t=>t.id===trait).icon+' '+TRAITS.find(t=>t.id===trait).name:'');
+  msg(tag);
   spawnParticle('-'+fmt(cost)+' ✨','#fbbf24');
+  if(rarity>=2)spawnParticle(RARITY_STARS[rarity]+'!',RARITY_COLORS[rarity]);
   updateUnlocks();render();
 }
 
@@ -569,7 +574,7 @@ function render(){
       bhtml+=`<div class="bld-card rare-${e.rarity}"><div class="bld-icon">${b.icon}${e.rarity>0?`<div class="rare-glow" style="color:${RARITY_COLORS[e.rarity]}"></div>`:''}</div><div class="bld-info"><div class="bld-name">${b.name} <span class="rare-tag rare-${e.rarity}">${RARITY_STARS[e.rarity]}</span>${e.trait?`<span class="trait-tag">${TRAITS.find(t=>t.id===e.trait).icon} ${TRAITS.find(t=>t.id===e.trait).name}</span>`:''}</div><div class="bld-meta">产量: ${fmt(prod)}/秒</div></div><div class="bld-btns"><div class="bld-count">×${e.count}</div></div></div>`;
     }
     const price=getPrice(b.id,baseCount);const canBuy=price<=S.dust;
-    bhtml+=`<div class="bld-card" style="opacity:${canBuy?'.85':'.45'}"><div class="bld-icon">${b.icon}</div><div class="bld-info"><div class="bld-name">${b.name}</div><div class="bld-meta">持有: ${baseCount}</div></div><div class="bld-btns"><button class="bld-buy" ${canBuy?'':'disabled'} onclick="doBuy('${b.id}',rollRarity(),rollTrait(0))">¥${fmt(price)}</button></div></div>`;
+    bhtml+=`<div class="bld-card" style="opacity:${canBuy?'.85':'.45'}"><div class="bld-icon">${b.icon}</div><div class="bld-info"><div class="bld-name">${b.name}</div><div class="bld-meta">持有: ${baseCount}</div></div><div class="bld-btns"><button class="bld-buy" ${canBuy?'':'disabled'} onclick="doBuy('${b.id}')">¥${fmt(price)}</button></div></div>`;
   }
   bldDiv.innerHTML=bhtml;
   document.getElementById('panels').classList.toggle('show',S.unlocked.panels);
