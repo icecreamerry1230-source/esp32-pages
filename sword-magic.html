@@ -53,8 +53,11 @@ body{background:#0d0d1a;font-family:system-ui,sans-serif;color:#c0b8d0;min-heigh
 .monster-name{font-size:14px;color:rgba(255,255,255,.5);margin-top:4px}
 .hp-bar{width:260px;height:8px;background:rgba(255,255,255,.06);border-radius:4px;margin:8px 0;overflow:hidden}
 .hp-fill{height:100%;background:linear-gradient(90deg,#f66,#f44);border-radius:4px;transition:width .3s}
-.dmg-num{position:absolute;pointer-events:none;font-weight:700;animation:dmgUp .8s ease-out forwards;z-index:2}
-@keyframes dmgUp{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-50px)}}
+.dmg-num{position:absolute;pointer-events:none;font-weight:700;animation:dmgUp .9s ease-out forwards;z-index:2;text-shadow:0 1px 3px rgba(0,0,0,.5);white-space:nowrap}
+@keyframes dmgUp{0%{opacity:1;transform:translateY(0) scale(.8)}15%{opacity:1;transform:translateY(-8px) scale(1.1)}100%{opacity:0;transform:translateY(-55px) scale(.9)}}
+.dmg-feed{position:absolute;right:8px;top:8px;font-size:11px;color:rgba(255,255,255,.25);text-align:right;pointer-events:none;z-index:1;max-height:120px;overflow:hidden;display:flex;flex-direction:column-reverse}
+.dmg-feed div{animation:feedFade 2s ease-out forwards;line-height:1.4}
+@keyframes feedFade{0%{opacity:.8}100%{opacity:0;transform:translateX(8px)}}
 .auto-row{display:flex;align-items:center;gap:8px;margin-top:8px}
 .toggle{width:40px;height:22px;background:rgba(255,255,255,.1);border-radius:11px;cursor:pointer;position:relative;transition:background .2s}
 .toggle.on{background:rgba(74,222,128,.3)}
@@ -161,6 +164,7 @@ body{background:#0d0d1a;font-family:system-ui,sans-serif;color:#c0b8d0;min-heigh
   <div class="main">
     <div class="panel" id="stats-panel"></div>
     <div class="battle" id="battle">
+      <div class="dmg-feed" id="dmg-feed"></div>
       <div class="zone-info" id="zone-info">🌲 新手森林 — 第1区域</div>
       <div class="monster" id="monster" onclick="doClick()">🐺</div>
       <div class="monster-name" id="mon-name">野狼</div>
@@ -435,11 +439,19 @@ function killMon(){
   spawnMon();
 }
 function levelUp(){G.lv++;G.exp-=G.expNeed;G.expNeed=expToLevel(G.lv);G.stats.str++;G.stats.int++;G.stats.dex++;G.stats.vit++;G.stats.luk++;toast('🎉 升级! Lv.'+G.lv);if(G.lv>=10&&!G.classes.some(c=>c!=='novice'))toast('⚡ 可转职了！点击下方转职标签')}
-function spawnDmg(val,color,txt){
+function spawnDmg(val,color,txt,skipFeed){
   const el=document.createElement('div');el.className='dmg-num';el.textContent=txt||val;el.style.color=color;
-  if(color==='#f0d78c')el.style.fontSize='20px';
-  el.style.left=(40+Math.random()*60)+'%';el.style.top='30%';
-  document.getElementById('battle').appendChild(el);setTimeout(()=>el.remove(),900);
+  if(color==='#f0d78c')el.style.fontSize='22px';
+  else if(color==='#f66')el.style.fontSize='18px';
+  else el.style.fontSize='15px';
+  el.style.left=(35+Math.random()*55)+'%';el.style.top=(25+Math.random()*20)+'%';
+  document.getElementById('battle').appendChild(el);setTimeout(()=>el.remove(),1000);
+  // 右侧伤害日志
+  if(!skipFeed){
+    const feed=document.getElementById('dmg-feed');
+    const fe=document.createElement('div');fe.textContent=(txt||val);fe.style.color=color;
+    feed.appendChild(fe);if(feed.children.length>25)feed.firstChild.remove();
+  }
 }
 
 // ═══ 属性 ═══
@@ -624,7 +636,13 @@ function loop(t){
   if(G.auto&&dt>0){
     const dps=calcDPS();
     G.monHp-=dps*dt;
-    if(G.monHp<=0)killMon();
+    G._dmgTick=(G._dmgTick||0)+dps*dt;
+    // 每累积0.25秒的伤害弹一次数字
+    if(G._dmgTick>dps*0.25){
+      spawnDmg(Math.floor(G._dmgTick),'#fff',Math.floor(G._dmgTick)+'');
+      G._dmgTick=0;
+    }
+    if(G.monHp<=0){killMon();G._dmgTick=0}
   }
   // 技能冷却
   for(const k of Object.keys(G.skillCD)){if(G.skillCD[k]>0)G.skillCD[k]-=dt;if(G.skillCD[k]<0)G.skillCD[k]=0}
