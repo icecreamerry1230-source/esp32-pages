@@ -373,25 +373,30 @@ function calcDPS(){
 function hasActiveSkill(){
   for(const cid of G.classes){
     if(cid==='novice')continue;
-    const t1=CLASSES.T1.find(c=>c.id===cid);
-    if(t1&&ACTIVE_SKILLS[t1.parent])return t1.parent;
+    // 直接检查这个职业是否有主动技能
+    if(ACTIVE_SKILLS[cid])return cid;
+    // T2/T3 职业：找其父路线
     const t2=CLASSES.T2.find(c=>c.id===cid);
-    if(t2){const p=t2.parent;if(ACTIVE_SKILLS[p])return p}
+    if(t2&&ACTIVE_SKILLS[t2.parent])return t2.parent;
     const t3=CLASSES.T3.find(c=>c.id===cid);
-    if(t3){const t2p=CLASSES.T2.find(c=>c.id===t3.parent);if(t2p){const p=t2p.parent;if(ACTIVE_SKILLS[p])return p}}
+    if(t3){const t2p=CLASSES.T2.find(c=>c.id===t3.parent);if(t2p&&ACTIVE_SKILLS[t2p.parent])return t2p.parent}
   }
   return null;
 }
 
 function monData(){const z=ZONES[G.zone];return G.monIdx<3?z.mons[G.monIdx]:z.boss}
-function monHPMax(){let hp=monData().hp;const mult=Math.pow(2.8,G.zone);return Math.floor(hp*mult)}
-function monGold(){const base=monData().gold*Math.pow(2.6,G.zone);return Math.floor(base*goldMult())}
-function monXP(){const base=monData().xp*Math.pow(2.6,G.zone);return Math.floor(base*xpMult())}
+function monHPMax(){return monData().hp}
+function monGold(){return Math.floor(monData().gold*goldMult())}
+function monXP(){return Math.floor(monData().xp*xpMult())}
 function expToLevel(l){return Math.floor(100*Math.pow(1.5,l-1))}
 function statCost(n){return Math.floor(10*Math.pow(1.18,n-1))}
 
 // ═══ 重生 ═══
-function spawnMon(){G.monIdx=Math.random()<0.1&&G.zone>=3?3:(Math.floor(Math.random()*3));G.monHp=monHPMax();renderBattle()}
+function spawnMon(){
+  const bossChance=Math.min(0.05+G.zone*0.01,0.15);
+  G.monIdx=Math.random()<bossChance?3:(Math.floor(Math.random()*3));
+  G.monHp=monHPMax();renderBattle();
+}
 function doClick(){
   let dmg=baseAtk();let extraHits=0;
   const wep=G.equipped.weapon;
@@ -506,6 +511,7 @@ function renderStats(){
     <h3>👤 ${className(G.curClass)}</h3>
     <div class="stat-row"><span class="s">Lv</span><span class="v">${G.lv}</span></div>
     <div class="stat-row"><span class="s">EXP</span><span>${G.exp}/${G.expNeed}</span></div>
+    <div style="height:3px;background:rgba(255,255,255,.06);border-radius:2px;margin:2px 0"><div style="width:${Math.min(100,G.exp/G.expNeed*100)}%;height:100%;background:linear-gradient(90deg,#5c7,#4ade80);border-radius:2px;transition:width .3s"></div></div>
     ${['str','int','dex','vit','luk'].map(s=>`<div class="stat-row"><span class="s">${({str:'💪力量',int:'🧠智力',dex:'🎯敏捷',vit:'🛡体力',luk:'🍀幸运'}[s])}</span><span class="v">${G.stats[s]}</span><button class="btn" onclick="buyStat('${s}')">¥${statCost(G.stats[s])}</button></div>`).join('')}
     <div class="stat-row"><span class="s">💀魂</span><span class="v" style="color:#f6a">${G.souls}</span></div>
     <div class="stat-row"><span class="s">🔄转生</span><span class="v">#${G.rebirth}</span></div>
@@ -660,6 +666,7 @@ function loop(t){
 // ═══ 启动 ═══
 document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',function(){activeTab=parseInt(this.dataset.t);document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===this));updateTab()}));
 load();spawnMon();renderAll();
+document.getElementById('auto-toggle').classList.toggle('on',G.auto);
 
 // 离线收益
 const elapsed=(Date.now()-G.lastSave)/1000;
