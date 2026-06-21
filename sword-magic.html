@@ -483,8 +483,19 @@ function className(id){const all=[{id:'novice',name:'初心者'},...CLASSES.T1,.
 // ═══ 装备 ═══
 function buyEquip(idx){
   const eq=EQUIP_SHOP[idx];if(G.gold<eq.cost)return;
+  // 卖掉该槽位旧装备（半价回收）
+  const old=G.equipped[eq.slot];
+  let refund=0;
+  if(old){refund=Math.floor(old.cost*0.5);G.gold+=refund}
   G.gold-=eq.cost;G.equipped[eq.slot]={...eq};
-  toast('购买 '+eq.name+'!');
+  toast('购买 '+eq.name+'!'+(refund>0?' (回收 +'+refund+'🪙)':''));
+  renderAll();
+}
+function sellEquip(slot){
+  const old=G.equipped[slot];if(!old)return;
+  const refund=Math.floor(old.cost*0.5);
+  G.gold+=refund;G.equipped[slot]=null;
+  toast('出售 '+old.name+' +'+refund+'🪙');
   renderAll();
 }
 
@@ -558,12 +569,24 @@ function updateTab(){
       });
     });
   }else if(activeTab===1){
-    h='<div style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:6px">🛒 装备商店 · 已装备: '+(Object.values(G.equipped).filter(Boolean).length)+'/6</div>';
+    h='<div style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:6px">🛒 装备商店 · 已装备: '+(Object.values(G.equipped).filter(Boolean).length)+'/6（购买时自动回收旧装备50%价格）</div>';
+    // 当前装备一览
+    h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;font-size:10px">';
+    ['weapon','armor','ring1','ring2','amulet','crown'].forEach(slot=>{
+      const eq=G.equipped[slot];
+      if(eq){
+        const rc=RARITY_COLORS[eq.rare]||'#aaa';
+        h+=`<div style="background:rgba(255,255,255,.02);border:1px solid ${rc};border-radius:8px;padding:4px 8px;position:relative;cursor:pointer" onclick="sellEquip('${slot}')" title="点击出售50%回收">
+          <div>${eq.icon} ${eq.name}</div><div style="color:${rc}">${eq.stat==='xp'?'EXP':eq.stat.toUpperCase()}+${eq.val}</div><div style="font-size:8px;color:rgba(255,255,255,.2)">点击出售 ¥${Math.floor(eq.cost*0.5)}</div></div>`;
+      }
+    });
+    h+='</div>';
     h+='<div style="display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap;font-size:10px">'+RARITY_NAMES.map((n,i)=>`<span style="color:${RARITY_COLORS[i]};background:${RARITY_BG[i]||'rgba(255,255,255,.04)'};padding:2px 6px;border-radius:6px">${n}</span>`).join('')+'</div>';
+    h+='<div style="font-size:10px;color:rgba(255,255,255,.15);margin-bottom:4px">🗡武器|🛡防具|💍幸运戒指|💍敏捷戒指|📿护符|👑头冠</div>';
     EQUIP_SHOP.forEach((eq,i)=>{
       const owned=G.equipped[eq.slot]&&G.equipped[eq.slot].name===eq.name;
       const rc=RARITY_COLORS[eq.rare]||'#aaa';
-      h+=`<div class="shop-item" style="background:${RARITY_BG[eq.rare]||'transparent'};border-left:2px solid ${rc}">
+      h+=`<div class="shop-item" style="background:${RARITY_BG[eq.rare]||'transparent'};border-left:2px solid ${rc};${owned?'opacity:.5':''}">
         <span><span class="eq-name" style="color:${rc}">${eq.icon} ${eq.name}</span>
         <span class="eq-stat">${eq.stat==='xp'?'EXP':eq.stat.toUpperCase()}+${eq.val}</span>
         ${eq.edesc?`<div style="font-size:10px;color:${rc}">⚡ ${eq.edesc}</div>`:''}</span>
