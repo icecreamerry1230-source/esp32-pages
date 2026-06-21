@@ -393,8 +393,8 @@ function sndEvo(){[600,800,1000,1200,1500].forEach((f,i)=>setTimeout(()=>cuteSou
 })();
 
 // ═══════════════ 游戏状态 ═══════════════
-let S={dust:0,gem:0,totalDust:0,buildings:{},buyMode:1,clicks:0,totalEarned:0,time:0,
-       unlocked:{buyModes:false,bldPanel:false,gem:false,evoBar:false,panels:false},
+let S={dust:15,gem:0,totalDust:15,buildings:{},buyMode:1,clicks:0,totalEarned:15,time:0,
+       unlocked:{buyModes:false,gem:false,evoBar:false,panels:false},
        evoStage:0,traitSeen:[],lastSave:Date.now(),version:2};
 
 function getBldEntryKey(bldId,rarity,trait){return bldId+'|'+rarity+'|'+(trait||'none')}
@@ -511,11 +511,10 @@ function changeMode(m){S.buyMode=m==='m'?'m':parseInt(m);render()}
 // ═══════════════ UI 解锁 ═══════════════
 function updateUnlocks(){
   const total=totalAllBuildings();
-  if(total>=10&&!S.unlocked.buyModes)S.unlocked.buyModes=true;
-  if(total>=1&&!S.unlocked.bldPanel)S.unlocked.bldPanel=true;
-  if(S.totalDust>=100000&&!S.unlocked.evoBar)S.unlocked.evoBar=true;
-  if(S.totalDust>=1000000&&!S.unlocked.panels)S.unlocked.panels=true;
-  if(S.totalDust>=500000&&!S.unlocked.gem)S.unlocked.gem=true;
+  if(total>=10&&!S.unlocked.buyModes){S.unlocked.buyModes=true;msg('🔓 批量购买模式解锁！')}
+  if(S.totalDust>=100000&&!S.unlocked.evoBar){S.unlocked.evoBar=true;msg('📊 进化进度条解锁！')}
+  if(S.totalDust>=1000000&&!S.unlocked.panels){S.unlocked.panels=true;msg('📖 图鉴面板解锁！')}
+  if(S.totalDust>=500000&&!S.unlocked.gem){S.unlocked.gem=true;msg('💎 星辉货币解锁！')}
   for(let i=EVO_STAGES.length-1;i>=0;i--){if(S.totalDust>=EVO_STAGES[i].threshold&&S.evoStage<i){S.evoStage=i;sndEvo();msg('🌟 进化！'+EVO_STAGES[i].name+'！')}}
 }
 
@@ -563,7 +562,7 @@ function render(){
   document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('on',String(S.buyMode)===b.dataset.m));
 
   const bldDiv=document.getElementById('bld-section');
-  bldDiv.classList.toggle('show',S.unlocked.bldPanel);
+  bldDiv.classList.add('show'); // 始终可见
   let bhtml='';
   for(const b of BUILDINGS){
     const baseCount=totalBldCount(b.id);
@@ -615,8 +614,8 @@ document.getElementById('panels').addEventListener('click',e=>{
 document.getElementById('btn-reset-game').addEventListener('click',()=>{if(confirm('重置游戏？')){S=createFresh();saveGame();render()}});
 
 function createFresh(){
-  return {dust:10,gem:0,totalDust:10,buildings:{},buyMode:1,clicks:0,totalEarned:10,time:0,
-          unlocked:{buyModes:false,bldPanel:false,gem:false,evoBar:false,panels:false},
+  return {dust:15,gem:0,totalDust:15,buildings:{},buyMode:1,clicks:0,totalEarned:15,time:0,
+          unlocked:{buyModes:false,gem:false,evoBar:false,panels:false},
           evoStage:0,traitSeen:[],lastSave:Date.now(),version:2};
 }
 
