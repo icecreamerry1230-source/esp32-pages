@@ -274,6 +274,7 @@ body{
         <button class="panel-tab on" data-p="0">📖 图鉴</button>
         <button class="panel-tab" data-p="1">🏷️ 特质</button>
         <button class="panel-tab" data-p="2">🏆 成就</button>
+        <button class="panel-tab" data-p="3">📋 规则</button>
       </div>
       <div class="panel-content" id="panel-content"></div>
     </div>
@@ -347,21 +348,21 @@ const TRAITS=[
 ];
 
 const BUILDINGS=[
-  {id:'collector',icon:'🌠',name:'星尘收集器',baseCost:15,baseProd:0.1,growth:1.15},
-  {id:'incubator',icon:'🥚',name:'星灵保育箱',baseCost:100,baseProd:0.5,growth:1.15},
-  {id:'garden',icon:'🌙',name:'月光花圃',baseCost:500,baseProd:2,growth:1.15},
-  {id:'fountain',icon:'⛲',name:'星泉喷池',baseCost:3000,baseProd:10,growth:1.15},
-  {id:'spindle',icon:'🎡',name:'星云纺车',baseCost:20000,baseProd:50,growth:1.15},
-  {id:'windmill',icon:'🌌',name:'银河风车',baseCost:150000,baseProd:300,growth:1.15},
-  {id:'altar',icon:'🔮',name:'星座祭坛',baseCost:1200000,baseProd:2000,growth:1.15},
-  {id:'forge',icon:'💥',name:'超新星熔炉',baseCost:10000000,baseProd:15000,growth:1.15},
+  {id:'collector',icon:'🌠',name:'星尘收集器',baseCost:10,baseProd:0.2,growth:1.12},
+  {id:'incubator',icon:'🥚',name:'星灵保育箱',baseCost:80,baseProd:0.8,growth:1.12},
+  {id:'garden',icon:'🌙',name:'月光花圃',baseCost:400,baseProd:3,growth:1.12},
+  {id:'fountain',icon:'⛲',name:'星泉喷池',baseCost:2500,baseProd:15,growth:1.12},
+  {id:'spindle',icon:'🎡',name:'星云纺车',baseCost:15000,baseProd:70,growth:1.12},
+  {id:'windmill',icon:'🌌',name:'银河风车',baseCost:100000,baseProd:400,growth:1.12},
+  {id:'altar',icon:'🔮',name:'星座祭坛',baseCost:800000,baseProd:2500,growth:1.12},
+  {id:'forge',icon:'💥',name:'超新星熔炉',baseCost:6000000,baseProd:18000,growth:1.12},
 ];
 
 const EVO_STAGES=[
   {name:'幼年星灵',threshold:0,clickMult:1,prodMult:1,desc:'噗哟~'},
-  {name:'成长星灵',threshold:1000,clickMult:2,prodMult:1.2,desc:'戴着蝴蝶结'},
-  {name:'皇冠星灵',threshold:100000,clickMult:5,prodMult:2,desc:'金色光晕环绕'},
-  {name:'星灵王',threshold:10000000,clickMult:15,prodMult:5,desc:'七彩星灵王!'},
+  {name:'成长星灵',threshold:500,clickMult:2,prodMult:1.2,desc:'戴着蝴蝶结'},
+  {name:'皇冠星灵',threshold:50000,clickMult:5,prodMult:2,desc:'金色光晕环绕'},
+  {name:'星灵王',threshold:5000000,clickMult:15,prodMult:5,desc:'七彩星灵王!'},
 ];
 
 // ═══════════════ 音频 ═══════════════
@@ -393,7 +394,7 @@ function sndEvo(){[600,800,1000,1200,1500].forEach((f,i)=>setTimeout(()=>cuteSou
 })();
 
 // ═══════════════ 游戏状态 ═══════════════
-let S={dust:15,gem:0,totalDust:15,buildings:{},buyMode:1,clicks:0,totalEarned:15,time:0,
+let S={dust:10,gem:0,totalDust:10,buildings:{},buyMode:1,clicks:0,totalEarned:10,time:0,
        unlocked:{buyModes:false,gem:false,evoBar:false,panels:false},
        evoStage:0,traitSeen:[],lastSave:Date.now(),version:2};
 
@@ -513,7 +514,7 @@ function updateUnlocks(){
   const total=totalAllBuildings();
   if(total>=10&&!S.unlocked.buyModes){S.unlocked.buyModes=true;msg('🔓 批量购买模式解锁！')}
   if(S.totalDust>=100000&&!S.unlocked.evoBar){S.unlocked.evoBar=true;msg('📊 进化进度条解锁！')}
-  if(S.totalDust>=1000000&&!S.unlocked.panels){S.unlocked.panels=true;msg('📖 图鉴面板解锁！')}
+  if(!S.unlocked.panels)S.unlocked.panels=true; // 规则面板始终可用
   if(S.totalDust>=500000&&!S.unlocked.gem){S.unlocked.gem=true;msg('💎 星辉货币解锁！')}
   for(let i=EVO_STAGES.length-1;i>=0;i--){if(S.totalDust>=EVO_STAGES[i].threshold&&S.evoStage<i){S.evoStage=i;sndEvo();msg('🌟 进化！'+EVO_STAGES[i].name+'！')}}
 }
@@ -593,13 +594,41 @@ function updatePanel(idx){
   }else if(idx===1){
     html='<div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:8px">🏷️ 特质图鉴</div>';
     for(const t of TRAITS)html+=`<div style="${S.traitSeen.includes(t.id)?'':'opacity:.3'}">${t.icon} ${t.name} — ${t.desc} ${S.traitSeen.includes(t.id)?'✓':'未解锁'}</div>`;
-  }else{
+  }else if(idx===2){
     html='<div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:8px">🏆 成就</div>';
     const total=totalAllBuildings();
     html+=`<div>🌟 总建筑: ${total} ${total>=100?'✓':'('+(100-total)+'到100)'}</div>`;
     html+=`<div>👆 点击: ${S.clicks} ${S.clicks>=1000?'✓':'('+(1000-S.clicks)+'到1K)'}</div>`;
     html+=`<div>💰 总星尘: ${fmt(S.totalEarned)} ${S.totalEarned>=1000000?'✓':'('+fmt(1000000-S.totalEarned)+'到1M)'}</div>`;
     html+=`<div>🏷️ 特质收集: ${S.traitSeen.length}/7 ${S.traitSeen.length>=7?'✓':''}</div>`;
+  }else if(idx===3){
+    html=`<div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:8px">📋 游戏规则</div>
+    <div style="line-height:2">
+    <div style="color:#fbbf24;margin-top:6px">⭐ 稀有度</div>
+    <div>购买建筑时随机获得稀有度：</div>
+    <div>${RARITY_STARS[0]} 星尘级 60% · 产量 ×1</div>
+    <div>${RARITY_STARS[1]} 月辉级 25% · 产量 ×1.8 · 带蓝色光晕</div>
+    <div>${RARITY_STARS[2]} 日冕级 10% · 产量 ×3.5 · 金色闪光</div>
+    <div>${RARITY_STARS[3]} 银河级 4% · 产量 ×7 · 紫色粒子</div>
+    <div>${RARITY_STARS[4]} 创世级 1% · 产量 ×15 · 彩虹特效</div>
+    <div style="color:#fbbf24;margin-top:8px">🏷️ 特质</div>
+    <div>非星尘级的建筑额外随机携带一个特质：</div>
+    <div>🌬️ 风之加护 — 该建筑产量 +30%</div>
+    <div>🔥 火之加护 — 点击收益 + 该建筑产量×0.5</div>
+    <div>💧 水之加护 — 离线收益倍率 +0.02（全局叠加）</div>
+    <div>🌍 地之加护 — 该建筑升级成本 −15%</div>
+    <div>✨ 光之加护 — 后续稀有度概率偏移 +5%（叠加）</div>
+    <div>🌑 暗之加护 — 该建筑产量 ×2，但不会再获得更高稀有度</div>
+    <div>⚡ 雷之加护 — 每30秒触发一次额外爆发（产量×10）</div>
+    <div style="color:#fbbf24;margin-top:8px">🌱 星灵进化</div>
+    <div>总星尘达到里程碑后主星灵进化：</div>
+    <div>幼年(0) → 成长(500, 点击×2) → 皇冠(50K, ×5) → 星灵王(5M, ×15)</div>
+    <div style="color:#fbbf24;margin-top:8px">💡 提示</div>
+    <div>· 点击胖星星获得星尘，也可等自动生产</div>
+    <div>· 稀有度+特质的组合让相同建筑产出天差地别</div>
+    <div>· 光之加护越多，未来抽到高稀有的概率越高</div>
+    <div>· 关闭页面回来后自动结算离线收益</div>
+    </div>`;
   }
   document.getElementById('panel-content').innerHTML=html;
 }
@@ -614,7 +643,7 @@ document.getElementById('panels').addEventListener('click',e=>{
 document.getElementById('btn-reset-game').addEventListener('click',()=>{if(confirm('重置游戏？')){S=createFresh();saveGame();render()}});
 
 function createFresh(){
-  return {dust:15,gem:0,totalDust:15,buildings:{},buyMode:1,clicks:0,totalEarned:15,time:0,
+  return {dust:10,gem:0,totalDust:10,buildings:{},buyMode:1,clicks:0,totalEarned:10,time:0,
           unlocked:{buyModes:false,gem:false,evoBar:false,panels:false},
           evoStage:0,traitSeen:[],lastSave:Date.now(),version:2};
 }
