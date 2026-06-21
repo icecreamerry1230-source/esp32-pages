@@ -356,7 +356,8 @@ function getPrice(bid,count){
 }
 function bldProd(entry){
   const cfg=BUILDINGS.find(b=>b.id===entry.key.split('|')[0]);
-  let p=cfg.prod*entry.count*p=RARITY_MULT[entry.rarity];
+  let p=cfg.prod*entry.count;
+  p*=RARITY_MULT[entry.rarity];
   if(entry.trait==='wind')p*=1.3;
   if(entry.trait==='dark')p*=2;
   return p;
