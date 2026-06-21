@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no"><title>剑与魔法 · 转职之路</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0d0d1a;font-family:system-ui,sans-serif;color:#c0b8d0;min-height:100vh;display:flex;justify-content:center;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.game{width:100%;max-width:700px;display:flex;flex-direction:column;min-height:100vh}
+.top-bar{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(0,0,0,.3);border-bottom:1px solid rgba(255,255,255,.05);font-size:12px;flex-wrap:wrap;gap:4px}
+.top-bar span{background:rgba(255,255,255,.04);padding:3px 10px;border-radius:8px}
+.g{color:#f0d78c}.r{color:#f66}.b{color:#6af}.p{color:#f6a}.gr{color:#5c7}
+.main{display:flex;flex:1;overflow:hidden}
+.panel{flex:0 0 180px;background:rgba(0,0,0,.2);padding:10px;overflow-y:auto;border-right:1px solid rgba(255,255,255,.04);display:flex;flex-direction:column;gap:6px}
+.panel h3{font-size:11px;color:#c9a96e;letter-spacing:2px;margin-bottom:2px}
+.stat-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:4px 6px;border-radius:6px;background:rgba(255,255,255,.02)}
+.stat-row .s{color:rgba(255,255,255,.5)}
+.stat-row .v{font-weight:600}
+.stat-row .btn{background:rgba(201,169,110,.08);border:1px solid rgba(201,169,110,.2);color:#c9a96e;padding:2px 8px;border-radius:6px;font-size:10px;cursor:pointer}
+.stat-row .btn:active{background:rgba(201,169,110,.2)}
+
+.battle{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;position:relative}
+.zone-info{font-size:12px;color:rgba(255,255,255,.3);margin-bottom:8px}
+.monster{font-size:80px;cursor:pointer;transition:transform .06s;position:relative;-webkit-tap-highlight-color:transparent}
+.monster:active{transform:scale(.9)}
+.monster-name{font-size:14px;color:rgba(255,255,255,.5);margin-top:4px}
+.hp-bar{width:260px;height:8px;background:rgba(255,255,255,.06);border-radius:4px;margin:8px 0;overflow:hidden}
+.hp-fill{height:100%;background:linear-gradient(90deg,#f66,#f44);border-radius:4px;transition:width .3s}
+.dmg-num{position:absolute;pointer-events:none;font-weight:700;animation:dmgUp .8s ease-out forwards;z-index:2}
+@keyframes dmgUp{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-50px)}}
+.auto-row{display:flex;align-items:center;gap:8px;margin-top:8px}
+.toggle{width:40px;height:22px;background:rgba(255,255,255,.1);border-radius:11px;cursor:pointer;position:relative;transition:background .2s}
+.toggle.on{background:rgba(74,222,128,.3)}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform .2s}
+.toggle.on::after{transform:translateX(18px)}
+
+.tabs{display:flex;border-top:1px solid rgba(255,255,255,.05);background:rgba(0,0,0,.3)}
+.tab{flex:1;padding:10px 4px;text-align:center;font-size:11px;cursor:pointer;color:rgba(255,255,255,.35);border:none;background:none;font-family:inherit;transition:all .15s;border-bottom:2px solid transparent}
+.tab.on{color:#c9a96e;border-bottom-color:#c9a96e;background:rgba(201,169,110,.04)}
+.tab-content{display:none;padding:12px;max-height:300px;overflow-y:auto;font-size:12px;line-height:1.8}
+.tab-content.show{display:block}
+
+.class-node{padding:6px 10px;margin:3px 0;border-radius:8px;border:1px solid rgba(255,255,255,.06);cursor:pointer;transition:all .15s;font-size:11px}
+.class-node:hover{background:rgba(255,255,255,.03)}
+.class-node.current{border-color:#c9a96e;background:rgba(201,169,110,.08)}
+.class-node.available{border-color:#4ade80;background:rgba(74,222,128,.05);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 4px rgba(74,222,128,.1)}50%{box-shadow:0 0 12px rgba(74,222,128,.25)}}
+.class-node.locked{opacity:.35}
+.class-node .c-name{font-weight:600;font-size:12px}
+.class-node .c-info{font-size:10px;color:rgba(255,255,255,.3);margin-top:1px}
+
+.shop-item{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.03);font-size:12px}
+.shop-item .eq-name{font-weight:600}
+.shop-item .eq-stat{font-size:10px;color:rgba(255,255,255,.35)}
+.shop-item button{background:rgba(201,169,110,.08);border:1px solid rgba(201,169,110,.2);color:#c9a96e;padding:4px 10px;border-radius:8px;font-size:11px;cursor:pointer}
+.shop-item button.equipped{background:rgba(74,222,128,.08);border-color:rgba(74,222,128,.2);color:#5c7}
+
+.rebirth-info{text-align:center;padding:10px}
+.rebirth-info .big{font-size:24px;color:#f0d78c}
+.rebirth-info button{background:rgba(246,106,170,.1);border:1px solid rgba(246,106,170,.25);color:#f6a;padding:10px 24px;border-radius:14px;font-size:15px;cursor:pointer;margin-top:8px}
+
+.feedback{position:fixed;top:12px;left:50%;transform:translateX(-50%);pointer-events:none;z-index:5;text-align:center}
+.toast{background:rgba(0,0,0,.8);color:#f0d78c;padding:6px 16px;border-radius:12px;font-size:13px;animation:toastIn .3s ease,toastOut .3s 2.5s ease forwards}
+@keyframes toastIn{0%{opacity:0;transform:translateY(-10px)}100%{opacity:1;transform:translateY(0)}}
+@keyframes toastOut{0%{opacity:1}100%{opacity:0}}
+
+/* 移动端 */
+@media(max-width:600px){
+  .main{flex-direction:column}
+  .panel{flex:0 0 auto;flex-direction:row;flex-wrap:wrap;gap:4px;padding:8px;overflow-y:visible}
+  .panel h3{display:none}
+  .stat-row{font-size:10px;padding:2px 4px}
+  .stat-row .btn{font-size:9px;padding:1px 6px}
+  .battle{min-height:200px}
+  .monster{font-size:60px}
+}
+</style>
+</head>
+<body>
+<div class="game">
+  <div class="top-bar">
+    <span class="g">⚔️ 剑与魔法</span>
+    <span id="lvl">Lv.1 初心者</span>
+    <span class="g">🪙 <b id="gold-t">0</b></span>
+    <span>💀 <b id="soul-t">0</b></span>
+    <span>⚡DPS <b id="dps-t">0</b></span>
+    <span class="gr" id="zone-t">🌲 新手森林</span>
+  </div>
+
+  <div class="main">
+    <div class="panel" id="stats-panel"></div>
+    <div class="battle" id="battle">
+      <div class="zone-info" id="zone-info">🌲 新手森林 — 第1区域</div>
+      <div class="monster" id="monster" onclick="doClick()">🐺</div>
+      <div class="monster-name" id="mon-name">野狼</div>
+      <div class="hp-bar"><div class="hp-fill" id="hp-bar"></div></div>
+      <div style="font-size:12px;color:rgba(255,255,255,.3)"><span id="hp-text">50</span> / <span id="hp-max">50</span></div>
+      <div class="auto-row">
+        <div class="toggle" id="auto-toggle" onclick="toggleAuto()"></div>
+        <span style="font-size:11px;color:rgba(255,255,255,.3)">自动战斗</span>
+        <span style="font-size:10px;color:rgba(255,255,255,.15);margin-left:8px" id="zone-nav">
+          <button onclick="prevZone()" style="background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:14px">◀</button>
+          区域 <span id="zone-num">1</span>/10
+          <button onclick="nextZone()" style="background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:14px">▶</button>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab on" data-t="0">🏛 转职</button>
+    <button class="tab" data-t="1">🛒 商店</button>
+    <button class="tab" data-t="2">⚔️ 技能</button>
+    <button class="tab" data-t="3">🏆 成就</button>
+    <button class="tab" data-t="4">🔄 转生</button>
+  </div>
+  <div class="tab-content show" id="tab-content"></div>
+</div>
+
+<div class="feedback" id="feedback"></div>
+
+<script>
+// ═══ 数据 ═══
+const ZONES=[
+  {n:'🌲 新手森林',mons:[{n:'野狼',e:'🐺',hp:50,gold:5,xp:3},{n:'巨蛛',e:'🕷️',hp:90,gold:10,xp:6},{n:'树精',e:'🌳',hp:150,gold:18,xp:10}],boss:{n:'巨蛛女王',e:'🕷️',hp:300,gold:50,xp:25,skill:'召唤小蜘蛛'}},
+  {n:'🕳️ 暗影洞穴',mons:[{n:'蝙蝠',e:'🦇',hp:180,gold:14,xp:9},{n:'蛇妖',e:'🐍',hp:320,gold:28,xp:16},{n:'石像鬼',e:'🗿',hp:540,gold:50,xp:28}],boss:{n:'美杜莎',e:'🐍',hp:1050,gold:140,xp:70,skill:'石化2秒'}},
+  {n:'🏰 魔法塔',mons:[{n:'火元素',e:'🔥',hp:500,gold:38,xp:25},{n:'幽灵',e:'👻',hp:900,gold:75,xp:45},{n:'魔像',e:'🗿',hp:1500,gold:135,xp:75}],boss:{n:'大精灵',e:'🧞',hp:3000,gold:400,xp:200,skill:'回复30%HP'}},
+  {n:'🏚️ 地下城',mons:[{n:'骷髅兵',e:'💀',hp:1400,gold:100,xp:65},{n:'亡灵',e:'👻',hp:2500,gold:200,xp:120},{n:'巫妖',e:'🧟',hp:4200,gold:400,xp:210}],boss:{n:'巫妖王',e:'🧟',hp:8400,gold:1000,xp:500,skill:'复活一次'}},
+  {n:'🌌 深渊裂隙',mons:[{n:'小鬼',e:'👿',hp:4000,gold:280,xp:180},{n:'恶魔',e:'😈',hp:7200,gold:550,xp:330},{n:'深渊兽',e:'🐗',hp:12000,gold:1000,xp:600}],boss:{n:'恶魔领主',e:'😈',hp:24000,gold:2500,xp:1400,skill:'暴击伤害减半'}},
+  {n:'🐉 龙之巢穴',mons:[{n:'幼龙',e:'🐲',hp:11000,gold:750,xp:500},{n:'飞龙',e:'🐉',hp:20000,gold:1500,xp:900},{n:'龙人',e:'🦎',hp:33000,gold:3000,xp:1600}],boss:{n:'远古巨龙',e:'🐉',hp:66000,gold:6000,xp:3500,skill:'飞天5秒'}},
+  {n:'🏛️ 神域边境',mons:[{n:'天使',e:'👼',hp:31000,gold:2000,xp:1300},{n:'神兵',e:'⚔️',hp:55000,gold:4200,xp:2400},{n:'圣兽',e:'🦁',hp:90000,gold:8000,xp:4200}],boss:{n:'神之使徒',e:'⚡',hp:180000,gold:16000,xp:9000,skill:'最大HP伤害'}},
+  {n:'🏯 魔王城',mons:[{n:'魔物',e:'👹',hp:85000,gold:5500,xp:3400},{n:'魔将',e:'👺',hp:150000,gold:11000,xp:6200},{n:'暗影龙',e:'🐲',hp:250000,gold:22000,xp:11000}],boss:{n:'魔王',e:'👑',hp:500000,gold:45000,xp:24000,skill:'召唤小怪'}},
+  {n:'🌑 混沌虚空',mons:[{n:'混沌兽',e:'🌑',hp:240000,gold:15000,xp:9000},{n:'虚空行者',e:'🕳️',hp:420000,gold:31000,xp:16000},{n:'混沌龙',e:'🐲',hp:700000,gold:60000,xp:28000}],boss:{n:'混沌主宰',e:'🌌',hp:1400000,gold:120000,xp:60000,skill:'复制技能'}},
+  {n:'🏛️ 创世神殿',mons:[{n:'圣灵',e:'✨',hp:660000,gold:42000,xp:24000},{n:'炽天使',e:'👼',hp:1150000,gold:85000,xp:43000},{n:'古神',e:'👁️',hp:1900000,gold:160000,xp:76000}],boss:{n:'创世神',e:'☀️',hp:3800000,gold:330000,xp:160000,skill:'三阶段'}},
+];
+
+const CLASSES={
+  T0:[{id:'novice',name:'初心者',icon:'⚔️',tier:0,parent:null,req:{},bonus:{},skill:'',desc:'冒险的起点'}],
+  T1:[
+    {id:'warrior',name:'战士',icon:'🛡️',tier:1,parent:'novice',req:{lv:10,str:15},bonus:{str:5,vit:3,dex:1},skill:'warr10',desc:'近战物理DPS/Tank · 路线: STR+VIT'},
+    {id:'mage',name:'法师',icon:'🔮',tier:1,parent:'novice',req:{lv:10,int:15},bonus:{int:5,dex:2,luk:2},skill:'mage10',desc:'远程魔法DPS · 路线: INT+DEX'},
+    {id:'archer',name:'弓箭手',icon:'🏹',tier:1,parent:'novice',req:{lv:10,dex:15},bonus:{dex:5,str:2,luk:2},skill:'arch10',desc:'远程暴击DPS · 路线: DEX+LUK'},
+    {id:'acolyte',name:'侍僧',icon:'⛪',tier:1,parent:'novice',req:{lv:10,int:10,vit:8},bonus:{int:3,vit:4,luk:2},skill:'acol10',desc:'辅助/金币特化 · 路线: INT+LUK'},
+  ],
+  T2:[
+    {id:'knight',name:'骑士',icon:'🐴',tier:2,parent:'warrior',req:{lv:30,str:50,vit:30},bonus:{str:12,vit:10,int:3},skill:'knight30',desc:'防御型坦克 · 圣盾冲锋'},
+    {id:'berserker',name:'狂战士',icon:'🪓',tier:2,parent:'warrior',req:{lv:30,str:65},bonus:{str:18,dex:5},skill:'bers30',desc:'狂怒DPS · 血怒'},
+    {id:'wizard',name:'巫师',icon:'🧙',tier:2,parent:'mage',req:{lv:30,int:60},bonus:{int:15,dex:5,luk:3},skill:'wiz30',desc:'奥术智慧 · 暴风雪'},
+    {id:'elementalist',name:'元素使',icon:'❄️',tier:2,parent:'mage',req:{lv:30,int:45,dex:25},bonus:{int:12,dex:8,str:3},skill:'elem30',desc:'元素共鸣 · 范围伤害'},
+    {id:'ranger',name:'游侠',icon:'🏹',tier:2,parent:'archer',req:{lv:30,dex:55},bonus:{dex:14,str:5,luk:4},skill:'rang30',desc:'自然之箭 · 稳定输出'},
+    {id:'assassin',name:'刺客',icon:'🗡️',tier:2,parent:'archer',req:{lv:30,dex:45,str:25},bonus:{dex:12,str:8,luk:5},skill:'assn30',desc:'暗杀 · 暴击特化'},
+    {id:'priest',name:'祭司',icon:'✝️',tier:2,parent:'acolyte',req:{lv:30,int:45,vit:30},bonus:{int:10,vit:10,luk:5},skill:'priest30',desc:'神圣祝福 · 金币+40%'},
+    {id:'monk',name:'武僧',icon:'✊',tier:2,parent:'acolyte',req:{lv:30,str:30,vit:30},bonus:{str:10,vit:10,dex:5},skill:'monk30',desc:'金刚不坏 · HP+40%'},
+  ],
+  T3:[
+    {id:'paladin',name:'圣骑士',icon:'👼',tier:3,parent:'knight',req:{lv:60,str:100,vit:70,int:40},bonus:{str:25,vit:20,int:10,luk:5},skill:'pala60',desc:'圣光裁决 · ATK+50% 金币+20%'},
+    {id:'darkknight',name:'暗黑骑士',icon:'🦇',tier:3,parent:'knight',req:{lv:60,str:130,vit:50},bonus:{str:30,vit:12,dex:8},skill:'dark60',desc:'暗影之力 · ATK+70% 暴伤+30%'},
+    {id:'juggernaut',name:'毁灭者',icon:'💀',tier:3,parent:'berserker',req:{lv:60,str:150,vit:80},bonus:{str:35,vit:25},skill:'jugg60',desc:'毁灭打击 · ATK+80%'},
+    {id:'archmage',name:'大法师',icon:'🌟',tier:3,parent:'wizard',req:{lv:60,int:140},bonus:{int:30,dex:10,luk:10},skill:'archM60',desc:'禁咒 · ATK+60% 暴率+15%'},
+    {id:'warlock',name:'术士',icon:'🔥',tier:3,parent:'wizard',req:{lv:60,int:110,str:40},bonus:{int:25,str:12,vit:8},skill:'warL60',desc:'恶魔契约 · ATK+65% EXP+30%'},
+    {id:'grandElem',name:'大元素使',icon:'🌪️',tier:3,parent:'elementalist',req:{lv:60,int:110,dex:50},bonus:{int:22,dex:15,str:8},skill:'gElem60',desc:'元素风暴 · ATK+55% 攻速+35%'},
+    {id:'sniper',name:'狙击手',icon:'🎯',tier:3,parent:'ranger',req:{lv:60,dex:130},bonus:{dex:30,str:10,luk:10},skill:'snip60',desc:'致命一击 · 暴率+25% 暴伤+80%'},
+    {id:'beastmaster',name:'兽王',icon:'🦅',tier:3,parent:'ranger',req:{lv:60,dex:90,int:50},bonus:{dex:20,int:15,vit:10,luk:5},skill:'beast60',desc:'兽群召唤 · 攻速+40% 金币+25%'},
+    {id:'shadowMaster',name:'暗影大师',icon:'👤',tier:3,parent:'assassin',req:{lv:60,dex:110,str:60},bonus:{dex:25,str:15,luk:10},skill:'shdw60',desc:'暗杀奥义 · 暴率+30% 暴伤+100%'},
+    {id:'bishop',name:'主教',icon:'⛪',tier:3,parent:'priest',req:{lv:60,int:120,vit:60},bonus:{int:25,vit:20,luk:10},skill:'bish60',desc:'神之恩典 · 金币+50% 全属性+15%'},
+    {id:'inquisitor',name:'审判官',icon:'⚖️',tier:3,parent:'priest',req:{lv:60,int:90,str:70},bonus:{int:20,str:20,vit:10,dex:5},skill:'inqu60',desc:'神圣审判 · ATK+55% 暴率+15%'},
+    {id:'grandmaster',name:'宗师',icon:'☯️',tier:3,parent:'monk',req:{lv:60,str:90,vit:90},bonus:{str:25,vit:25,dex:10},skill:'gMas60',desc:'天人合一 · 全属性+25% ATK+35%'},
+  ]
+};
+
+const EQUIP_SHOP=[
+  {slot:'weapon',name:'短剑',cost:50,stat:'str',val:3,icon:'🗡️'},
+  {slot:'weapon',name:'长剑',cost:300,stat:'str',val:8,icon:'⚔️'},
+  {slot:'weapon',name:'秘法杖',cost:350,stat:'int',val:8,icon:'🪄'},
+  {slot:'weapon',name:'龙牙剑',cost:2000,stat:'str',val:20,icon:'🗡️'},
+  {slot:'armor',name:'皮甲',cost:80,stat:'vit',val:4,icon:'🛡️'},
+  {slot:'armor',name:'锁子甲',cost:400,stat:'vit',val:10,icon:'🛡️'},
+  {slot:'armor',name:'板甲',cost:2500,stat:'vit',val:25,icon:'🛡️'},
+  {slot:'ring1',name:'铜戒指',cost:100,stat:'luk',val:3,icon:'💍'},
+  {slot:'ring1',name:'银戒指',cost:500,stat:'luk',val:8,icon:'💍'},
+  {slot:'ring2',name:'敏捷戒指',cost:120,stat:'dex',val:3,icon:'💍'},
+  {slot:'ring2',name:'精准戒指',cost:600,stat:'dex',val:9,icon:'💍'},
+  {slot:'amulet',name:'幸运项链',cost:300,stat:'luk',val:5,icon:'📿'},
+  {slot:'amulet',name:'黄金项链',cost:1500,stat:'luk',val:12,icon:'📿'},
+  {slot:'crown',name:'学徒帽',cost:500,stat:'xp',val:10,icon:'🎓'},
+  {slot:'crown',name:'智者冠',cost:3000,stat:'xp',val:25,icon:'👑'},
+];
+
+// ═══ 状态 ═══
+let G={
+  gold:0,lv:1,exp:0,expNeed:100,
+  stats:{str:5,int:5,dex:5,vit:5,luk:5},
+  curClass:'novice',classes:['novice'],
+  equipped:{weapon:null,armor:null,ring1:null,ring2:null,amulet:null,crown:null},
+  zone:0,monIdx:0,monHp:50,
+  totalKills:0,maxZone:0,clicks:0,
+  rebirth:0,souls:0,
+  auto:false,lastSave:Date.now(),version:1
+};
+
+// ═══ 公式 ═══
+function baseAtk(){let s=G.stats.str*2;const eq=G.equipped.weapon;if(eq)s+=eq.val;return s}
+function critChance(){let c=G.stats.dex*0.0025;const c2=G.classes.filter(id=>id!=='novice');c+=c2.length*0.02;return Math.min(c,0.85)}
+function critMult(){let m=1.5+G.stats.dex*0.003;return m}
+function goldMult(){return 1+G.stats.luk*0.04}
+function xpMult(){let x=1;const eq=G.equipped.crown;if(eq)x+=eq.val/100;return x}
+function atkSpeed(){return 1}
+function calcDPS(){let d=baseAtk();const c=critChance(),cm=critMult();d*=1+c*(cm-1);d*=atkSpeed();d*=(1+G.souls*0.05);const cls=G.classes;if(cls.includes('warrior'))d*=1.25;if(cls.includes('knight'))d*=1.25;if(cls.includes('berserker'))d*=1.5;if(cls.includes('paladin'))d*=1.5;if(cls.includes('darkknight'))d*=1.7;if(cls.includes('juggernaut'))d*=1.8;if(cls.includes('mage'))d*=1.3;if(cls.includes('wizard'))d*=1.3;if(cls.includes('elementalist'))d*=1.2;if(cls.includes('archmage'))d*=1.6;if(cls.includes('warlock'))d*=1.65;if(cls.includes('grandElem'))d*=1.55;if(cls.includes('archer'))d*=1.15;if(cls.includes('assassin')){d*=1+critChance()*(critMult()-1)*0.5};if(cls.includes('acolyte'))d*=1.2;if(cls.includes('priest'))d*=1.1;if(cls.includes('monk'))d*=1.2;if(cls.includes('grandmaster'))d*=1.35;return Math.floor(d)}
+
+function monData(){const z=ZONES[G.zone];return G.monIdx<3?z.mons[G.monIdx]:z.boss}
+function monHPMax(){let hp=monData().hp;const mult=Math.pow(2.8,G.zone);return Math.floor(hp*mult)}
+function monGold(){const base=monData().gold*Math.pow(2.6,G.zone);return Math.floor(base*goldMult())}
+function monXP(){const base=monData().xp*Math.pow(2.6,G.zone);return Math.floor(base*xpMult())}
+function expToLevel(l){return Math.floor(100*Math.pow(1.5,l-1))}
+function statCost(n){return Math.floor(10*Math.pow(1.18,n-1))}
+
+// ═══ 重生 ═══
+function spawnMon(){G.monIdx=Math.random()<0.1&&G.zone>=3?3:(Math.floor(Math.random()*3));G.monHp=monHPMax();renderBattle()}
+function doClick(){
+  let dmg=baseAtk();
+  if(Math.random()<critChance()){dmg=Math.floor(dmg*critMult());spawnDmg(dmg,'#f0d78c','big')}
+  else spawnDmg(dmg,'#fff','');
+  if(Math.random()<0.03){dmg=Math.floor(dmg*1.5);spawnDmg(dmg,'#f66','奋力一击!')}
+  G.monHp-=dmg;G.clicks++;
+  if(G.monHp<=0)killMon();
+  renderBattle();
+}
+function killMon(){
+  const g=monGold(),xp=monXP();
+  G.gold+=g;G.exp+=xp;G.totalKills++;
+  if(G.exp>=G.expNeed)levelUp();
+  spawnDmg(-g,'#f0d78c','+'+g+'🪙');
+  toast('击杀 '+monData().n+'! +'+g+'🪙 +'+xp+'XP');
+  spawnMon();
+}
+function levelUp(){G.lv++;G.exp-=G.expNeed;G.expNeed=expToLevel(G.lv);G.stats.str++;G.stats.int++;G.stats.dex++;G.stats.vit++;G.stats.luk++;toast('🎉 升级! Lv.'+G.lv);if(G.lv>=10&&!G.classes.some(c=>c!=='novice'))toast('⚡ 可转职了！点击下方转职标签')}
+function spawnDmg(val,color,txt){
+  const el=document.createElement('div');el.className='dmg-num';el.textContent=txt||val;el.style.color=color;
+  if(color==='#f0d78c')el.style.fontSize='20px';
+  el.style.left=(40+Math.random()*60)+'%';el.style.top='30%';
+  document.getElementById('battle').appendChild(el);setTimeout(()=>el.remove(),900);
+}
+
+// ═══ 属性 ═══
+function buyStat(stat){
+  const val=G.stats[stat];const cost=statCost(val);
+  if(G.gold<cost)return;
+  G.gold-=cost;G.stats[stat]++;
+  renderStats();renderAll();
+}
+
+// ═══ 职业 ═══
+function switchClass(id){if(G.classes.includes(id)){G.curClass=id;toast('切换为 '+className(id));renderAll()}}
+function canUnlock(c){if(G.classes.includes(c.id))return false;if(c.req.lv&&G.lv<c.req.lv)return false;if(c.req.str&&G.stats.str<c.req.str)return false;if(c.req.int&&G.stats.int<c.req.int)return false;if(c.req.dex&&G.stats.dex<c.req.dex)return false;if(c.req.vit&&G.stats.vit<c.req.vit)return false;if(!G.classes.includes(c.parent))return false;return true}
+function unlockClass(id){
+  const all=[...CLASSES.T1,...CLASSES.T2,...CLASSES.T3];
+  const c=all.find(x=>x.id===id);if(!c||!canUnlock(c))return;
+  G.classes.push(id);G.curClass=id;
+  for(const[k,v]of Object.entries(c.bonus))G.stats[k]=(G.stats[k]||0)+v;
+  toast('✨ 转职为 '+c.name+'！');
+  renderAll();
+}
+function className(id){const all=[{id:'novice',name:'初心者'},...CLASSES.T1,...CLASSES.T2,...CLASSES.T3];const c=all.find(x=>x.id===id);return c?c.icon+' '+c.name:id}
+
+// ═══ 装备 ═══
+function buyEquip(idx){
+  const eq=EQUIP_SHOP[idx];if(G.gold<eq.cost)return;
+  G.gold-=eq.cost;G.equipped[eq.slot]={...eq};
+  toast('购买 '+eq.name+'!');
+  renderAll();
+}
+
+// ═══ 转生 ═══
+function rebirth(){
+  const minLv=50+G.rebirth*10;
+  if(G.lv<minLv||!G.classes.some(c=>CLASSES.T2.find(x=>x.id===c)))return toast('条件不足: Lv.'+minLv+' + T2职业');
+  const souls=Math.floor(G.lv/10)+G.classes.length*3+G.maxZone*2+G.totalKills/100;
+  G={gold:0,lv:1,exp:0,expNeed:100,stats:{str:5,int:5,dex:5,vit:5,luk:5},curClass:'novice',classes:['novice'],equipped:{weapon:null,armor:null,ring1:null,ring2:null,amulet:null,crown:null},zone:0,monIdx:0,monHp:50,totalKills:0,maxZone:G.maxZone,clicks:0,rebirth:G.rebirth+1,souls:G.souls+souls,auto:G.auto,lastSave:Date.now(),version:1};
+  toast('🔄 转生! +'+souls+' 英雄之魂');
+  spawnMon();renderAll();save();
+}
+
+// ═══ 区域 ═══
+function nextZone(){if(G.zone<9){G.zone++;if(G.zone>G.maxZone)G.maxZone=G.zone;spawnMon();renderAll()}}
+function prevZone(){if(G.zone>0){G.zone--;spawnMon();renderAll()}}
+
+// ═══ 自动 ═══
+function toggleAuto(){G.auto=!G.auto;document.getElementById('auto-toggle').classList.toggle('on',G.auto)}
+
+// ═══ 渲染 ═══
+function renderStats(){
+  document.getElementById('stats-panel').innerHTML=`
+    <h3>👤 ${className(G.curClass)}</h3>
+    <div class="stat-row"><span class="s">Lv</span><span class="v">${G.lv}</span></div>
+    <div class="stat-row"><span class="s">EXP</span><span>${G.exp}/${G.expNeed}</span></div>
+    ${['str','int','dex','vit','luk'].map(s=>`<div class="stat-row"><span class="s">${({str:'💪力量',int:'🧠智力',dex:'🎯敏捷',vit:'🛡体力',luk:'🍀幸运'}[s])}</span><span class="v">${G.stats[s]}</span><button class="btn" onclick="buyStat('${s}')">¥${statCost(G.stats[s])}</button></div>`).join('')}
+    <div class="stat-row"><span class="s">💀魂</span><span class="v" style="color:#f6a">${G.souls}</span></div>
+    <div class="stat-row"><span class="s">🔄转生</span><span class="v">#${G.rebirth}</span></div>
+  `;
+}
+function renderBattle(){
+  const md=monData();const maxHp=monHPMax();
+  document.getElementById('hp-bar').style.width=Math.max(0,G.monHp/maxHp*100)+'%';
+  document.getElementById('hp-text').textContent=Math.max(0,Math.floor(G.monHp));
+  document.getElementById('hp-max').textContent=maxHp;
+  document.getElementById('mon-name').textContent=md.n+(G.monIdx===3?' 👑BOSS':'');
+  document.getElementById('monster').textContent=md.e;
+  document.getElementById('zone-t').textContent=ZONES[G.zone].n;
+  document.getElementById('zone-info').textContent=ZONES[G.zone].n+' — 第'+(G.zone+1)+'区域';
+  document.getElementById('zone-num').textContent=G.zone+1;
+}
+function renderAll(){
+  renderStats();
+  document.getElementById('lvl').textContent='Lv.'+G.lv+' '+className(G.curClass);
+  document.getElementById('gold-t').textContent=Math.floor(G.gold);
+  document.getElementById('soul-t').textContent=G.souls;
+  document.getElementById('dps-t').textContent=calcDPS();
+  renderBattle();
+  updateTab();
+  save();
+}
+let activeTab=0;
+function updateTab(){
+  let h='';
+  if(activeTab===0){
+    const all=[...CLASSES.T1,...CLASSES.T2,...CLASSES.T3];
+    h='<div style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:6px">🏛 职业树 · 已解锁 '+G.classes.length+'/'+(1+all.length)+' · 当前: '+className(G.curClass)+'</div>';
+    [['T0 初始',CLASSES.T0],['T1 基础',CLASSES.T1],['T2 进阶',CLASSES.T2],['T3 大师',CLASSES.T3]].forEach(([tier,list])=>{
+      h+=`<div style="font-size:10px;color:rgba(255,255,255,.2);margin:6px 0 2px">${tier}</div>`;
+      list.forEach(c=>{
+        const cur=G.curClass===c.id;
+        const unl=G.classes.includes(c.id);
+        const avail=canUnlock(c);
+        const cls=cur?'current':avail?'available':unl?'':'locked';
+        h+=`<div class="class-node ${cls}" onclick="${unl?'switchClass(\''+c.id+'\')':avail?'unlockClass(\''+c.id+'\')':''}">
+          <div class="c-name">${c.icon} ${c.name} ${cur?'⭐':unl?'✓':avail?'✨':'🔒'}</div>
+          <div class="c-info">${c.desc||''}${c.req.lv?' | 需Lv'+c.req.lv:''}${c.req.str?' STR'+c.req.str:''}${c.req.int?' INT'+c.req.int:''}${c.req.dex?' DEX'+c.req.dex:''}${c.req.vit?' VIT'+c.req.vit:''}</div>
+        </div>`;
+      });
+    });
+  }else if(activeTab===1){
+    h='<div style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:6px">🛒 装备商店 · 已装备: '+(Object.values(G.equipped).filter(Boolean).length)+'/6</div>';
+    EQUIP_SHOP.forEach((eq,i)=>{
+      const owned=G.equipped[eq.slot]&&G.equipped[eq.slot].name===eq.name;
+      h+=`<div class="shop-item"><span><span class="eq-name">${eq.icon} ${eq.name}</span> <span class="eq-stat">${eq.stat==='xp'?'EXP':eq.stat.toUpperCase()}+${eq.val}</span></span>
+        <button class="${owned?'equipped':''}" onclick="${owned?'':'buyEquip('+i+')'}">${owned?'已装备':'¥'+eq.cost}</button></div>`;
+    });
+  }else if(activeTab===2){
+    h='<div style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:6px">⚔️ 已习得技能 (所有叠加生效)</div>';
+    const all=[...CLASSES.T1,...CLASSES.T2,...CLASSES.T3];
+    G.classes.forEach(id=>{
+      const c=all.find(x=>x.id===id);if(!c)return;
+      h+=`<div style="padding:4px 0;border-bottom:1px solid rgba(255,255,255,.03)"><b>${c.icon} ${c.name}</b>: ${c.desc||c.skill||'被动加成'}</div>`;
+    });
+    if(G.classes.length<=1)h+='<div style="color:rgba(255,255,255,.15)">转职后解锁技能...</div>';
+    h+=`<div style="margin-top:8px;font-size:11px;color:rgba(255,255,255,.4)">💪 ATK: ${baseAtk()} | 💥 暴率: ${Math.floor(critChance()*100)}% | 💢 暴伤: ${Math.floor(critMult()*100)}% | ⚡DPS: ${calcDPS()}</div>`;
+  }else if(activeTab===3){
+    h='<div style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:6px">🏆 成就</div>';
+    h+=`<div>⚔️ 击杀: ${G.totalKills} ${G.totalKills>=1e5?'✓':''}</div>`;
+    h+=`<div>🎓 职业: ${G.classes.length} ${G.classes.length>=5?'✓':''}</div>`;
+    h+=`<div>💰 金币: ${Math.floor(G.gold)} ${G.gold>=1e6?'✓':''}</div>`;
+    h+=`<div>🌍 区域: ${G.maxZone+1} ${G.maxZone>=9?'✓':''}</div>`;
+    h+=`<div>🔄 转生: ${G.rebirth} ${G.rebirth>=5?'✓':''}</div>`;
+  }else{
+    const minLv=50+G.rebirth*10;
+    const souls=Math.floor(G.lv/10)+G.classes.length*3+G.maxZone*2+Math.floor(G.totalKills/100);
+    h=`<div class="rebirth-info">
+      <div>🔄 转生 #${G.rebirth+1}</div>
+      <div class="big">+${souls} 💀</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.3)">需要: Lv.${minLv} + T2职业</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.2);margin:4px 0">重置等级/金币/属性/职业/装备<br>保留: 英雄之魂 + 成就 + 转生次数</div>
+      <button onclick="rebirth()">🔄 转生</button>
+      ${G.souls>0?`<div style="margin-top:6px;font-size:12px;color:#f6a">💀 ${G.souls}魂: ATK+${Math.floor(G.souls*5)}% 金币+${G.souls*2}%</div>`:''}
+    </div>`;
+  }
+  document.getElementById('tab-content').innerHTML=h;
+}
+
+// ═══ Toast ═══
+function toast(msg){
+  const el=document.createElement('div');el.className='toast';el.textContent=msg;
+  document.getElementById('feedback').appendChild(el);setTimeout(()=>el.remove(),3000);
+}
+
+// ═══ 存档 ═══
+const SK='sword_magic_save';
+function save(){G.lastSave=Date.now();localStorage.setItem(SK,JSON.stringify(G))}
+function load(){try{const d=JSON.parse(localStorage.getItem(SK));if(d&&d.version===G.version){Object.assign(G,d);return true}}catch(e){}return false}
+
+// ═══ 主循环 ═══
+let lt=0;
+function loop(t){
+  const dt=Math.min((t-lt)/1000,0.2);lt=t;
+  if(G.auto&&dt>0){
+    const dps=calcDPS();
+    G.monHp-=dps*dt;
+    if(G.monHp<=0)killMon();
+  }
+  if(t%1000<20)renderAll();
+  if(t%15000<20)save();
+  requestAnimationFrame(loop);
+}
+
+// ═══ 启动 ═══
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',function(){activeTab=parseInt(this.dataset.t);document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===this));updateTab()}));
+load();spawnMon();renderAll();
+
+// 离线收益
+const elapsed=(Date.now()-G.lastSave)/1000;
+if(elapsed>10){
+  const dps=calcDPS()*0.8;
+  const kills=Math.floor(dps*Math.min(elapsed,43200)/monHPMax());
+  const goldEarned=Math.floor(kills*monGold());
+  G.gold+=goldEarned;G.exp+=Math.floor(kills*monXP());
+  if(goldEarned>0)toast('⏳ 离线 '+Math.floor(elapsed)+'秒 · +'+goldEarned+'🪙');
+}
+
+updateTab();requestAnimationFrame(loop);
+</script>
+</body>
+</html>
