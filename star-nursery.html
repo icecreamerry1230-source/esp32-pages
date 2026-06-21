@@ -12,23 +12,90 @@ body{
   overflow-y:auto;
 }
 .game{width:100%;max-width:460px;padding-bottom:40px;position:relative}
-.back{color:rgba(255,255,255,.4);text-decoration:none;font-size:12px;letter-spacing:1px;transition:color .2s}
-.back:hover{color:#fbbf24}
 
 /* 星空背景 */
 .stars{position:fixed;inset:0;pointer-events:none;z-index:-1}
 .star-dot{position:absolute;background:#fff;border-radius:50%;animation:twinkle 3s infinite alternate}
 @keyframes twinkle{0%{opacity:.2;transform:scale(1)}100%{opacity:.8;transform:scale(1.3)}}
 
+/* ═══════════ 主菜单 ═══════════ */
+.menu-screen{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:90vh;text-align:center;gap:8px;
+}
+.menu-logo{font-size:72px;animation:float 3s ease-in-out infinite;margin-bottom:8px}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.menu-title{
+  font-size:26px;font-weight:300;letter-spacing:4px;
+  background:linear-gradient(135deg,#fbbf24,#ec4899,#a78bfa);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  margin-bottom:4px;
+}
+.menu-subtitle{font-size:12px;color:rgba(255,255,255,.35);letter-spacing:2px;margin-bottom:28px}
+.menu-btn{
+  width:200px;padding:14px 0;border-radius:24px;font-size:16px;cursor:pointer;
+  border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);
+  color:rgba(255,255,255,.7);letter-spacing:1px;
+  transition:all .2s;-webkit-tap-highlight-color:transparent;
+  font-family:inherit;
+}
+.menu-btn:hover{background:rgba(255,255,255,.08)}
+.menu-btn:active{transform:scale(.96)}
+.menu-btn.primary{
+  background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.25);
+  color:#fbbf24;font-size:18px;margin-bottom:8px;
+}
+.menu-btn.primary:hover{background:rgba(251,191,36,.18)}
+.menu-ver{font-size:10px;color:rgba(255,255,255,.15);margin-top:20px}
+
+/* ═══════════ 设置面板 ═══════════ */
+.settings-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10;
+  justify-content:center;align-items:center;
+}
+.settings-overlay.show{display:flex}
+.settings-panel{
+  background:#1e1650;border:1px solid rgba(255,255,255,.08);
+  border-radius:20px;padding:28px 24px;width:300px;text-align:center;
+}
+.settings-panel h2{font-size:18px;font-weight:400;margin-bottom:20px;color:#a78bfa}
+.setting-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);
+}
+.setting-row .s-label{font-size:14px}
+.setting-row .s-val{font-size:13px;color:rgba(255,255,255,.4)}
+.toggle-switch{
+  width:44px;height:24px;background:rgba(255,255,255,.1);border-radius:12px;
+  cursor:pointer;position:relative;transition:background .2s;
+}
+.toggle-switch.on{background:rgba(167,139,250,.4)}
+.toggle-switch::after{
+  content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;
+  background:#fff;border-radius:50%;transition:transform .2s;
+}
+.toggle-switch.on::after{transform:translateX(20px)}
+.settings-close{
+  margin-top:20px;padding:8px 32px;border-radius:16px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  color:rgba(255,255,255,.5);cursor:pointer;font-family:inherit;font-size:13px;
+}
+
+/* ═══════════ 游戏界面 ═══════════ */
+.game-screen{display:none}
+.game-screen.show{display:block}
+.game-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.game-back{color:rgba(255,255,255,.4);text-decoration:none;font-size:12px;letter-spacing:1px;transition:color .2s;cursor:pointer}
+.game-back:hover{color:#fbbf24}
+
 /* 主星灵区域 */
-.spirit-area{text-align:center;padding:10px 0;position:relative}
+.spirit-area{text-align:center;padding:8px 0;position:relative}
 .spirit{
-  display:inline-block;font-size:80px;cursor:pointer;transition:transform .1s,padding .3s;
+  display:inline-block;font-size:80px;cursor:pointer;transition:transform .1s;
   filter:drop-shadow(0 0 20px rgba(255,215,0,.3));position:relative;
   -webkit-tap-highlight-color:transparent;
 }
 .spirit:active{transform:scale(.88)}
-.spirit.evo1{font-size:80px}
 .spirit.evo2{font-size:90px;filter:drop-shadow(0 0 30px rgba(255,180,220,.4))}
 .spirit.evo3{font-size:100px;filter:drop-shadow(0 0 40px rgba(255,215,0,.5))}
 .spirit.evo4{font-size:110px;filter:drop-shadow(0 0 60px rgba(255,180,255,.6))}
@@ -77,10 +144,7 @@ body{
 .bld-card.rare-3{border-color:rgba(167,139,250,.25);background:rgba(167,139,250,.06)}
 .bld-card.rare-4{border-color:rgba(236,72,153,.25);background:linear-gradient(135deg,rgba(236,72,153,.06),rgba(251,191,36,.06),rgba(59,130,246,.06))}
 .bld-icon{font-size:28px;flex-shrink:0;position:relative}
-.bld-icon .rare-glow{
-  position:absolute;inset:-2px;border-radius:50%;pointer-events:none;
-  animation:glowPulse 2s infinite
-}
+.bld-icon .rare-glow{position:absolute;inset:-2px;border-radius:50%;pointer-events:none;animation:glowPulse 2s infinite}
 @keyframes glowPulse{0%,100%{box-shadow:0 0 4px rgba(251,191,36,.2)}50%{box-shadow:0 0 12px rgba(251,191,36,.5)}}
 .bld-info{flex:1;min-width:0}
 .bld-name{font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
@@ -136,57 +200,135 @@ body{
 <!-- 星空背景 -->
 <div class="stars" id="stars"></div>
 
-<div class="game">
-  <a class="back" href="games.html">← 游戏</a>
-
-  <!-- 主星灵 -->
-  <div class="spirit-area">
-    <div class="spirit evo1" id="spirit">⭐</div>
-    <div id="spirit-decos"></div>
-    <div class="spirit-name" id="spirit-name">幼年星灵 · 噗哟~</div>
-    <div class="evo-bar-wrap" id="evo-wrap"><div class="evo-bar-fill" id="evo-bar"></div></div>
-    <div class="evo-label" id="evo-label"></div>
-  </div>
-
-  <!-- 资源 -->
-  <div class="res">
-    <div class="res-main" id="dust-display">0</div>
-    <div class="res-rate">每秒 ✨ <span id="rate-display">0</span></div>
-    <div class="res-gem" id="gem-area">💎 <span id="gem-display">0</span></div>
-  </div>
-
-  <!-- 消息 -->
-  <div class="msg-area" id="msg-area"></div>
-
-  <!-- 购买模式 -->
-  <div class="buy-modes" id="buy-modes">
-    <button class="mode-btn on" data-m="1">×1</button>
-    <button class="mode-btn" data-m="10">×10</button>
-    <button class="mode-btn" data-m="25">×25</button>
-    <button class="mode-btn" data-m="m">MAX</button>
-  </div>
-
-  <!-- 建筑列表 -->
-  <div class="bld-section" id="bld-section"></div>
-
-  <!-- 面板 -->
-  <div class="panels" id="panels">
-    <div class="panel-tabs">
-      <button class="panel-tab on" data-p="0">📖 图鉴</button>
-      <button class="panel-tab" data-p="1">🏷️ 特质</button>
-      <button class="panel-tab" data-p="2">🏆 成就</button>
+<!-- 设置弹窗 -->
+<div class="settings-overlay" id="settings-overlay">
+  <div class="settings-panel">
+    <h2>⚙ 设置</h2>
+    <div class="setting-row">
+      <span class="s-label">🔊 音效</span>
+      <div class="toggle-switch on" id="toggle-sound" onclick="toggleSound()"></div>
     </div>
-    <div class="panel-content" id="panel-content"></div>
+    <div class="setting-row">
+      <span class="s-label">📊 数据</span>
+      <span class="s-val" style="cursor:pointer;color:#f87171" onclick="resetData()">重置存档</span>
+    </div>
+    <div class="setting-row">
+      <span class="s-label">📋 版本</span>
+      <span class="s-val">v1.0</span>
+    </div>
+    <button class="settings-close" onclick="closeSettings()">关闭</button>
+  </div>
+</div>
+
+<div class="game">
+  <!-- ═══════════ 主菜单 ═══════════ -->
+  <div class="menu-screen" id="menu-screen">
+    <div class="menu-logo">🌟</div>
+    <div class="menu-title">星灵培育师</div>
+    <div class="menu-subtitle">Star Spirit Nursery</div>
+    <button class="menu-btn primary" onclick="startGame()">开始游戏</button>
+    <button class="menu-btn" onclick="openSettings()">设置</button>
+    <button class="menu-btn" onclick="exitGame()">退出游戏</button>
+    <div class="menu-ver">v1.0</div>
   </div>
 
-  <!-- 底部 -->
-  <div class="footer">
-    <button id="btn-save">💾 存档</button>
-    <button id="btn-reset">🔄 重置</button>
+  <!-- ═══════════ 游戏界面 ═══════════ -->
+  <div class="game-screen" id="game-screen">
+    <div class="game-top">
+      <span class="game-back" onclick="backToMenu()">← 菜单</span>
+    </div>
+
+    <!-- 主星灵 -->
+    <div class="spirit-area">
+      <div class="spirit" id="spirit">⭐</div>
+      <div id="spirit-decos"></div>
+      <div class="spirit-name" id="spirit-name">幼年星灵 · 噗哟~</div>
+      <div class="evo-bar-wrap" id="evo-wrap"><div class="evo-bar-fill" id="evo-bar"></div></div>
+      <div class="evo-label" id="evo-label"></div>
+    </div>
+
+    <!-- 资源 -->
+    <div class="res">
+      <div class="res-main" id="dust-display">0</div>
+      <div class="res-rate">每秒 ✨ <span id="rate-display">0</span></div>
+      <div class="res-gem" id="gem-area">💎 <span id="gem-display">0</span></div>
+    </div>
+
+    <!-- 消息 -->
+    <div class="msg-area" id="msg-area"></div>
+
+    <!-- 购买模式 -->
+    <div class="buy-modes" id="buy-modes">
+      <button class="mode-btn on" data-m="1">×1</button>
+      <button class="mode-btn" data-m="10">×10</button>
+      <button class="mode-btn" data-m="25">×25</button>
+      <button class="mode-btn" data-m="m">MAX</button>
+    </div>
+
+    <!-- 建筑列表 -->
+    <div class="bld-section" id="bld-section"></div>
+
+    <!-- 面板 -->
+    <div class="panels" id="panels">
+      <div class="panel-tabs">
+        <button class="panel-tab on" data-p="0">📖 图鉴</button>
+        <button class="panel-tab" data-p="1">🏷️ 特质</button>
+        <button class="panel-tab" data-p="2">🏆 成就</button>
+      </div>
+      <div class="panel-content" id="panel-content"></div>
+    </div>
+
+    <!-- 底部 -->
+    <div class="footer">
+      <button id="btn-reset-game">🔄 重置</button>
+    </div>
   </div>
 </div>
 
 <script>
+// ═══════════════ 菜单控制 ═══════════════
+let soundOn=true;
+
+function startGame(){
+  document.getElementById('menu-screen').style.display='none';
+  document.getElementById('game-screen').classList.add('show');
+  aInit();
+}
+
+function backToMenu(){
+  document.getElementById('game-screen').classList.remove('show');
+  document.getElementById('menu-screen').style.display='flex';
+  saveGame();
+}
+
+function exitGame(){window.location.href='games.html'}
+
+function openSettings(){
+  document.getElementById('settings-overlay').classList.add('show');
+}
+
+function closeSettings(){
+  document.getElementById('settings-overlay').classList.remove('show');
+}
+
+function toggleSound(){
+  soundOn=!soundOn;
+  document.getElementById('toggle-sound').classList.toggle('on',soundOn);
+  localStorage.setItem('star_sound',soundOn?'1':'0');
+}
+
+function resetData(){
+  if(confirm('确定删除所有存档数据？此操作不可撤销。')){
+    localStorage.removeItem(SAVE_KEY);
+    localStorage.removeItem('star_sound');
+    location.reload();
+  }
+}
+
+// 加载设置
+soundOn=localStorage.getItem('star_sound')!=='0';
+document.getElementById('toggle-sound').classList.toggle('on',soundOn);
+
 // ═══════════════ 常量 ═══════════════
 const RARITY_NAMES=['星尘级','月辉级','日冕级','银河级','创世级'];
 const RARITY_COLORS=['#aaa','#60a5fa','#fbbf24','#a78bfa','#f9a8d4'];
@@ -216,19 +358,17 @@ const BUILDINGS=[
 ];
 
 const EVO_STAGES=[
-  {name:'幼年星灵',icon:'⭐',emoji:'⭐',threshold:0,clickMult:1,prodMult:1,desc:'噗哟~'},
-  {name:'成长星灵',icon:'🌟',emoji:'🌟',threshold:1000,clickMult:2,prodMult:1.2,desc:'戴着蝴蝶结'},
-  {name:'皇冠星灵',icon:'👑',emoji:'🌟',threshold:100000,clickMult:5,prodMult:2,desc:'金色光晕环绕'},
-  {name:'星灵王',icon:'🌈',emoji:'🌟',threshold:10000000,clickMult:15,prodMult:5,desc:'七彩星灵王!'},
+  {name:'幼年星灵',threshold:0,clickMult:1,prodMult:1,desc:'噗哟~'},
+  {name:'成长星灵',threshold:1000,clickMult:2,prodMult:1.2,desc:'戴着蝴蝶结'},
+  {name:'皇冠星灵',threshold:100000,clickMult:5,prodMult:2,desc:'金色光晕环绕'},
+  {name:'星灵王',threshold:10000000,clickMult:15,prodMult:5,desc:'七彩星灵王!'},
 ];
-
-const ALL_TRAIT_IDS=TRAITS.map(t=>t.id);
 
 // ═══════════════ 音频 ═══════════════
 let actx;
 function aInit(){if(!actx)actx=new(window.AudioContext||window.webkitAudioContext)();if(actx.state==='suspended')actx.resume()}
 function cuteSound(f0,f1,len,type){
-  if(!actx)return;const t=actx.currentTime;
+  if(!actx||!soundOn)return;const t=actx.currentTime;
   const o=actx.createOscillator(),g=actx.createGain();
   o.type=type||'sine';o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+len);
   g.gain.setValueAtTime(0.08,t);g.gain.exponentialRampToValueAtTime(0.001,t+len+.02);
@@ -236,14 +376,8 @@ function cuteSound(f0,f1,len,type){
 }
 function sndClick(){cuteSound(600,900,.06,'sine')}
 function sndBuy(){cuteSound(800,1200,.04,'sine');setTimeout(()=>cuteSound(1000,1400,.05,'sine'),50)}
-function sndRare(lv){
-  const t=actx.currentTime;
-  for(let i=0;i<=lv;i++)setTimeout(()=>cuteSound(400+i*200,800+i*150,.08+i*.02,'sine'),i*70);
-}
-function sndEvo(){
-  const t=actx.currentTime;
-  [600,800,1000,1200,1500].forEach((f,i)=>setTimeout(()=>cuteSound(f,f+200,.1,'sine'),i*80));
-}
+function sndRare(lv){const t=actx.currentTime;for(let i=0;i<=lv;i++)setTimeout(()=>cuteSound(400+i*200,800+i*150,.08+i*.02,'sine'),i*70)}
+function sndEvo(){[600,800,1000,1200,1500].forEach((f,i)=>setTimeout(()=>cuteSound(f,f+200,.1,'sine'),i*80))}
 
 // ═══════════════ 星空背景 ═══════════════
 (function(){
@@ -259,17 +393,9 @@ function sndEvo(){
 })();
 
 // ═══════════════ 游戏状态 ═══════════════
-let S={
-  dust:0, gem:0, totalDust:0,
-  buildings:{}, // {id: [{count,rarity,trait}]} — 每个建筑可有多条稀有度记录
-  buyMode:1,
-  clicks:0, totalEarned:0, time:0,
-  unlocked:{buyModes:false,bldPanel:false,rarity:false,gem:false,evoBar:false,panels:false},
-  evoStage:0,
-  traitSeen:[],
-  lastSave:Date.now(),
-  version:2
-};
+let S={dust:0,gem:0,totalDust:0,buildings:{},buyMode:1,clicks:0,totalEarned:0,time:0,
+       unlocked:{buyModes:false,bldPanel:false,gem:false,evoBar:false,panels:false},
+       evoStage:0,traitSeen:[],lastSave:Date.now(),version:2};
 
 function getBldEntryKey(bldId,rarity,trait){return bldId+'|'+rarity+'|'+(trait||'none')}
 
@@ -282,16 +408,13 @@ function ensureBldEntry(bldId,rarity,trait){
 }
 
 function totalBldCount(bldId){return(S.buildings[bldId]||[]).reduce((s,e)=>s+e.count,0)}
-function totalAllBuildings(){
-  let s=0;for(const b of BUILDINGS)s+=totalBldCount(b.id);return s;
-}
+function totalAllBuildings(){let s=0;for(const b of BUILDINGS)s+=totalBldCount(b.id);return s;}
 
 // ═══════════════ 引擎 ═══════════════
 function getBldConfig(id){return BUILDINGS.find(b=>b.id===id)}
 
 function getPrice(bldId,count){
   const cfg=getBldConfig(bldId);
-  // 地之加护减价：遍历该建筑所有地加护
   const earthDiscount=(S.buildings[bldId]||[]).filter(e=>e.trait==='earth').reduce((s,e)=>s+Math.abs(TRAITS.find(t=>t.id==='earth').val)*e.count,0);
   const mult=Math.max(0.2,1-earthDiscount);
   return cfg.baseCost*Math.pow(cfg.growth,count)*mult;
@@ -300,113 +423,59 @@ function getPrice(bldId,count){
 function getBldProduction(entry){
   const cfg=getBldConfig(entry.key.split('|')[0]);
   let prod=cfg.baseProd*entry.count;
-  // 稀有度倍率
   prod*=RARITY_MULT[entry.rarity]||1;
-  // 风之加护
   if(entry.trait==='wind')prod*=(1+TRAITS.find(t=>t.id==='wind').val);
-  // 暗之加护
   if(entry.trait==='dark')prod*=TRAITS.find(t=>t.id==='dark').val;
   return prod;
 }
 
 function getTotalProduction(){
   let total=0;
-  for(const b of BUILDINGS){
-    for(const e of(S.buildings[b.id]||[]))total+=getBldProduction(e);
-  }
-  // 进化倍率
+  for(const b of BUILDINGS)for(const e of(S.buildings[b.id]||[]))total+=getBldProduction(e);
   total*=EVO_STAGES[S.evoStage].prodMult;
   return total;
 }
 
 function getClickPower(){
   let base=1;
-  // 进化倍率
   base*=EVO_STAGES[S.evoStage].clickMult;
-  // 火之加护：all buildings with fire trait
-  for(const b of BUILDINGS){
-    for(const e of(S.buildings[b.id]||[])){
-      if(e.trait==='fire')base+=getBldProduction(e)*TRAITS.find(t=>t.id==='fire').val;
-    }
-  }
+  for(const b of BUILDINGS)for(const e of(S.buildings[b.id]||[]))if(e.trait==='fire')base+=getBldProduction(e)*TRAITS.find(t=>t.id==='fire').val;
   return base;
 }
 
 function getOfflineMult(){
   let m=0.5;
-  for(const b of BUILDINGS){
-    for(const e of(S.buildings[b.id]||[])){
-      if(e.trait==='water')m+=TRAITS.find(t=>t.id==='water').val*e.count;
-    }
-  }
+  for(const b of BUILDINGS)for(const e of(S.buildings[b.id]||[]))if(e.trait==='water')m+=TRAITS.find(t=>t.id==='water').val*e.count;
   return Math.min(m,1);
 }
 
 function getLuckBonus(){
   let bonus=0;
-  for(const b of BUILDINGS){
-    for(const e of(S.buildings[b.id]||[])){
-      if(e.trait==='light')bonus+=TRAITS.find(t=>t.id==='light').val*e.count;
-    }
-  }
+  for(const b of BUILDINGS)for(const e of(S.buildings[b.id]||[]))if(e.trait==='light')bonus+=TRAITS.find(t=>t.id==='light').val*e.count;
   return Math.min(bonus,0.3);
 }
 
 function rollRarity(){
-  const luck=getLuckBonus();
-  let r=Math.random();
-  // 轻度概率偏移
-  r-=luck;
-  let cum=0;
-  for(let i=0;i<RARITY_RATES.length;i++){
-    cum+=(RARITY_RATES[i]*(1-(i>0?luck:0)*0.3));
-    if(r<cum)return i;
-  }
+  const luck=getLuckBonus();let r=Math.random()-luck;let cum=0;
+  for(let i=0;i<RARITY_RATES.length;i++){cum+=(RARITY_RATES[i]*(1-(i>0?luck:0)*0.3));if(r<cum)return i}
   return 0;
 }
 
-function rollTrait(rarity){
-  if(rarity===0)return null; // 星尘级无特质
-  // 不能是已经暗之加护的建筑（暗阻止后续稀有度但本身持有）
-  const available=TRAITS.map(t=>t.id);
-  return available[Math.floor(Math.random()*available.length)]||null;
-}
+function rollTrait(rarity){if(rarity===0)return null;const available=TRAITS.map(t=>t.id);return available[Math.floor(Math.random()*available.length)]||null}
 
 function calcBulk(bldId,gold,rarity,trait,mode){
   let count=0,cost=0;
-  const entry=ensureBldEntry(bldId,rarity,trait);
   const base=totalBldCount(bldId);
-  if(mode==='m'){
-    let i=0;
-    while(i<1000){
-      const p=getPrice(bldId,base+count);
-      if(cost+p>gold)break;
-      cost+=p;count++;i++;
-    }
-  }else{
-    for(let i=0;i<parseInt(mode);i++){
-      const p=getPrice(bldId,base+count);
-      if(cost+p>gold)break;
-      cost+=p;count++;
-    }
-  }
+  if(mode==='m'){let i=0;while(i<1000){const p=getPrice(bldId,base+count);if(cost+p>gold)break;cost+=p;count++;i++}}
+  else{for(let i=0;i<parseInt(mode);i++){const p=getPrice(bldId,base+count);if(cost+p>gold)break;cost+=p;count++}}
   return {count,cost};
 }
 
 // ═══════════════ 存档 ═══════════════
 const SAVE_KEY='star_nursery_v2';
-function saveGame(){
-  S.lastSave=Date.now();
-  localStorage.setItem(SAVE_KEY,JSON.stringify(S));
-}
+function saveGame(){S.lastSave=Date.now();localStorage.setItem(SAVE_KEY,JSON.stringify(S))}
 function loadGame(){
-  try{
-    const raw=localStorage.getItem(SAVE_KEY);
-    if(!raw)return false;
-    const data=JSON.parse(raw);
-    if(data.version!==S.version)return false;
-    S=data;return true;
-  }catch(e){return false}
+  try{const raw=localStorage.getItem(SAVE_KEY);if(!raw)return false;const data=JSON.parse(raw);if(data.version!==S.version)return false;S=data;return true}catch(e){return false}
 }
 
 // ═══════════════ 动作 ═══════════════
@@ -419,24 +488,20 @@ function doClick(){
 }
 
 function doBuy(bldId,rarity,trait){
-  const entry=ensureBldEntry(bldId,rarity,trait);
   const {count,cost}=calcBulk(bldId,S.dust,rarity,trait,String(S.buyMode));
   if(count===0||cost>S.dust)return;
   aInit();
-  S.dust-=cost;entry.count+=count;
+  S.dust-=cost;
+  const entry=ensureBldEntry(bldId,rarity,trait);
+  entry.count+=count;
   if(rarity>0)sndRare(rarity);else sndBuy();
-  // 更新稀有度初见
   if(!S.traitSeen.includes(trait)&&trait)S.traitSeen.push(trait);
-  // 雷之加护特殊处理
   msg('购买 '+RARITY_STARS[rarity]+' ×'+count+(trait?' '+TRAITS.find(t=>t.id===trait).icon:''));
   spawnParticle('-'+fmt(cost)+' ✨','#fbbf24');
   updateUnlocks();render();
 }
 
-function changeMode(m){
-  S.buyMode=m==='m'?'m':parseInt(m);
-  render();
-}
+function changeMode(m){S.buyMode=m==='m'?'m':parseInt(m);render()}
 
 // ═══════════════ UI 解锁 ═══════════════
 function updateUnlocks(){
@@ -446,35 +511,20 @@ function updateUnlocks(){
   if(S.totalDust>=100000&&!S.unlocked.evoBar)S.unlocked.evoBar=true;
   if(S.totalDust>=1000000&&!S.unlocked.panels)S.unlocked.panels=true;
   if(S.totalDust>=500000&&!S.unlocked.gem)S.unlocked.gem=true;
-
-  // 进化检测
-  for(let i=EVO_STAGES.length-1;i>=0;i--){
-    if(S.totalDust>=EVO_STAGES[i].threshold&&S.evoStage<i){
-      S.evoStage=i;sndEvo();msg('🌟 进化！'+EVO_STAGES[i].name+'！');
-    }
-  }
+  for(let i=EVO_STAGES.length-1;i>=0;i--){if(S.totalDust>=EVO_STAGES[i].threshold&&S.evoStage<i){S.evoStage=i;sndEvo();msg('🌟 进化！'+EVO_STAGES[i].name+'！')}}
 }
 
 // ═══════════════ 粒子/消息 ═══════════════
 function spawnParticle(text,color){
-  const el=document.createElement('div');el.className='float-particle';
-  el.textContent=text;el.style.color=color;
-  el.style.left=(40+Math.random()*30)+'%';el.style.top='40%';
-  document.body.appendChild(el);
-  setTimeout(()=>el.remove(),900);
+  const el=document.createElement('div');el.className='float-particle';el.textContent=text;el.style.color=color;
+  el.style.left=(40+Math.random()*30)+'%';el.style.top='40%';document.body.appendChild(el);setTimeout(()=>el.remove(),900);
 }
 function msg(text){
-  const area=document.getElementById('msg-area');
-  const el=document.createElement('div');el.className='msg-pop';el.textContent=text;
+  const area=document.getElementById('msg-area');const el=document.createElement('div');el.className='msg-pop';el.textContent=text;
   area.appendChild(el);setTimeout(()=>el.remove(),1900);
 }
 
-// ═══════════════ 格式化 ═══════════════
-function fmt(n){
-  if(n>=1000000)return (n/1000000).toFixed(2)+'M';
-  if(n>=1000)return (n/1000).toFixed(1)+'K';
-  return Math.floor(n).toString();
-}
+function fmt(n){if(n>=1000000)return(n/1000000).toFixed(2)+'M';if(n>=1000)return(n/1000).toFixed(1)+'K';return Math.floor(n).toString()}
 
 // ═══════════════ 渲染 ═══════════════
 function render(){
@@ -483,14 +533,12 @@ function render(){
   document.getElementById('gem-display').textContent=S.gem;
   document.getElementById('gem-area').classList.toggle('show',S.unlocked.gem);
 
-  // 进化
   const evo=EVO_STAGES[S.evoStage];
   const spirit=document.getElementById('spirit');
-  spirit.className='spirit evo'+(S.evoStage+1);
+  spirit.className='spirit'+(S.evoStage>0?' evo'+Math.min(S.evoStage+1,4):'');
   spirit.textContent=S.evoStage>=3?'🌟':S.evoStage>=2?'🌟':S.evoStage>=1?'🌟':'⭐';
   document.getElementById('spirit-name').textContent=evo.name+' · '+evo.desc;
 
-  // 进化装饰
   let decos='';
   if(S.traitSeen.includes('wind'))decos+='<span class="evo-deco">💨</span>';
   if(S.traitSeen.includes('fire'))decos+='<span class="evo-deco">🔥</span>';
@@ -499,67 +547,31 @@ function render(){
   if(S.evoStage>=3)decos+='<span class="evo-deco">🌈</span>';
   document.getElementById('spirit-decos').innerHTML=decos;
 
-  // 进化条
   document.getElementById('evo-wrap').style.display=S.unlocked.evoBar?'block':'none';
   if(S.unlocked.evoBar&&S.evoStage<EVO_STAGES.length-1){
-    const next=EVO_STAGES[S.evoStage+1];
-    const pct=Math.min(100,(S.totalDust-evo.threshold)/(next.threshold-evo.threshold)*100);
-    document.getElementById('evo-bar').style.width=pct+'%';
-    document.getElementById('evo-label').textContent='下一阶: '+fmt(next.threshold-evo.threshold)+' 星尘';
-  }else if(S.evoStage>=EVO_STAGES.length-1){
-    document.getElementById('evo-bar').style.width='100%';
-    document.getElementById('evo-label').textContent='已满级！';
-  }else{
-    document.getElementById('evo-label').textContent='';
-  }
+    const next=EVO_STAGES[S.evoStage+1];const pct=Math.min(100,(S.totalDust-evo.threshold)/(next.threshold-evo.threshold)*100);
+    document.getElementById('evo-bar').style.width=pct+'%';document.getElementById('evo-label').textContent='下一阶: '+fmt(next.threshold-evo.threshold)+' 星尘';
+  }else if(S.evoStage>=EVO_STAGES.length-1){document.getElementById('evo-bar').style.width='100%';document.getElementById('evo-label').textContent='已满级！'}
+  else{document.getElementById('evo-label').textContent=''}
 
-  // 购买模式
   document.getElementById('buy-modes').classList.toggle('show',S.unlocked.buyModes);
   document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('on',String(S.buyMode)===b.dataset.m));
 
-  // 建筑
   const bldDiv=document.getElementById('bld-section');
   bldDiv.classList.toggle('show',S.unlocked.bldPanel);
   let bhtml='';
   for(const b of BUILDINGS){
     const baseCount=totalBldCount(b.id);
     const entries=S.buildings[b.id]||[];
-    // 按稀有度+特质分组展示
     for(const e of entries){
       if(e.count===0)continue;
       const prod=getBldProduction(e);
-      bhtml+=`<div class="bld-card rare-${e.rarity}">
-        <div class="bld-icon">${b.icon}${e.rarity>0?`<div class="rare-glow" style="color:${RARITY_COLORS[e.rarity]}"></div>`:''}</div>
-        <div class="bld-info">
-          <div class="bld-name">
-            ${b.name}
-            <span class="rare-tag rare-${e.rarity}">${RARITY_STARS[e.rarity]}</span>
-            ${e.trait?`<span class="trait-tag">${TRAITS.find(t=>t.id===e.trait).icon} ${TRAITS.find(t=>t.id===e.trait).name}</span>`:''}
-          </div>
-          <div class="bld-meta">产量: ${fmt(prod)}/秒</div>
-        </div>
-        <div class="bld-btns">
-          <div class="bld-count">×${e.count}</div>
-        </div>
-      </div>`;
+      bhtml+=`<div class="bld-card rare-${e.rarity}"><div class="bld-icon">${b.icon}${e.rarity>0?`<div class="rare-glow" style="color:${RARITY_COLORS[e.rarity]}"></div>`:''}</div><div class="bld-info"><div class="bld-name">${b.name} <span class="rare-tag rare-${e.rarity}">${RARITY_STARS[e.rarity]}</span>${e.trait?`<span class="trait-tag">${TRAITS.find(t=>t.id===e.trait).icon} ${TRAITS.find(t=>t.id===e.trait).name}</span>`:''}</div><div class="bld-meta">产量: ${fmt(prod)}/秒</div></div><div class="bld-btns"><div class="bld-count">×${e.count}</div></div></div>`;
     }
-    // 购买按钮（每个建筑+每个稀有度一条）
-    const price=getPrice(b.id,baseCount);
-    const canBuy=price<=S.dust;
-    bhtml+=`<div class="bld-card" style="opacity:${canBuy?'.85':'.45'}">
-      <div class="bld-icon">${b.icon}</div>
-      <div class="bld-info">
-        <div class="bld-name">${b.name}</div>
-        <div class="bld-meta">持有: ${baseCount}</div>
-      </div>
-      <div class="bld-btns">
-        <button class="bld-buy" ${canBuy?'':'disabled'} onclick="doBuy('${b.id}',rollRarity(),rollTrait(0))">¥${fmt(price)}</button>
-      </div>
-    </div>`;
+    const price=getPrice(b.id,baseCount);const canBuy=price<=S.dust;
+    bhtml+=`<div class="bld-card" style="opacity:${canBuy?'.85':'.45'}"><div class="bld-icon">${b.icon}</div><div class="bld-info"><div class="bld-name">${b.name}</div><div class="bld-meta">持有: ${baseCount}</div></div><div class="bld-btns"><button class="bld-buy" ${canBuy?'':'disabled'} onclick="doBuy('${b.id}',rollRarity(),rollTrait(0))">¥${fmt(price)}</button></div></div>`;
   }
   bldDiv.innerHTML=bhtml;
-
-  // 面板
   document.getElementById('panels').classList.toggle('show',S.unlocked.panels);
   updatePanel(0);
 }
@@ -567,68 +579,52 @@ function render(){
 function updatePanel(idx){
   if(!S.unlocked.panels)return;
   let html='';
-  if(idx===0){ // 图鉴
+  if(idx===0){
     html='<div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:8px">📖 建筑图鉴</div>';
     for(const b of BUILDINGS){
-      const entries=S.buildings[b.id]||[];
-      let hasAny=false;
-      for(let r=0;r<5;r++){
-        const es=entries.filter(e=>e.rarity===r);
-        if(es.length>0){hasAny=true;html+=`<div>${b.icon} ${b.name} ${RARITY_STARS[r]} ×${es.reduce((s,e)=>s+e.count,0)} ✓</div>`}
-      }
+      const entries=S.buildings[b.id]||[];let hasAny=false;
+      for(let r=0;r<5;r++){const es=entries.filter(e=>e.rarity===r);if(es.length>0){hasAny=true;html+=`<div>${b.icon} ${b.name} ${RARITY_STARS[r]} ×${es.reduce((s,e)=>s+e.count,0)} ✓</div>`}}
       if(!hasAny)html+=`<div style="opacity:.3">${b.icon} ${b.name} — 未获得</div>`;
     }
-  }else if(idx===1){ // 特质
+  }else if(idx===1){
     html='<div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:8px">🏷️ 特质图鉴</div>';
-    for(const t of TRAITS){
-      const seen=S.traitSeen.includes(t.id);
-      html+=`<div style="${seen?'':'opacity:.3'}">${t.icon} ${t.name} — ${t.desc} ${seen?'✓':'未解锁'}</div>`;
-    }
-  }else if(idx===2){ // 成就
+    for(const t of TRAITS)html+=`<div style="${S.traitSeen.includes(t.id)?'':'opacity:.3'}">${t.icon} ${t.name} — ${t.desc} ${S.traitSeen.includes(t.id)?'✓':'未解锁'}</div>`;
+  }else{
     html='<div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:8px">🏆 成就</div>';
     const total=totalAllBuildings();
     html+=`<div>🌟 总建筑: ${total} ${total>=100?'✓':'('+(100-total)+'到100)'}</div>`;
     html+=`<div>👆 点击: ${S.clicks} ${S.clicks>=1000?'✓':'('+(1000-S.clicks)+'到1K)'}</div>`;
     html+=`<div>💰 总星尘: ${fmt(S.totalEarned)} ${S.totalEarned>=1000000?'✓':'('+fmt(1000000-S.totalEarned)+'到1M)'}</div>`;
-    const traitCount=S.traitSeen.length;
-    html+=`<div>🏷️ 特质收集: ${traitCount}/7 ${traitCount>=7?'✓':''}</div>`;
+    html+=`<div>🏷️ 特质收集: ${S.traitSeen.length}/7 ${S.traitSeen.length>=7?'✓':''}</div>`;
   }
   document.getElementById('panel-content').innerHTML=html;
 }
 
 // ═══════════════ 事件 ═══════════════
 document.getElementById('spirit').addEventListener('pointerdown',e=>{e.preventDefault();doClick()});
-document.getElementById('buy-modes').addEventListener('click',e=>{
-  const btn=e.target.closest('.mode-btn');if(btn)changeMode(btn.dataset.m);
-});
+document.getElementById('buy-modes').addEventListener('click',e=>{const btn=e.target.closest('.mode-btn');if(btn)changeMode(btn.dataset.m)});
 document.getElementById('panels').addEventListener('click',e=>{
   const tab=e.target.closest('.panel-tab');
-  if(tab){
-    document.querySelectorAll('.panel-tab').forEach(t=>t.classList.toggle('on',t===tab));
-    updatePanel(parseInt(tab.dataset.p));
-  }
+  if(tab){document.querySelectorAll('.panel-tab').forEach(t=>t.classList.toggle('on',t===tab));updatePanel(parseInt(tab.dataset.p))}
 });
-document.getElementById('btn-save').addEventListener('click',()=>{saveGame();msg('💾 已保存')});
-document.getElementById('btn-reset').addEventListener('click',()=>{
-  if(confirm('重置游戏？所有数据将丢失。')){
-    localStorage.removeItem(SAVE_KEY);
-    location.reload();
-  }
-});
+document.getElementById('btn-reset-game').addEventListener('click',()=>{if(confirm('重置游戏？')){S=createFresh();saveGame();render()}});
+
+function createFresh(){
+  return {dust:10,gem:0,totalDust:10,buildings:{},buyMode:1,clicks:0,totalEarned:10,time:0,
+          unlocked:{buyModes:false,bldPanel:false,gem:false,evoBar:false,panels:false},
+          evoStage:0,traitSeen:[],lastSave:Date.now(),version:2};
+}
 
 // ═══════════════ 主循环 ═══════════════
 function tick(dt){
   const prod=getTotalProduction();
   if(prod>0){const earned=prod*dt;S.dust+=earned;S.totalDust+=earned;S.totalEarned+=earned}
   S.time+=dt;
-  // 雷之加护
-  for(const b of BUILDINGS){
-    for(const e of(S.buildings[b.id]||[])){
-      if(e.trait==='thunder'&&Math.random()<dt/30){
-        const boltDmg=getBldProduction(e)*TRAITS.find(t=>t.id==='thunder').val;
-        S.dust+=boltDmg;S.totalDust+=boltDmg;S.totalEarned+=boltDmg;
-        spawnParticle('⚡+'+fmt(boltDmg),'#fbbf24');
-      }
+  for(const b of BUILDINGS)for(const e of(S.buildings[b.id]||[])){
+    if(e.trait==='thunder'&&Math.random()<dt/30){
+      const boltDmg=getBldProduction(e)*TRAITS.find(t=>t.id==='thunder').val;
+      S.dust+=boltDmg;S.totalDust+=boltDmg;S.totalEarned+=boltDmg;
+      spawnParticle('⚡+'+fmt(boltDmg),'#fbbf24');
     }
   }
   updateUnlocks();render();
@@ -637,22 +633,13 @@ function tick(dt){
 // ═══════════════ 启动 ═══════════════
 function bootstrap(){
   const loaded=loadGame();
-  if(!loaded){
-    // 初始状态
-    S.dust=0;S.gem=0;S.totalDust=0;
-    S.buildings={};
-    S.buyMode=1;S.clicks=0;S.totalEarned=0;S.time=0;
-    S.unlocked={buyModes:false,bldPanel:false,rarity:false,gem:false,evoBar:false,panels:false};
-    S.evoStage=0;S.traitSeen=[];S.lastSave=Date.now();
-    // 给小初始值
-    S.dust=10;S.totalDust=10;S.totalEarned=10;
-  }else{
-    // 离线收益
+  if(!loaded){const f=createFresh();Object.assign(S,f)}
+  else{
     const elapsed=(Date.now()-S.lastSave)/1000;
     if(elapsed>5){
       const earned=Math.min(getTotalProduction()*elapsed*getOfflineMult(),getTotalProduction()*86400);
       S.dust+=earned;S.totalDust+=earned;S.totalEarned+=earned;
-      if(earned>0)msg('你离开了 '+Math.floor(elapsed)+' 秒，星灵们生产了 '+fmt(earned)+' ✨');
+      if(earned>0)msg('离线 '+Math.floor(elapsed)+'秒，星灵们生产了 '+fmt(earned)+' ✨');
     }
   }
   updateUnlocks();render();
