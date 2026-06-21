@@ -329,6 +329,7 @@ function resetData(){
 // 加载设置
 soundOn=localStorage.getItem('star_sound')!=='0';
 document.getElementById('toggle-sound').classList.toggle('on',soundOn);
+let activePanel=0;
 
 // ═══════════════ 常量 ═══════════════
 const RARITY_NAMES=['星尘级','月辉级','日冕级','银河级','创世级'];
@@ -578,7 +579,7 @@ function render(){
   }
   bldDiv.innerHTML=bhtml;
   document.getElementById('panels').classList.toggle('show',S.unlocked.panels);
-  updatePanel(0);
+  updatePanel(activePanel);
 }
 
 function updatePanel(idx){
@@ -638,7 +639,7 @@ document.getElementById('spirit').addEventListener('pointerdown',e=>{e.preventDe
 document.getElementById('buy-modes').addEventListener('click',e=>{const btn=e.target.closest('.mode-btn');if(btn)changeMode(btn.dataset.m)});
 document.getElementById('panels').addEventListener('click',e=>{
   const tab=e.target.closest('.panel-tab');
-  if(tab){document.querySelectorAll('.panel-tab').forEach(t=>t.classList.toggle('on',t===tab));updatePanel(parseInt(tab.dataset.p))}
+  if(tab){activePanel=parseInt(tab.dataset.p);document.querySelectorAll('.panel-tab').forEach(t=>t.classList.toggle('on',t===tab));updatePanel(activePanel)}
 });
 document.getElementById('btn-reset-game').addEventListener('click',()=>{if(confirm('重置游戏？')){S=createFresh();saveGame();render()}});
 
