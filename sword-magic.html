@@ -251,22 +251,79 @@ const CLASSES={
 };
 
 const EQUIP_SHOP=[
-  {slot:'weapon',name:'短剑',cost:50,stat:'str',val:3,icon:'🗡️'},
-  {slot:'weapon',name:'长剑',cost:300,stat:'str',val:8,icon:'⚔️'},
-  {slot:'weapon',name:'秘法杖',cost:350,stat:'int',val:8,icon:'🪄'},
-  {slot:'weapon',name:'龙牙剑',cost:2000,stat:'str',val:20,icon:'🗡️'},
-  {slot:'armor',name:'皮甲',cost:80,stat:'vit',val:4,icon:'🛡️'},
-  {slot:'armor',name:'锁子甲',cost:400,stat:'vit',val:10,icon:'🛡️'},
-  {slot:'armor',name:'板甲',cost:2500,stat:'vit',val:25,icon:'🛡️'},
-  {slot:'ring1',name:'铜戒指',cost:100,stat:'luk',val:3,icon:'💍'},
-  {slot:'ring1',name:'银戒指',cost:500,stat:'luk',val:8,icon:'💍'},
-  {slot:'ring2',name:'敏捷戒指',cost:120,stat:'dex',val:3,icon:'💍'},
-  {slot:'ring2',name:'精准戒指',cost:600,stat:'dex',val:9,icon:'💍'},
-  {slot:'amulet',name:'幸运项链',cost:300,stat:'luk',val:5,icon:'📿'},
-  {slot:'amulet',name:'黄金项链',cost:1500,stat:'luk',val:12,icon:'📿'},
-  {slot:'crown',name:'学徒帽',cost:500,stat:'xp',val:10,icon:'🎓'},
-  {slot:'crown',name:'智者冠',cost:3000,stat:'xp',val:25,icon:'👑'},
+  // 武器 - 每种武器带独有效果
+  {slot:'weapon',name:'短剑',cost:50,stat:'str',val:3,icon:'🗡️',rare:0,eff:null,edesc:''},
+  {slot:'weapon',name:'长剑',cost:300,stat:'str',val:8,icon:'⚔️',rare:0,eff:null,edesc:''},
+  {slot:'weapon',name:'阔刃剑',cost:1200,stat:'str',val:18,icon:'🗡️',rare:1,eff:'bleed',edesc:'10%概率造成流血(3秒)'},
+  {slot:'weapon',name:'龙牙剑',cost:5000,stat:'str',val:35,icon:'🗡️',rare:2,eff:'bleed',edesc:'20%概率造成流血(5秒)'},
+  {slot:'weapon',name:'秘法杖',cost:350,stat:'int',val:8,icon:'🪄',rare:0,eff:null,edesc:''},
+  {slot:'weapon',name:'火晶杖',cost:1500,stat:'int',val:18,icon:'🪄',rare:1,eff:'burn',edesc:'攻击附加灼烧(3秒)'},
+  {slot:'weapon',name:'冰霜之杖',cost:5500,stat:'int',val:38,icon:'❄️',rare:2,eff:'freeze',edesc:'15%概率冻结怪物2秒'},
+  {slot:'weapon',name:'长弓',cost:320,stat:'dex',val:7,icon:'🏹',rare:0,eff:null,edesc:''},
+  {slot:'weapon',name:'复合弓',cost:1400,stat:'dex',val:16,icon:'🏹',rare:1,eff:'double',edesc:'12%概率射出双箭'},
+  {slot:'weapon',name:'鹰眼弓',cost:5200,stat:'dex',val:32,icon:'🏹',rare:2,eff:'double',edesc:'25%概率射出三箭'},
+  {slot:'weapon',name:'暗杀匕首',cost:400,stat:'dex',val:9,icon:'🗡️',rare:1,eff:'execute',edesc:'对半血下怪物伤害+50%'},
+  {slot:'weapon',name:'影刃',cost:5000,stat:'dex',val:30,icon:'🗡️',rare:2,eff:'execute',edesc:'对半血下怪物伤害+100%'},
+  {slot:'weapon',name:'圣光之锤',cost:2800,stat:'int',val:25,icon:'🔨',rare:1,eff:'smite',edesc:'对亡灵/恶魔伤害+40%'},
+  // 防具
+  {slot:'armor',name:'皮甲',cost:80,stat:'vit',val:4,icon:'🛡️',rare:0,eff:null,edesc:''},
+  {slot:'armor',name:'锁子甲',cost:400,stat:'vit',val:10,icon:'🛡️',rare:0,eff:null,edesc:''},
+  {slot:'armor',name:'板甲',cost:2500,stat:'vit',val:22,icon:'🛡️',rare:1,eff:null,edesc:''},
+  {slot:'armor',name:'龙鳞甲',cost:8000,stat:'vit',val:40,icon:'🛡️',rare:2,eff:'regen',edesc:'每秒回复1%HP'},
+  {slot:'armor',name:'暗影斗篷',cost:3500,stat:'vit',val:18,icon:'🦇',rare:1,eff:'dodge',edesc:'10%概率闪避攻击'},
+  // 戒指
+  {slot:'ring1',name:'铜戒指',cost:100,stat:'luk',val:3,icon:'💍',rare:0,eff:null,edesc:''},
+  {slot:'ring1',name:'银戒指',cost:500,stat:'luk',val:8,icon:'💍',rare:0,eff:null,edesc:''},
+  {slot:'ring1',name:'金戒指',cost:2000,stat:'luk',val:16,icon:'💍',rare:1,eff:null,edesc:''},
+  {slot:'ring1',name:'幸运之星',cost:6000,stat:'luk',val:30,icon:'💍',rare:2,eff:'luck',edesc:'金币获取+25%'},
+  {slot:'ring2',name:'敏捷戒指',cost:120,stat:'dex',val:3,icon:'💍',rare:0,eff:null,edesc:''},
+  {slot:'ring2',name:'精准戒指',cost:600,stat:'dex',val:9,icon:'💍',rare:1,eff:null,edesc:''},
+  {slot:'ring2',name:'暴击之戒',cost:3500,stat:'dex',val:18,icon:'💍',rare:2,eff:'crit',edesc:'暴击率+10%'},
+  // 护符
+  {slot:'amulet',name:'幸运项链',cost:300,stat:'luk',val:5,icon:'📿',rare:0,eff:null,edesc:''},
+  {slot:'amulet',name:'黄金项链',cost:1500,stat:'luk',val:12,icon:'📿',rare:1,eff:null,edesc:''},
+  {slot:'amulet',name:'贤者之石',cost:10000,stat:'luk',val:25,icon:'🔮',rare:3,eff:'all',edesc:'全属性+8% 经验+40%'},
+  // 头冠
+  {slot:'crown',name:'学徒帽',cost:500,stat:'xp',val:10,icon:'🎓',rare:0,eff:null,edesc:''},
+  {slot:'crown',name:'智者冠',cost:3000,stat:'xp',val:25,icon:'👑',rare:1,eff:null,edesc:''},
+  {slot:'crown',name:'皇冠',cost:12000,stat:'xp',val:50,icon:'👑',rare:2,eff:'xp',edesc:'经验获取+50%'},
 ];
+
+const RARITY_COLORS=['#aaa','#6af','#c0f','#f0d78c','#f44'];
+const RARITY_NAMES=['普通','稀有','史诗','传说','神话'];
+const RARITY_BG=['','rgba(100,170,255,.06)','rgba(192,0,255,.06)','rgba(240,215,140,.08)','rgba(255,68,68,.08)'];
+
+// 武器特殊效果
+const WEAPON_EFFECTS={
+  bleed:{name:'流血',desc:'造成额外持续伤害',apply:function(dmg,sec){return Math.floor(dmg*0.3*sec)}},
+  burn:{name:'灼烧',desc:'每跳造成伤害',apply:function(dmg,sec){return Math.floor(dmg*0.25*sec)}},
+  freeze:{name:'冻结',desc:'怪物暂停移动',apply:function(){return 0}},
+  double:{name:'多重射击',desc:'额外攻击次数',apply:function(dmg,n){return dmg*n}},
+  execute:{name:'处决',desc:'低血量额外伤害',apply:function(dmg,hpPct){return hpPct<0.5?Math.floor(dmg*0.5):0}},
+  smite:{name:'圣光',desc:'对亡灵/恶魔增伤',apply:function(dmg){return Math.floor(dmg*0.4)}},
+  regen:{name:'回复',desc:'每秒回复生命',apply:function(){}},
+  dodge:{name:'闪避',desc:'概率闪避',apply:function(){}},
+  luck:{name:'幸运',desc:'额外金币',apply:function(){}},
+  crit:{name:'精准',desc:'额外暴击率',apply:function(){}},
+  all:{name:'全知',desc:'全属性提升',apply:function(){}},
+  xp:{name:'睿智',desc:'额外经验',apply:function(){}},
+};
+
+// 主动技能(每个职业一个，自动施放)
+const ACTIVE_SKILLS={
+  warrior:{name:'旋风斩',icon:'🌪️',cd:8,dur:0,desc:'对怪物造成250%伤害',dmg:2.5,color:'#f66'},
+  knight:{name:'圣盾冲锋',icon:'🛡️',cd:12,dur:5,desc:'5秒内减伤40%+180%伤害',dmg:1.8,buff:'shield',color:'#6af'},
+  berserker:{name:'血怒',icon:'💢',cd:15,dur:8,desc:'8秒内ATK+80%',dmg:0,buff:'atkUp',color:'#f44'},
+  mage:{name:'火球术',icon:'🔥',cd:5,dur:0,desc:'对怪物造成300%伤害',dmg:3,color:'#f90'},
+  wizard:{name:'暴风雪',icon:'❄️',cd:14,dur:8,desc:'8秒内攻速+50%+怪物受伤+25%',dmg:0,buff:'speedUp',color:'#6cf'},
+  elementalist:{name:'元素爆发',icon:'⚡',cd:10,dur:0,desc:'随机400%火/冰/雷伤害',dmg:4,color:'#ff0'},
+  archer:{name:'连射',icon:'🏹',cd:7,dur:0,desc:'瞬间攻击3次(每次80%)',dmg:0.8,hits:3,color:'#5f5'},
+  ranger:{name:'箭雨',icon:'🌧️',cd:10,dur:0,desc:'对怪物造成220%伤害×2次',dmg:2.2,hits:2,color:'#5f5'},
+  assassin:{name:'暗杀',icon:'🗡️',cd:10,dur:0,desc:'HP>50%时400%否则200%',dmg:4,color:'#a0f'},
+  acolyte:{name:'神圣新星',icon:'✨',cd:12,dur:0,desc:'200%伤害+金币+100%',dmg:2,goldBonus:1,color:'#ff0'},
+  priest:{name:'祝福',icon:'🙏',cd:20,dur:15,desc:'15秒金币+40%经验+30%',dmg:0,buff:'goldUp',color:'#ff0'},
+  monk:{name:'寸劲',icon:'✊',cd:8,dur:0,desc:'伤害+已损失HP%×5',dmg:1,extraScale:'hpLost',color:'#f66'},
+};
 
 // ═══ 状态 ═══
 let G={
@@ -277,17 +334,50 @@ let G={
   zone:0,monIdx:0,monHp:50,
   totalKills:0,maxZone:0,clicks:0,
   rebirth:0,souls:0,
-  auto:false,lastSave:Date.now(),version:1
+  auto:false,lastSave:Date.now(),version:2,
+  skillCD:{},buffs:{},bleedDmg:0,bleedTimer:0
 };
 
 // ═══ 公式 ═══
-function baseAtk(){let s=G.stats.str*2;const eq=G.equipped.weapon;if(eq)s+=eq.val;return s}
-function critChance(){let c=G.stats.dex*0.0025;const c2=G.classes.filter(id=>id!=='novice');c+=c2.length*0.02;return Math.min(c,0.85)}
+function baseAtk(){let s=G.stats.str*2;const eq=G.equipped.weapon;if(eq)s+=eq.val;if(G.equipped.amulet&&G.equipped.amulet.eff==='all')s=Math.floor(s*1.08);return s}
+function critChance(){let c=G.stats.dex*0.0025;const c2=G.classes.filter(id=>id!=='novice');c+=c2.length*0.02;const r2=G.equipped.ring2;if(r2&&r2.eff==='crit')c+=0.1;return Math.min(c,0.85)}
 function critMult(){let m=1.5+G.stats.dex*0.003;return m}
-function goldMult(){return 1+G.stats.luk*0.04}
-function xpMult(){let x=1;const eq=G.equipped.crown;if(eq)x+=eq.val/100;return x}
-function atkSpeed(){return 1}
-function calcDPS(){let d=baseAtk();const c=critChance(),cm=critMult();d*=1+c*(cm-1);d*=atkSpeed();d*=(1+G.souls*0.05);const cls=G.classes;if(cls.includes('warrior'))d*=1.25;if(cls.includes('knight'))d*=1.25;if(cls.includes('berserker'))d*=1.5;if(cls.includes('paladin'))d*=1.5;if(cls.includes('darkknight'))d*=1.7;if(cls.includes('juggernaut'))d*=1.8;if(cls.includes('mage'))d*=1.3;if(cls.includes('wizard'))d*=1.3;if(cls.includes('elementalist'))d*=1.2;if(cls.includes('archmage'))d*=1.6;if(cls.includes('warlock'))d*=1.65;if(cls.includes('grandElem'))d*=1.55;if(cls.includes('archer'))d*=1.15;if(cls.includes('assassin')){d*=1+critChance()*(critMult()-1)*0.5};if(cls.includes('acolyte'))d*=1.2;if(cls.includes('priest'))d*=1.1;if(cls.includes('monk'))d*=1.2;if(cls.includes('grandmaster'))d*=1.35;return Math.floor(d)}
+function goldMult(){let g=1+G.stats.luk*0.04;const r1=G.equipped.ring1;if(r1&&r1.eff==='luck')g+=0.25;return g}
+function xpMult(){let x=1;const eq=G.equipped.crown;if(eq)x+=eq.val/100;if(eq&&eq.eff==='xp')x+=0.5;if(G.equipped.amulet&&G.equipped.amulet.eff==='all')x+=0.4;return x}
+function atkSpeed(){let s=1;if(G.buffs.speedUp)s=1.5;return s}
+function calcDPS(){
+  let d=baseAtk();
+  const c=critChance(),cm=critMult();
+  d*=1+c*(cm-1);
+  d*=atkSpeed();
+  d*=(1+G.souls*0.05);
+  // 职业技能加成
+  const cls=G.classes;
+  const skillMult=[
+    ['warrior',1.25],['knight',1.25],['berserker',1.5],['paladin',1.5],['darkknight',1.7],['juggernaut',1.8],
+    ['mage',1.3],['wizard',1.3],['elementalist',1.2],['archmage',1.6],['warlock',1.65],['grandElem',1.55],
+    ['archer',1.15],['acolyte',1.2],['priest',1.1],['monk',1.2],['grandmaster',1.35]
+  ];
+  skillMult.forEach(([id,m])=>{if(cls.includes(id))d*=m});
+  if(cls.includes('assassin'))d*=1+critChance()*(critMult()-1)*0.5;
+  // 武器特殊效果DPS加成
+  const wep=G.equipped.weapon;if(wep&&wep.eff==='execute')d*=1.25;
+  // 增益
+  if(G.buffs.atkUp)d*=1.8;
+  return Math.floor(d);
+}
+function hasActiveSkill(){
+  for(const cid of G.classes){
+    if(cid==='novice')continue;
+    const t1=CLASSES.T1.find(c=>c.id===cid);
+    if(t1&&ACTIVE_SKILLS[t1.parent])return t1.parent;
+    const t2=CLASSES.T2.find(c=>c.id===cid);
+    if(t2){const p=t2.parent;if(ACTIVE_SKILLS[p])return p}
+    const t3=CLASSES.T3.find(c=>c.id===cid);
+    if(t3){const t2p=CLASSES.T2.find(c=>c.id===t3.parent);if(t2p){const p=t2p.parent;if(ACTIVE_SKILLS[p])return p}}
+  }
+  return null;
+}
 
 function monData(){const z=ZONES[G.zone];return G.monIdx<3?z.mons[G.monIdx]:z.boss}
 function monHPMax(){let hp=monData().hp;const mult=Math.pow(2.8,G.zone);return Math.floor(hp*mult)}
@@ -299,13 +389,42 @@ function statCost(n){return Math.floor(10*Math.pow(1.18,n-1))}
 // ═══ 重生 ═══
 function spawnMon(){G.monIdx=Math.random()<0.1&&G.zone>=3?3:(Math.floor(Math.random()*3));G.monHp=monHPMax();renderBattle()}
 function doClick(){
-  let dmg=baseAtk();
-  if(Math.random()<critChance()){dmg=Math.floor(dmg*critMult());spawnDmg(dmg,'#f0d78c','big')}
-  else spawnDmg(dmg,'#fff','');
+  let dmg=baseAtk();let extraHits=0;
+  const wep=G.equipped.weapon;
+  // 武器多重射击
+  if(wep&&wep.eff==='double'){
+    if(Math.random()<(wep.rare>=2?0.25:0.12))extraHits=wep.rare>=2?2:1;
+  }
+  // 暴击
+  if(Math.random()<critChance()){dmg=Math.floor(dmg*critMult());spawnDmg(dmg,'#f0d78c','💥'+dmg)}
+  else spawnDmg(dmg,'#fff',dmg+'');
   if(Math.random()<0.03){dmg=Math.floor(dmg*1.5);spawnDmg(dmg,'#f66','奋力一击!')}
-  G.monHp-=dmg;G.clicks++;
+  G.monHp-=dmg;
+  // 武器流血/灼烧
+  if(wep&&wep.eff==='bleed'&&Math.random()<(wep.rare>=2?0.2:0.1)){G.bleedDmg=Math.floor(dmg*0.3);G.bleedTimer=(wep.rare>=2?5:3);spawnDmg(G.bleedDmg,'#f44','🩸')}
+  if(wep&&wep.eff==='burn'){G.bleedDmg=Math.floor(dmg*0.25);G.bleedTimer=3;spawnDmg(G.bleedDmg,'#f90','🔥')}
+  if(wep&&wep.eff==='freeze'&&Math.random()<0.15){spawnDmg(0,'#6cf','❄冻结!')}
+  // 处决
+  if(wep&&wep.eff==='execute'&&G.monHp<monHPMax()*0.5){const ed=Math.floor(dmg*(wep.rare>=2?1:0.5));G.monHp-=ed;spawnDmg(ed,'#a0f','☠处决!')}
+  G.clicks++;
+  // 额外箭矢
+  for(let i=0;i<extraHits;i++){const hd=Math.floor(dmg*0.6);G.monHp-=hd;spawnDmg(hd,'#5f5','🏹')}
   if(G.monHp<=0)killMon();
   renderBattle();
+}
+function castSkill(){
+  const sid=hasActiveSkill();if(!sid)return;
+  const sk=ACTIVE_SKILLS[sid];if(!sk)return;
+  if(G.skillCD[sid]&&G.skillCD[sid]>0)return;
+  let dmg=baseAtk();if(sk.dmg>0){
+    dmg=Math.floor(dmg*sk.dmg);
+    if(sk.extraScale==='hpLost'){const hpPct=1-(G.stats.vit*12+100)/(G.stats.vit*12+200);dmg+=Math.floor(dmg*hpPct*5)}
+    for(let i=0;i<(sk.hits||1);i++){G.monHp-=dmg;spawnDmg(dmg,sk.color,sk.icon+' '+sk.name)}
+  }
+  if(sk.buff)G.buffs[sk.buff]=sk.dur;
+  if(sk.goldBonus){const g=Math.floor(monGold()*sk.goldBonus);G.gold+=g;spawnDmg(g,'#ff0','💛+'+g)}
+  G.skillCD[sid]=sk.cd;
+  if(G.monHp<=0)killMon();
 }
 function killMon(){
   const g=monGold(),xp=monXP();
@@ -357,7 +476,7 @@ function rebirth(){
   const minLv=50+G.rebirth*10;
   if(G.lv<minLv||!G.classes.some(c=>CLASSES.T2.find(x=>x.id===c)))return toast('条件不足: Lv.'+minLv+' + T2职业');
   const souls=Math.floor(G.lv/10)+G.classes.length*3+G.maxZone*2+G.totalKills/100;
-  G={gold:0,lv:1,exp:0,expNeed:100,stats:{str:5,int:5,dex:5,vit:5,luk:5},curClass:'novice',classes:['novice'],equipped:{weapon:null,armor:null,ring1:null,ring2:null,amulet:null,crown:null},zone:0,monIdx:0,monHp:50,totalKills:0,maxZone:G.maxZone,clicks:0,rebirth:G.rebirth+1,souls:G.souls+souls,auto:G.auto,lastSave:Date.now(),version:1};
+  G={gold:0,lv:1,exp:0,expNeed:100,stats:{str:5,int:5,dex:5,vit:5,luk:5},curClass:'novice',classes:['novice'],equipped:{weapon:null,armor:null,ring1:null,ring2:null,amulet:null,crown:null},zone:0,monIdx:0,monHp:50,totalKills:0,maxZone:G.maxZone,clicks:0,rebirth:G.rebirth+1,souls:G.souls+souls,auto:G.auto,lastSave:Date.now(),version:2,skillCD:{},buffs:{},bleedDmg:0,bleedTimer:0};
   toast('🔄 转生! +'+souls+' 英雄之魂');
   spawnMon();renderAll();save();
 }
@@ -422,20 +541,49 @@ function updateTab(){
     });
   }else if(activeTab===1){
     h='<div style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:6px">🛒 装备商店 · 已装备: '+(Object.values(G.equipped).filter(Boolean).length)+'/6</div>';
+    h+='<div style="display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap;font-size:10px">'+RARITY_NAMES.map((n,i)=>`<span style="color:${RARITY_COLORS[i]};background:${RARITY_BG[i]||'rgba(255,255,255,.04)'};padding:2px 6px;border-radius:6px">${n}</span>`).join('')+'</div>';
     EQUIP_SHOP.forEach((eq,i)=>{
       const owned=G.equipped[eq.slot]&&G.equipped[eq.slot].name===eq.name;
-      h+=`<div class="shop-item"><span><span class="eq-name">${eq.icon} ${eq.name}</span> <span class="eq-stat">${eq.stat==='xp'?'EXP':eq.stat.toUpperCase()}+${eq.val}</span></span>
+      const rc=RARITY_COLORS[eq.rare]||'#aaa';
+      h+=`<div class="shop-item" style="background:${RARITY_BG[eq.rare]||'transparent'};border-left:2px solid ${rc}">
+        <span><span class="eq-name" style="color:${rc}">${eq.icon} ${eq.name}</span>
+        <span class="eq-stat">${eq.stat==='xp'?'EXP':eq.stat.toUpperCase()}+${eq.val}</span>
+        ${eq.edesc?`<div style="font-size:10px;color:${rc}">⚡ ${eq.edesc}</div>`:''}</span>
         <button class="${owned?'equipped':''}" onclick="${owned?'':'buyEquip('+i+')'}">${owned?'已装备':'¥'+eq.cost}</button></div>`;
     });
   }else if(activeTab===2){
-    h='<div style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:6px">⚔️ 已习得技能 (所有叠加生效)</div>';
+    h='<div style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:6px">⚔️ 技能面板</div>';
+    h+='<div style="font-size:11px;color:#f0d78c;margin-bottom:4px">🔸 被动技能 (转职获得，全部叠加):</div>';
     const all=[...CLASSES.T1,...CLASSES.T2,...CLASSES.T3];
     G.classes.forEach(id=>{
+      if(id==='novice')return;
       const c=all.find(x=>x.id===id);if(!c)return;
-      h+=`<div style="padding:4px 0;border-bottom:1px solid rgba(255,255,255,.03)"><b>${c.icon} ${c.name}</b>: ${c.desc||c.skill||'被动加成'}</div>`;
+      h+=`<div style="padding:3px 0;border-bottom:1px solid rgba(255,255,255,.02);font-size:11px"><b>${c.icon} ${c.name}</b>: ${c.desc||''}</div>`;
     });
-    if(G.classes.length<=1)h+='<div style="color:rgba(255,255,255,.15)">转职后解锁技能...</div>';
-    h+=`<div style="margin-top:8px;font-size:11px;color:rgba(255,255,255,.4)">💪 ATK: ${baseAtk()} | 💥 暴率: ${Math.floor(critChance()*100)}% | 💢 暴伤: ${Math.floor(critMult()*100)}% | ⚡DPS: ${calcDPS()}</div>`;
+    if(G.classes.length<=1)h+='<div style="color:rgba(255,255,255,.15)">转职后解锁被动技能...</div>';
+    // 主动技能
+    h+='<div style="font-size:11px;color:#f0d78c;margin:6px 0 4px">🔹 主动技能 (自动施放):</div>';
+    const sid=hasActiveSkill();
+    if(sid&&ACTIVE_SKILLS[sid]){
+      const sk=ACTIVE_SKILLS[sid];const cd=G.skillCD[sid]||0;
+      h+=`<div style="padding:8px;background:rgba(255,255,255,.02);border-radius:10px;border:1px solid rgba(255,255,255,.06)">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:24px">${sk.icon}</span>
+          <div>
+            <div style="font-weight:600;color:${sk.color}">${sk.name}</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.4)">${sk.desc}</div>
+            <div style="font-size:10px;color:rgba(255,255,255,.25)">冷却: ${sk.cd}秒 ${cd>0?`· 剩余 ${cd.toFixed(1)}秒`:''}</div>
+            ${cd>0?`<div style="width:100%;height:3px;background:rgba(255,255,255,.06);border-radius:2px;margin-top:2px"><div style="width:${(1-cd/sk.cd)*100}%;height:100%;background:${sk.color};border-radius:2px;transition:width .3s"></div></div>`:''}
+          </div>
+        </div>
+      </div>`;
+    }else{h+='<div style="color:rgba(255,255,255,.15)">转职后解锁主动技能...</div>'}
+    // 武器效果
+    const wep=G.equipped.weapon;
+    h+='<div style="font-size:11px;color:#f0d78c;margin:6px 0 4px">🔧 武器效果:</div>';
+    if(wep&&wep.eff){h+=`<div style="font-size:11px;color:${RARITY_COLORS[wep.rare]||'#aaa'}">⚡ ${wep.edesc}</div>`}
+    else h+='<div style="color:rgba(255,255,255,.15);font-size:11px">装备带特效的武器获得额外能力</div>';
+    h+=`<div style="margin-top:6px;font-size:11px;color:rgba(255,255,255,.4)">💪 ATK: ${baseAtk()} | 💥 暴率: ${Math.floor(critChance()*100)}% | 💢 暴伤: ${Math.floor(critMult()*100)}% | ⚡DPS: ${calcDPS()}</div>`;
   }else if(activeTab===3){
     h='<div style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:6px">🏆 成就</div>';
     h+=`<div>⚔️ 击杀: ${G.totalKills} ${G.totalKills>=1e5?'✓':''}</div>`;
@@ -472,14 +620,22 @@ function load(){try{const d=JSON.parse(localStorage.getItem(SK));if(d&&d.version
 // ═══ 主循环 ═══
 let lt=0;
 function loop(t){
-  const dt=Math.min((t-lt)/1000,0.2);lt=t;
+  const dt=Math.min((t-lt)/1000,0.5);lt=t;
   if(G.auto&&dt>0){
     const dps=calcDPS();
     G.monHp-=dps*dt;
     if(G.monHp<=0)killMon();
   }
-  if(t%1000<20)renderAll();
-  if(t%15000<20)save();
+  // 技能冷却
+  for(const k of Object.keys(G.skillCD)){if(G.skillCD[k]>0)G.skillCD[k]-=dt;if(G.skillCD[k]<0)G.skillCD[k]=0}
+  // 自动施放技能
+  if(G.auto&&G.classes.length>1)castSkill();
+  // 流血/灼烧
+  if(G.bleedTimer>0){G.bleedTimer-=dt;G.monHp-=G.bleedDmg*dt;if(G.monHp<=0)killMon()}
+  // 增益计时
+  for(const k of Object.keys(G.buffs)){if(G.buffs[k]>0)G.buffs[k]-=dt;if(G.buffs[k]<=0)delete G.buffs[k]}
+  if(Math.floor(t)%1000<20)renderAll();
+  if(Math.floor(t)%15000<20)save();
   requestAnimationFrame(loop);
 }
 
