@@ -137,7 +137,7 @@ body{background:#0d0d1a;font-family:system-ui,sans-serif;color:#c0b8d0;min-heigh
       <div class="monster-name" id="mon-name">野狼</div>
       <div class="hp-bar"><div class="hp-fill" id="hp-bar"></div></div>
       <div style="font-size:12px;color:rgba(255,255,255,.3)"><span id="hp-text">30</span> / <span id="hp-max">30</span></div>
-      <div style="margin-top:4px;font-size:11px;color:rgba(255,255,255,.35)">❤️ 冒险者: <span id="php-text">100</span>/<span id="phpmax-text">100</span></div>
+      <div style="margin-top:4px;font-size:11px;color:rgba(255,255,255,.35)">❤️ <span id="player-sprite">🧑</span> <span id="php-text">100</span>/<span id="phpmax-text">100</span></div>
       <div class="hp-bar" style="width:200px"><div class="hp-fill" id="php-bar" style="background:linear-gradient(90deg,#4ade80,#22c55e)"></div></div>
       <div class="auto-row">
         <div class="toggle" id="auto-toggle" onclick="toggleAuto()"></div>
@@ -200,36 +200,36 @@ const ZONES=[
 ];
 
 const CLASSES={
-  T0:[{id:'novice',name:'初心者',icon:'⚔️',tier:0,parent:null,req:{},bonus:{},desc:'冒险的起点'}],
+  T0:[{id:'novice',name:'初心者',icon:'⚔️',sprite:'🧑',color:'#aaa',desc:'冒险的起点',passive:''}],
   T1:[
-    {id:'warrior',name:'战士',icon:'🛡️',tier:1,parent:'novice',req:{lv:8,str:12},bonus:{str:5,vit:3,dex:1},desc:'近战DPS/Tank · STR+VIT'},
-    {id:'mage',name:'法师',icon:'🔮',tier:1,parent:'novice',req:{lv:8,int:12},bonus:{int:5,dex:2,luk:2},desc:'重击特化 · INT+DEX'},
-    {id:'archer',name:'弓箭手',icon:'🏹',tier:1,parent:'novice',req:{lv:8,dex:12},bonus:{dex:5,str:2,luk:2},desc:'远程暴击 · DEX+LUK'},
-    {id:'acolyte',name:'侍僧',icon:'⛪',tier:1,parent:'novice',req:{lv:8,int:8,vit:8},bonus:{int:3,vit:4,luk:2},desc:'金币特化 · INT+LUK'},
+    {id:'warrior',name:'战士',icon:'🛡️',sprite:'🛡️',color:'#f66',desc:'近战坦克 · 高HP高防御',passive:'VIT额外+30%HP · 怪物反击伤害-20%'},
+    {id:'mage',name:'法师',icon:'🔮',sprite:'🔮',color:'#a0f',desc:'重击大师 · 技能爆发',passive:'重击间隔-30% · 重击倍率+50% · 主动技能CD-2秒'},
+    {id:'archer',name:'弓箭手',icon:'🏹',sprite:'🏹',color:'#5f5',desc:'暴击猎手 · 极速连击',passive:'暴率+10% · 攻速+30% · 多重箭概率翻倍'},
+    {id:'acolyte',name:'侍僧',icon:'⛪',sprite:'⛪',color:'#ff0',desc:'金币大亨 · 不死之身',passive:'金币+40% · 击杀回复额外20%HP · 免死一次(CD60s)'},
   ],
   T2:[
-    {id:'knight',name:'骑士',icon:'🐴',tier:2,parent:'warrior',req:{lv:30,str:50,vit:30},bonus:{str:12,vit:10,int:3},desc:'防御坦克 · 圣盾冲锋'},
-    {id:'berserker',name:'狂战士',icon:'🪓',tier:2,parent:'warrior',req:{lv:30,str:65},bonus:{str:18,dex:5},desc:'狂怒DPS · 血怒'},
-    {id:'wizard',name:'巫师',icon:'🧙',tier:2,parent:'mage',req:{lv:30,int:60},bonus:{int:15,dex:5,luk:3},desc:'奥术智慧 · 暴风雪'},
-    {id:'elementalist',name:'元素使',icon:'❄️',tier:2,parent:'mage',req:{lv:30,int:45,dex:25},bonus:{int:12,dex:8,str:3},desc:'元素共鸣 · 范围伤害'},
-    {id:'ranger',name:'游侠',icon:'🏹',tier:2,parent:'archer',req:{lv:30,dex:55},bonus:{dex:14,str:5,luk:4},desc:'自然之箭 · 稳定输出'},
-    {id:'assassin',name:'刺客',icon:'🗡️',tier:2,parent:'archer',req:{lv:30,dex:45,str:25},bonus:{dex:12,str:8,luk:5},desc:'暗杀 · 暴击特化'},
-    {id:'priest',name:'祭司',icon:'✝️',tier:2,parent:'acolyte',req:{lv:30,int:45,vit:30},bonus:{int:10,vit:10,luk:5},desc:'神圣祝福 · 金币+40%'},
-    {id:'monk',name:'武僧',icon:'✊',tier:2,parent:'acolyte',req:{lv:30,str:30,vit:30},bonus:{str:10,vit:10,dex:5},desc:'金刚不坏 · HP+40%'},
+    {id:'knight',name:'骑士',icon:'🐴',sprite:'🛡️',color:'#6af',desc:'圣盾坦克',passive:'受击20%概率格挡 · HP+50%'},
+    {id:'berserker',name:'狂战士',icon:'🪓',sprite:'🛡️',color:'#f44',desc:'狂怒战神',passive:'HP越低ATK越高(最高×2) · 吸血+5%'},
+    {id:'wizard',name:'巫师',icon:'🧙',sprite:'🔮',color:'#c0f',desc:'奥术智者',passive:'重击伤害+80% · 经验+25%'},
+    {id:'elementalist',name:'元素使',icon:'❄️',sprite:'🔮',color:'#6cf',desc:'元素主宰',passive:'攻击附带随机元素: 30%冻结/灼烧/感电'},
+    {id:'ranger',name:'游侠',icon:'🏹',sprite:'🏹',color:'#5c7',desc:'自然射手',passive:'每第5次攻击必定暴击 · 暴伤+40%'},
+    {id:'assassin',name:'刺客',icon:'🗡️',sprite:'🏹',color:'#a0f',desc:'暗杀者',passive:'对满血怪物首击×3 · 暴伤+80% · 闪避+15%'},
+    {id:'priest',name:'祭司',icon:'✝️',sprite:'⛪',color:'#ff0',desc:'神圣牧师',passive:'金币+80% · 每10秒全队回血20%'},
+    {id:'monk',name:'武僧',icon:'✊',sprite:'⛪',color:'#f90',desc:'金刚武僧',passive:'HP+80% · 空手攻击力+50% · 反击伤害×2'},
   ],
   T3:[
-    {id:'paladin',name:'圣骑士',icon:'👼',tier:3,parent:'knight',req:{lv:60,str:100,vit:70,int:40},bonus:{str:25,vit:20,int:10,luk:5},desc:'圣光裁决 · ATK+50%'},
-    {id:'darkknight',name:'暗黑骑士',icon:'🦇',tier:3,parent:'knight',req:{lv:60,str:130,vit:50},bonus:{str:30,vit:12,dex:8},desc:'暗影之力 · ATK+70%'},
-    {id:'juggernaut',name:'毁灭者',icon:'💀',tier:3,parent:'berserker',req:{lv:60,str:150,vit:80},bonus:{str:35,vit:25},desc:'毁灭打击 · ATK+80%'},
-    {id:'archmage',name:'大法师',icon:'🌟',tier:3,parent:'wizard',req:{lv:60,int:140},bonus:{int:30,dex:10,luk:10},desc:'禁咒 · 重击+60%'},
-    {id:'warlock',name:'术士',icon:'🔥',tier:3,parent:'wizard',req:{lv:60,int:110,str:40},bonus:{int:25,str:12,vit:8},desc:'恶魔契约 · 重击+65%'},
-    {id:'grandElem',name:'大元素使',icon:'🌪️',tier:3,parent:'elementalist',req:{lv:60,int:110,dex:50},bonus:{int:22,dex:15,str:8},desc:'元素风暴 · 重击+55%'},
-    {id:'sniper',name:'狙击手',icon:'🎯',tier:3,parent:'ranger',req:{lv:60,dex:130},bonus:{dex:30,str:10,luk:10},desc:'致命一击 · 暴率+25%'},
-    {id:'beastmaster',name:'兽王',icon:'🦅',tier:3,parent:'ranger',req:{lv:60,dex:90,int:50},bonus:{dex:20,int:15,vit:10,luk:5},desc:'兽群召唤 · 攻速+40%'},
-    {id:'shadowMaster',name:'暗影大师',icon:'👤',tier:3,parent:'assassin',req:{lv:60,dex:110,str:60},bonus:{dex:25,str:15,luk:10},desc:'暗杀奥义 · 暴伤+100%'},
-    {id:'bishop',name:'主教',icon:'⛪',tier:3,parent:'priest',req:{lv:60,int:120,vit:60},bonus:{int:25,vit:20,luk:10},desc:'神之恩典 · 金币+50%'},
-    {id:'inquisitor',name:'审判官',icon:'⚖️',tier:3,parent:'priest',req:{lv:60,int:90,str:70},bonus:{int:20,str:20,vit:10,dex:5},desc:'神圣审判 · ATK+55%'},
-    {id:'grandmaster',name:'宗师',icon:'☯️',tier:3,parent:'monk',req:{lv:60,str:90,vit:90},bonus:{str:25,vit:25,dex:10},desc:'天人合一 · 全属性+25%'},
+    {id:'paladin',name:'圣骑士',icon:'👼',sprite:'🛡️',color:'#6af',desc:'圣光守护',passive:'全属性+15% · 光环:怪物伤害-30%'},
+    {id:'darkknight',name:'暗黑骑士',icon:'🦇',sprite:'🛡️',color:'#a0f',desc:'暗影领主',passive:'ATK+70% · 击杀回满血+伤害×1.5持续3秒'},
+    {id:'juggernaut',name:'毁灭者',icon:'💀',sprite:'🛡️',color:'#f44',desc:'灭世者',passive:'ATK+80% · 暴击无视50%防御 · HP翻倍'},
+    {id:'archmage',name:'大法师',icon:'🌟',sprite:'🔮',color:'#c0f',desc:'禁咒使者',passive:'重击CD减半 · 重击伤害×3 · 全屏溅射'},
+    {id:'warlock',name:'术士',icon:'🔥',sprite:'🔮',color:'#f90',desc:'恶魔契约',passive:'ATK+65% · 经验+50% · 击杀召唤恶魔助战'},
+    {id:'grandElem',name:'大元素使',icon:'🌪️',sprite:'🔮',color:'#6cf',desc:'元素之神',passive:'元素触发率翻倍 · 攻速+50% · 冻结延长至4秒'},
+    {id:'sniper',name:'狙击手',icon:'🎯',sprite:'🏹',color:'#5c7',desc:'死神之眼',passive:'暴率+25% · 暴伤+150% · 每10秒必暴狙击'},
+    {id:'beastmaster',name:'兽王',icon:'🦅',sprite:'🏹',color:'#5f5',desc:'万兽之王',passive:'召唤2只战鹰 · 攻速+50% · 金币+30%'},
+    {id:'shadowMaster',name:'暗影大师',icon:'👤',sprite:'🏹',color:'#a0f',desc:'无形死神',passive:'暴率+35% · 暴伤+200% · 击杀隐身2秒无敌'},
+    {id:'bishop',name:'主教',icon:'⛪',sprite:'⛪',color:'#ff0',desc:'神之代言',passive:'金币+120% · 全属性+20% · 光环:友方+15%全属性'},
+    {id:'inquisitor',name:'审判官',icon:'⚖️',sprite:'⛪',color:'#f66',desc:'神圣审判',passive:'ATK+60% · 暴率+20% · 对BOSS伤害+100%'},
+    {id:'grandmaster',name:'宗师',icon:'☯️',sprite:'⛪',color:'#f90',desc:'天人合一',passive:'全属性+30% · HP+100% · 所有伤害×1.5'},
   ]
 };
 
@@ -313,22 +313,19 @@ let G={
 };
 
 // ═══ 公式 ═══
-function baseAtk(){let s=G.stats.str*3;const eq=G.equipped.weapon;if(eq)s+=eq.val;const gl=G.equipped.gloves;if(gl)s+=gl.val;return Math.floor(s)}
-function heavyMul(){let m=1.5+G.stats.int*0.06;return m}
-function heavyInterval(){return Math.max(2,10-G.stats.int*0.08)}
-function critChance(){let c=G.stats.dex*0.004;if(G.classes.length>1)c+=0.05;const r2=G.equipped.ring2;if(r2&&r2.eff==='crit')c+=0.1;return Math.min(c,0.85)}
-function critMult(){let m=1.5+G.stats.luk*0.005+G.stats.dex*0.002;return m}
-function goldMult(){return 1+G.stats.luk*0.06}
+function baseAtk(){const p=applyClassPassives();let s=G.stats.str*3;const eq=G.equipped.weapon;if(eq)s+=eq.val;const gl=G.equipped.gloves;if(gl)s+=gl.val;s=Math.floor(s*p.atkMul);return Math.floor(s)}
+function heavyMul(){const p=applyClassPassives();let m=1.5+G.stats.int*0.06;m+=p.heavyMulBonus;return m}
+function heavyInterval(){const p=applyClassPassives();return Math.max(1.5,10-G.stats.int*0.08-p.heavyCDReduc*2)}
+function critChance(){const p=applyClassPassives();let c=G.stats.dex*0.004+p.critBonus;if(G.classes.length>1)c+=0.03;const r2=G.equipped.ring2;if(r2&&r2.eff==='crit')c+=0.1;return Math.min(c,0.85)}
+function critMult(){const p=applyClassPassives();let m=1.5+G.stats.luk*0.005+G.stats.dex*0.002+p.cdmgBonus;return m}
+function goldMult(){const p=applyClassPassives();let g=(1+G.stats.luk*0.06)*p.goldMul;return g}
 function xpMult(){let x=1+G.stats.int*0.02;const eq=G.equipped.crown;if(eq)x+=eq.val/100;return x}
-function atkSpeed(){let s=1+G.stats.dex*0.01;if(G.buffs.speedUp)s*=1.5;return Math.min(s,5)}
-function playerMaxHP(){let hp=80+G.stats.vit*15;const eq=G.equipped.armor;if(eq)hp+=eq.val*3;const bt=G.equipped.boots;if(bt)hp+=bt.val*2;return Math.floor(hp)}
+function atkSpeed(){const p=applyClassPassives();let s=1+G.stats.dex*0.01+p.speedBonus;if(G.buffs.speedUp)s*=1.5;return Math.min(s,5)}
+function playerMaxHP(){const p=applyClassPassives();let hp=(80+G.stats.vit*15)*p.hpMul;const eq=G.equipped.armor;if(eq)hp+=eq.val*3;const bt=G.equipped.boots;if(bt)hp+=bt.val*2;return Math.floor(hp)}
 function calcDPS(){
+  const p=applyClassPassives();
   let d=baseAtk();const c=critChance(),cm=critMult();
   d*=1+c*(cm-1);d*=atkSpeed();d*=(1+G.souls*0.05);
-  const cls=G.classes;
-  const mults={warrior:1.3,knight:1.3,berserker:1.55,paladin:1.55,darkknight:1.75,juggernaut:1.85,mage:1.35,wizard:1.35,elementalist:1.25,archmage:1.65,warlock:1.7,grandElem:1.6,archer:1.2,acolyte:1.25,priest:1.15,monk:1.25,grandmaster:1.4};
-  for(const[id,m]of Object.entries(mults))if(cls.includes(id))d*=m;
-  if(cls.includes('assassin'))d*=1+critChance()*(critMult()-1)*0.6;
   const wep=G.equipped.weapon;if(wep&&wep.eff==='execute')d*=1.3;
   if(G.buffs.atkUp)d*=1.8;
   return Math.floor(d);
@@ -410,7 +407,43 @@ function buyStat(stat){const val=G.stats[stat];const cost=statCost(val);if(G.gol
 function switchClass(id){if(G.classes.includes(id)){G.curClass=id;toast('切换为 '+className(id));renderAll()}}
 function canUnlock(c){if(G.classes.includes(c.id))return false;if(c.req.lv&&G.lv<c.req.lv)return false;if(c.req.str&&G.stats.str<c.req.str)return false;if(c.req.int&&G.stats.int<c.req.int)return false;if(c.req.dex&&G.stats.dex<c.req.dex)return false;if(c.req.vit&&G.stats.vit<c.req.vit)return false;if(!G.classes.includes(c.parent))return false;return true}
 function unlockClass(id){const all=[...CLASSES.T1,...CLASSES.T2,...CLASSES.T3];const c=all.find(x=>x.id===id);if(!c||!canUnlock(c))return;G.classes.push(id);G.curClass=id;for(const[k,v]of Object.entries(c.bonus))G.stats[k]=(G.stats[k]||0)+v;toast('✨ 转职为 '+c.name+'！');renderAll()}
-function className(id){const all=[{id:'novice',name:'初心者'},...CLASSES.T1,...CLASSES.T2,...CLASSES.T3];const c=all.find(x=>x.id===id);return c?c.icon+' '+c.name:id}
+function className(id){const all=[{id:'novice',name:'初心者',icon:'⚔️',sprite:'🧑',color:'#aaa'},...CLASSES.T1,...CLASSES.T2,...CLASSES.T3];const c=all.find(x=>x.id===id);return c?c.icon+' '+c.name:id}
+function classInfo(id){const all=[{id:'novice',name:'初心者',icon:'⚔️',sprite:'🧑',color:'#aaa',passive:''},...CLASSES.T1,...CLASSES.T2,...CLASSES.T3];return all.find(x=>x.id===id)||all[0]}
+function classAtkColor(){const ci=classInfo(G.curClass);return ci.color||'#fff'}
+function classSprite(){const ci=classInfo(G.curClass);return ci.sprite||'🧑'}
+
+function applyClassPassives(){
+  // 返回额外加成
+  let p={atkMul:1,hpMul:1,goldMul:1,critBonus:0,cdmgBonus:0,speedBonus:0,heavyCDReduc:0,heavyMulBonus:0};
+  const cls=G.classes;
+  // T1
+  if(cls.includes('warrior')){p.hpMul*=1.3;p.atkMul*=1.1}
+  if(cls.includes('mage')){p.heavyCDReduc+=0.3;p.heavyMulBonus+=0.5}
+  if(cls.includes('archer')){p.critBonus+=0.1;p.speedBonus+=0.3}
+  if(cls.includes('acolyte')){p.goldMul*=1.4}
+  // T2
+  if(cls.includes('knight')){p.hpMul*=1.5}
+  if(cls.includes('berserker')){const hpPct=G.playerHp/playerMaxHP();p.atkMul*=1+(1-hpPct)}
+  if(cls.includes('wizard')){p.heavyMulBonus+=0.8}
+  if(cls.includes('ranger')){p.cdmgBonus+=0.4}
+  if(cls.includes('assassin')){p.cdmgBonus+=0.8;p.critBonus+=0.1}
+  if(cls.includes('priest')){p.goldMul*=1.8}
+  if(cls.includes('monk')){p.hpMul*=1.8;p.atkMul*=1.5}
+  // T3
+  if(cls.includes('paladin')){p.hpMul*=1.3;p.atkMul*=1.15}
+  if(cls.includes('darkknight')){p.atkMul*=1.7}
+  if(cls.includes('juggernaut')){p.atkMul*=1.8;p.hpMul*=2}
+  if(cls.includes('archmage')){p.heavyCDReduc+=0.5;p.heavyMulBonus+=2}
+  if(cls.includes('warlock')){p.atkMul*=1.65}
+  if(cls.includes('grandElem')){p.speedBonus+=0.5}
+  if(cls.includes('sniper')){p.critBonus+=0.25;p.cdmgBonus+=1.5}
+  if(cls.includes('beastmaster')){p.speedBonus+=0.5;p.goldMul*=1.3}
+  if(cls.includes('shadowMaster')){p.critBonus+=0.35;p.cdmgBonus+=2.0}
+  if(cls.includes('bishop')){p.goldMul*=2.2}
+  if(cls.includes('inquisitor')){p.atkMul*=1.6;p.critBonus+=0.2}
+  if(cls.includes('grandmaster')){p.atkMul*=1.5;p.hpMul*=2}
+  return p;
+}
 
 // ═══ 装备 ═══
 function buyEquip(idx){const eq=EQUIP_SHOP[idx];if(G.gold<eq.cost)return;const old=G.equipped[eq.slot];let refund=0;if(old){refund=Math.floor(old.cost*0.5);G.gold+=refund}G.gold-=eq.cost;G.equipped[eq.slot]={...eq};toast('购买 '+eq.name+'!'+(refund>0?' (回收 +'+refund+'🪙)':''));renderAll()}
@@ -488,6 +521,8 @@ function renderBattle(){
   document.getElementById('php-text').textContent=Math.max(0,Math.floor(G.playerHp));
   document.getElementById('phpmax-text').textContent=G.playerMaxHp;
   document.getElementById('php-bar').style.width=Math.max(0,G.playerHp/G.playerMaxHp*100)+'%';
+  document.getElementById('player-sprite').textContent=classSprite();
+  document.getElementById('player-sprite').style.color=classAtkColor();
 }
 function renderAll(){renderStats();document.getElementById('lvl').textContent='Lv.'+G.lv+' '+className(G.curClass);document.getElementById('gold-t').textContent=Math.floor(G.gold);document.getElementById('soul-t').textContent=G.souls;document.getElementById('dps-t').textContent=calcDPS();document.getElementById('exp-t').textContent=G.exp+'/'+G.expNeed;renderBattle();updateTab();if(Math.floor(Date.now()/1000)%15<2)save()}
 let activeTab=0;
