@@ -170,6 +170,9 @@ body{background:#0d0d1a;font-family:system-ui,sans-serif;color:#c0b8d0;min-heigh
       <div class="monster-name" id="mon-name">野狼</div>
       <div class="hp-bar"><div class="hp-fill" id="hp-bar"></div></div>
       <div style="font-size:12px;color:rgba(255,255,255,.3)"><span id="hp-text">50</span> / <span id="hp-max">50</span></div>
+      <!-- 玩家HP -->
+      <div style="margin-top:6px;font-size:11px;color:rgba(255,255,255,.35)">❤️ 冒险者: <span id="php-text">100</span>/<span id="phpmax-text">100</span></div>
+      <div class="hp-bar" style="width:200px"><div class="hp-fill" id="php-bar" style="background:linear-gradient(90deg,#4ade80,#22c55e)"></div></div>
       <div class="auto-row">
         <div class="toggle" id="auto-toggle" onclick="toggleAuto()"></div>
         <span style="font-size:11px;color:rgba(255,255,255,.3)">自动战斗</span>
@@ -208,16 +211,16 @@ function closeModal(){document.getElementById('set-bg').classList.remove('show')
 // ═══ 数据 ═══
 // ═══ 数据 ═══
 const ZONES=[
-  {n:'🌲 新手森林',mons:[{n:'野狼',e:'🐺',hp:50,gold:5,xp:3},{n:'巨蛛',e:'🕷️',hp:90,gold:10,xp:6},{n:'树精',e:'🌳',hp:150,gold:18,xp:10}],boss:{n:'巨蛛女王',e:'🕷️',hp:300,gold:50,xp:25,skill:'召唤小蜘蛛'}},
-  {n:'🕳️ 暗影洞穴',mons:[{n:'蝙蝠',e:'🦇',hp:180,gold:14,xp:9},{n:'蛇妖',e:'🐍',hp:320,gold:28,xp:16},{n:'石像鬼',e:'🗿',hp:540,gold:50,xp:28}],boss:{n:'美杜莎',e:'🐍',hp:1050,gold:140,xp:70,skill:'石化2秒'}},
-  {n:'🏰 魔法塔',mons:[{n:'火元素',e:'🔥',hp:500,gold:38,xp:25},{n:'幽灵',e:'👻',hp:900,gold:75,xp:45},{n:'魔像',e:'🗿',hp:1500,gold:135,xp:75}],boss:{n:'大精灵',e:'🧞',hp:3000,gold:400,xp:200,skill:'回复30%HP'}},
-  {n:'🏚️ 地下城',mons:[{n:'骷髅兵',e:'💀',hp:1400,gold:100,xp:65},{n:'亡灵',e:'👻',hp:2500,gold:200,xp:120},{n:'巫妖',e:'🧟',hp:4200,gold:400,xp:210}],boss:{n:'巫妖王',e:'🧟',hp:8400,gold:1000,xp:500,skill:'复活一次'}},
-  {n:'🌌 深渊裂隙',mons:[{n:'小鬼',e:'👿',hp:4000,gold:280,xp:180},{n:'恶魔',e:'😈',hp:7200,gold:550,xp:330},{n:'深渊兽',e:'🐗',hp:12000,gold:1000,xp:600}],boss:{n:'恶魔领主',e:'😈',hp:24000,gold:2500,xp:1400,skill:'暴击伤害减半'}},
-  {n:'🐉 龙之巢穴',mons:[{n:'幼龙',e:'🐲',hp:11000,gold:750,xp:500},{n:'飞龙',e:'🐉',hp:20000,gold:1500,xp:900},{n:'龙人',e:'🦎',hp:33000,gold:3000,xp:1600}],boss:{n:'远古巨龙',e:'🐉',hp:66000,gold:6000,xp:3500,skill:'飞天5秒'}},
-  {n:'🏛️ 神域边境',mons:[{n:'天使',e:'👼',hp:31000,gold:2000,xp:1300},{n:'神兵',e:'⚔️',hp:55000,gold:4200,xp:2400},{n:'圣兽',e:'🦁',hp:90000,gold:8000,xp:4200}],boss:{n:'神之使徒',e:'⚡',hp:180000,gold:16000,xp:9000,skill:'最大HP伤害'}},
-  {n:'🏯 魔王城',mons:[{n:'魔物',e:'👹',hp:85000,gold:5500,xp:3400},{n:'魔将',e:'👺',hp:150000,gold:11000,xp:6200},{n:'暗影龙',e:'🐲',hp:250000,gold:22000,xp:11000}],boss:{n:'魔王',e:'👑',hp:500000,gold:45000,xp:24000,skill:'召唤小怪'}},
-  {n:'🌑 混沌虚空',mons:[{n:'混沌兽',e:'🌑',hp:240000,gold:15000,xp:9000},{n:'虚空行者',e:'🕳️',hp:420000,gold:31000,xp:16000},{n:'混沌龙',e:'🐲',hp:700000,gold:60000,xp:28000}],boss:{n:'混沌主宰',e:'🌌',hp:1400000,gold:120000,xp:60000,skill:'复制技能'}},
-  {n:'🏛️ 创世神殿',mons:[{n:'圣灵',e:'✨',hp:660000,gold:42000,xp:24000},{n:'炽天使',e:'👼',hp:1150000,gold:85000,xp:43000},{n:'古神',e:'👁️',hp:1900000,gold:160000,xp:76000}],boss:{n:'创世神',e:'☀️',hp:3800000,gold:330000,xp:160000,skill:'三阶段'}},
+  {n:'🌲 新手森林',mons:[{n:'野狼',e:'🐺',hp:30,gold:5,xp:8,spd:'慢',atk:2},{n:'巨蛛',e:'🕷️',hp:55,gold:8,xp:12,spd:'慢',atk:3},{n:'树精',e:'🌳',hp:100,gold:14,xp:18,spd:'慢',atk:5},{n:'哥布林',e:'👺',hp:25,gold:6,xp:10,spd:'快',atk:1}],boss:{n:'巨蛛女王',e:'🕷️',hp:200,gold:40,xp:30,spd:'中',atk:8,skill:'召唤小蜘蛛'}},
+  {n:'🕳️ 暗影洞穴',mons:[{n:'蝙蝠',e:'🦇',hp:120,gold:12,xp:22,spd:'快',atk:6},{n:'蛇妖',e:'🐍',hp:200,gold:22,xp:35,spd:'中',atk:10},{n:'石像鬼',e:'🗿',hp:350,gold:40,xp:55,spd:'慢',atk:15},{n:'矿工僵尸',e:'🧟',hp:280,gold:30,xp:40,spd:'慢',atk:12}],boss:{n:'美杜莎',e:'🐍',hp:700,gold:100,xp:80,spd:'中',atk:20,skill:'石化2秒'}},
+  {n:'🏰 魔法塔',mons:[{n:'火元素',e:'🔥',hp:350,gold:30,xp:50,spd:'中',atk:18},{n:'幽灵',e:'👻',hp:500,gold:50,xp:70,spd:'快',atk:14},{n:'魔像',e:'🗿',hp:900,gold:80,xp:100,spd:'慢',atk:25},{n:'魔法书',e:'📕',hp:250,gold:35,xp:60,spd:'快',atk:20}],boss:{n:'大精灵',e:'🧞',hp:1800,gold:250,xp:150,spd:'中',atk:30,skill:'回复30%HP'}},
+  {n:'🏚️ 地下城',mons:[{n:'骷髅兵',e:'💀',hp:800,gold:70,xp:90,spd:'中',atk:22},{n:'亡灵',e:'👻',hp:1400,gold:120,xp:150,spd:'快',atk:20},{n:'巫妖',e:'🧟',hp:2400,gold:200,xp:240,spd:'慢',atk:35},{n:'暗影刺客',e:'🗡️',hp:600,gold:100,xp:120,spd:'极快',atk:28}],boss:{n:'巫妖王',e:'🧟',hp:5000,gold:600,xp:400,spd:'慢',atk:45,skill:'复活一次'}},
+  {n:'🌌 深渊裂隙',mons:[{n:'小鬼',e:'👿',hp:2200,gold:180,xp:220,spd:'快',atk:30},{n:'恶魔',e:'😈',hp:4000,gold:350,xp:380,spd:'中',atk:40},{n:'深渊兽',e:'🐗',hp:7000,gold:600,xp:550,spd:'慢',atk:55},{n:'魅魔',e:'💋',hp:1800,gold:250,xp:280,spd:'快',atk:35}],boss:{n:'恶魔领主',e:'😈',hp:14000,gold:1400,xp:900,spd:'中',atk:60,skill:'暴击减半'}},
+  {n:'🐉 龙之巢穴',mons:[{n:'幼龙',e:'🐲',hp:6000,gold:500,xp:500,spd:'中',atk:42},{n:'飞龙',e:'🐉',hp:10000,gold:800,xp:750,spd:'快',atk:38},{n:'龙人',e:'🦎',hp:16000,gold:1200,xp:1000,spd:'慢',atk:60},{n:'火龙',e:'🐉',hp:12000,gold:1000,xp:900,spd:'中',atk:55}],boss:{n:'远古巨龙',e:'🐉',hp:35000,gold:3500,xp:2000,spd:'慢',atk:75,skill:'飞天5秒'}},
+  {n:'🏛️ 神域边境',mons:[{n:'天使',e:'👼',hp:18000,gold:1200,xp:1200,spd:'中',atk:50},{n:'神兵',e:'⚔️',hp:30000,gold:2200,xp:1800,spd:'快',atk:55},{n:'圣兽',e:'🦁',hp:50000,gold:4000,xp:2800,spd:'慢',atk:70},{n:'神官',e:'✝️',hp:15000,gold:1500,xp:1400,spd:'中',atk:48}],boss:{n:'神之使徒',e:'⚡',hp:100000,gold:9000,xp:5000,spd:'快',atk:85,skill:'最大HP伤'}},
+  {n:'🏯 魔王城',mons:[{n:'魔物',e:'👹',hp:45000,gold:3000,xp:2500,spd:'中',atk:60},{n:'魔将',e:'👺',hp:80000,gold:5500,xp:4000,spd:'慢',atk:80},{n:'暗影龙',e:'🐲',hp:130000,gold:9000,xp:6000,spd:'快',atk:65},{n:'魔导士',e:'🧙',hp:35000,gold:4000,xp:3000,spd:'中',atk:75}],boss:{n:'魔王',e:'👑',hp:280000,gold:22000,xp:12000,spd:'中',atk:100,skill:'召唤小兵'}},
+  {n:'🌑 混沌虚空',mons:[{n:'混沌兽',e:'🌑',hp:120000,gold:8000,xp:6000,spd:'慢',atk:75},{n:'虚空行者',e:'🕳️',hp:220000,gold:15000,xp:10000,spd:'快',atk:70},{n:'混沌龙',e:'🐲',hp:380000,gold:28000,xp:16000,spd:'中',atk:95},{n:'混沌法师',e:'🔮',hp:100000,gold:10000,xp:7500,spd:'快',atk:85}],boss:{n:'混沌主宰',e:'🌌',hp:800000,gold:60000,xp:30000,spd:'中',atk:130,skill:'复制技能'}},
+  {n:'🏛️ 创世神殿',mons:[{n:'圣灵',e:'✨',hp:350000,gold:22000,xp:15000,spd:'中',atk:90},{n:'炽天使',e:'👼',hp:600000,gold:40000,xp:25000,spd:'快',atk:85},{n:'古神',e:'👁️',hp:1000000,gold:75000,xp:42000,spd:'慢',atk:120},{n:'创世守护者',e:'🛡️',hp:800000,gold:50000,xp:32000,spd:'中',atk:110}],boss:{n:'创世神',e:'☀️',hp:2200000,gold:180000,xp:100000,spd:'中',atk:160,skill:'三阶段'}},
 ];
 
 const CLASSES={
@@ -291,6 +294,16 @@ const EQUIP_SHOP=[
   {slot:'crown',name:'学徒帽',cost:500,stat:'xp',val:10,icon:'🎓',rare:0,eff:null,edesc:''},
   {slot:'crown',name:'智者冠',cost:3000,stat:'xp',val:25,icon:'👑',rare:1,eff:null,edesc:''},
   {slot:'crown',name:'皇冠',cost:12000,stat:'xp',val:50,icon:'👑',rare:2,eff:'xp',edesc:'经验获取+50%'},
+  // 靴子 (VIT → HP)
+  {slot:'boots',name:'皮靴',cost:60,stat:'vit',val:3,icon:'👢',rare:0,eff:null,edesc:''},
+  {slot:'boots',name:'铁靴',cost:350,stat:'vit',val:8,icon:'👢',rare:0,eff:null,edesc:''},
+  {slot:'boots',name:'疾风靴',cost:1800,stat:'vit',val:16,icon:'👢',rare:1,eff:'speed',edesc:'移速+20%'},
+  {slot:'boots',name:'天使之靴',cost:7000,stat:'vit',val:30,icon:'👢',rare:2,eff:'speed',edesc:'移速+40% 闪避+10%'},
+  // 手套 (STR → ATK)
+  {slot:'gloves',name:'布手套',cost:70,stat:'str',val:3,icon:'🧤',rare:0,eff:null,edesc:''},
+  {slot:'gloves',name:'铁手套',cost:400,stat:'str',val:9,icon:'🧤',rare:0,eff:null,edesc:''},
+  {slot:'gloves',name:'力量护手',cost:2000,stat:'str',val:18,icon:'🧤',rare:1,eff:'crush',edesc:'10%概率击晕怪物1秒'},
+  {slot:'gloves',name:'泰坦之握',cost:8000,stat:'str',val:35,icon:'🧤',rare:2,eff:'crush',edesc:'20%概率击晕+伤害+50%'},
 ];
 
 const RARITY_COLORS=['#aaa','#6af','#c0f','#f0d78c','#f44'];
@@ -331,42 +344,34 @@ const ACTIVE_SKILLS={
 
 // ═══ 状态 ═══
 let G={
-  gold:0,lv:1,exp:0,expNeed:100,
+  gold:0,lv:1,exp:0,expNeed:60,
   stats:{str:5,int:5,dex:5,vit:5,luk:5},
   curClass:'novice',classes:['novice'],
-  equipped:{weapon:null,armor:null,ring1:null,ring2:null,amulet:null,crown:null},
-  zone:0,monIdx:0,monHp:50,
+  equipped:{weapon:null,armor:null,ring1:null,ring2:null,amulet:null,crown:null,boots:null,gloves:null},
+  zone:0,monIdx:0,monHp:30,playerHp:100,playerMaxHp:100,
   totalKills:0,maxZone:0,clicks:0,
   rebirth:0,souls:0,
-  auto:false,lastSave:Date.now(),version:2,
+  auto:false,lastSave:Date.now(),version:3,
   skillCD:{},buffs:{},bleedDmg:0,bleedTimer:0
 };
 
-// ═══ 公式 ═══
-function baseAtk(){let s=G.stats.str*2;const eq=G.equipped.weapon;if(eq)s+=eq.val;if(G.equipped.amulet&&G.equipped.amulet.eff==='all')s=Math.floor(s*1.08);return s}
-function critChance(){let c=G.stats.dex*0.0025;const c2=G.classes.filter(id=>id!=='novice');c+=c2.length*0.02;const r2=G.equipped.ring2;if(r2&&r2.eff==='crit')c+=0.1;return Math.min(c,0.85)}
-function critMult(){let m=1.5+G.stats.dex*0.003;return m}
-function goldMult(){let g=1+G.stats.luk*0.04;const r1=G.equipped.ring1;if(r1&&r1.eff==='luck')g+=0.25;return g}
-function xpMult(){let x=1;const eq=G.equipped.crown;if(eq)x+=eq.val/100;if(eq&&eq.eff==='xp')x+=0.5;if(G.equipped.amulet&&G.equipped.amulet.eff==='all')x+=0.4;return x}
-function atkSpeed(){let s=1;if(G.buffs.speedUp)s=1.5;return s}
+// ═══ 公式 — 全属性都有用 ═══
+function baseAtk(){let s=G.stats.str*3;const eq=G.equipped.weapon;if(eq)s+=eq.val;const gl=G.equipped.gloves;if(gl)s+=gl.val;return Math.floor(s)}
+function critChance(){let c=G.stats.dex*0.004;if(G.classes.length>1)c+=0.05;const r2=G.equipped.ring2;if(r2&&r2.eff==='crit')c+=0.1;return Math.min(c,0.85)}
+function critMult(){let m=1.5+G.stats.luk*0.005+G.stats.dex*0.002;return m}
+function goldMult(){return 1+G.stats.luk*0.06}
+function xpMult(){let x=1+G.stats.int*0.02;const eq=G.equipped.crown;if(eq)x+=eq.val/100;return x}
+function atkSpeed(){let s=1+G.stats.dex*0.01;if(G.buffs.speedUp)s*=1.5;return Math.min(s,5)}
+function playerMaxHP(){let hp=80+G.stats.vit*15;const eq=G.equipped.armor;if(eq)hp+=eq.val*3;const bt=G.equipped.boots;if(bt)hp+=bt.val*2;return Math.floor(hp)}
+function skillDmgBonus(){return 1+G.stats.int*0.03}
 function calcDPS(){
-  let d=baseAtk();
-  const c=critChance(),cm=critMult();
-  d*=1+c*(cm-1);
-  d*=atkSpeed();
-  d*=(1+G.souls*0.05);
-  // 职业技能加成
+  let d=baseAtk();const c=critChance(),cm=critMult();
+  d*=1+c*(cm-1);d*=atkSpeed();d*=(1+G.souls*0.05);
   const cls=G.classes;
-  const skillMult=[
-    ['warrior',1.25],['knight',1.25],['berserker',1.5],['paladin',1.5],['darkknight',1.7],['juggernaut',1.8],
-    ['mage',1.3],['wizard',1.3],['elementalist',1.2],['archmage',1.6],['warlock',1.65],['grandElem',1.55],
-    ['archer',1.15],['acolyte',1.2],['priest',1.1],['monk',1.2],['grandmaster',1.35]
-  ];
-  skillMult.forEach(([id,m])=>{if(cls.includes(id))d*=m});
-  if(cls.includes('assassin'))d*=1+critChance()*(critMult()-1)*0.5;
-  // 武器特殊效果DPS加成
-  const wep=G.equipped.weapon;if(wep&&wep.eff==='execute')d*=1.25;
-  // 增益
+  const mults={warrior:1.3,knight:1.3,berserker:1.55,paladin:1.55,darkknight:1.75,juggernaut:1.85,mage:1.35,wizard:1.35,elementalist:1.25,archmage:1.65,warlock:1.7,grandElem:1.6,archer:1.2,acolyte:1.25,priest:1.15,monk:1.25,grandmaster:1.4};
+  for(const[id,m]of Object.entries(mults))if(cls.includes(id))d*=m;
+  if(cls.includes('assassin'))d*=1+critChance()*(critMult()-1)*0.6;
+  const wep=G.equipped.weapon;if(wep&&wep.eff==='execute')d*=1.3;
   if(G.buffs.atkUp)d*=1.8;
   return Math.floor(d);
 }
@@ -388,8 +393,8 @@ function monData(){const z=ZONES[G.zone];return G.monIdx<3?z.mons[G.monIdx]:z.bo
 function monHPMax(){return monData().hp}
 function monGold(){return Math.floor(monData().gold*goldMult())}
 function monXP(){return Math.floor(monData().xp*xpMult())}
-function expToLevel(l){return Math.floor(100*Math.pow(1.5,l-1))}
-function statCost(n){return Math.floor(10*Math.pow(1.18,n-1))}
+function expToLevel(l){return Math.floor(60*Math.pow(1.4,l-1))}
+function statCost(n){return Math.floor(8*Math.pow(1.16,n-1))}
 
 // ═══ 重生 ═══
 function spawnMon(){
@@ -438,12 +443,19 @@ function castSkill(){
 function killMon(){
   const g=monGold(),xp=monXP();
   G.gold+=g;G.exp+=xp;G.totalKills++;
+  // 击杀回满血
+  G.playerMaxHp=playerMaxHP();G.playerHp=G.playerMaxHp;
   if(G.exp>=G.expNeed)levelUp();
   spawnDmg(-g,'#f0d78c','+'+g+'🪙');
-  toast('击杀 '+monData().n+'! +'+g+'🪙 +'+xp+'XP');
+  toast('击杀 '+monData().n+'! +'+g+'🪙 +'+xp+'XP 💚满血');
   spawnMon();
 }
-function levelUp(){G.lv++;G.exp-=G.expNeed;G.expNeed=expToLevel(G.lv);G.stats.str++;G.stats.int++;G.stats.dex++;G.stats.vit++;G.stats.luk++;toast('🎉 升级! Lv.'+G.lv);if(G.lv>=10&&!G.classes.some(c=>c!=='novice'))toast('⚡ 可转职了！点击下方转职标签')}
+function levelUp(){G.lv++;G.exp-=G.expNeed;G.expNeed=expToLevel(G.lv);G.stats.str++;G.stats.int++;G.stats.dex++;G.stats.vit++;G.stats.luk++;G.playerMaxHp=playerMaxHP();G.playerHp=G.playerMaxHp;toast('🎉 升级! Lv.'+G.lv);if(G.lv>=8&&!G.classes.some(c=>c!=='novice'))toast('⚡ 可转职了！点击下方转职标签')}
+function die(){
+  G.auto=false;document.getElementById('auto-toggle').classList.remove('on');
+  G.playerHp=playerMaxHP();G.playerMaxHp=G.playerHp;
+  toast('💀 被击败！重新生成怪物...');spawnMon();renderAll();
+}
 function spawnDmg(val,color,txt,skipFeed){
   const el=document.createElement('div');el.className='dmg-num';el.textContent=txt||val;el.style.color=color;
   if(color==='#f0d78c')el.style.fontSize='22px';
@@ -504,7 +516,7 @@ function rebirth(){
   const minLv=50+G.rebirth*10;
   if(G.lv<minLv||!G.classes.some(c=>CLASSES.T2.find(x=>x.id===c)))return toast('条件不足: Lv.'+minLv+' + T2职业');
   const souls=Math.floor(G.lv/10)+G.classes.length*3+G.maxZone*2+G.totalKills/100;
-  G={gold:0,lv:1,exp:0,expNeed:100,stats:{str:5,int:5,dex:5,vit:5,luk:5},curClass:'novice',classes:['novice'],equipped:{weapon:null,armor:null,ring1:null,ring2:null,amulet:null,crown:null},zone:0,monIdx:0,monHp:50,totalKills:0,maxZone:G.maxZone,clicks:0,rebirth:G.rebirth+1,souls:G.souls+souls,auto:G.auto,lastSave:Date.now(),version:2,skillCD:{},buffs:{},bleedDmg:0,bleedTimer:0};
+  G={gold:0,lv:1,exp:0,expNeed:60,stats:{str:5,int:5,dex:5,vit:5,luk:5},curClass:'novice',classes:['novice'],equipped:{weapon:null,armor:null,ring1:null,ring2:null,amulet:null,crown:null,boots:null,gloves:null},zone:0,monIdx:0,monHp:30,playerHp:100,playerMaxHp:100,totalKills:0,maxZone:G.maxZone,clicks:0,rebirth:G.rebirth+1,souls:G.souls+souls,auto:G.auto,lastSave:Date.now(),version:3,skillCD:{},buffs:{},bleedDmg:0,bleedTimer:0};
   toast('🔄 转生! +'+souls+' 英雄之魂');
   spawnMon();renderAll();save();
 }
@@ -533,11 +545,17 @@ function renderBattle(){
   document.getElementById('hp-bar').style.width=Math.max(0,G.monHp/maxHp*100)+'%';
   document.getElementById('hp-text').textContent=Math.max(0,Math.floor(G.monHp));
   document.getElementById('hp-max').textContent=maxHp;
-  document.getElementById('mon-name').textContent=md.n+(G.monIdx===3?' 👑BOSS':'');
+  document.getElementById('mon-name').textContent=md.n+(G.monIdx===3?' 👑BOSS':'')+' · '+md.spd;
   document.getElementById('monster').textContent=md.e;
   document.getElementById('zone-t').textContent=ZONES[G.zone].n;
   document.getElementById('zone-info').textContent=ZONES[G.zone].n+' — 第'+(G.zone+1)+'区域';
   document.getElementById('zone-num').textContent=G.zone+1;
+  // 玩家HP
+  G.playerMaxHp=playerMaxHP();
+  if(G.playerHp>G.playerMaxHp)G.playerHp=G.playerMaxHp;
+  document.getElementById('php-text').textContent=Math.max(0,Math.floor(G.playerHp));
+  document.getElementById('phpmax-text').textContent=G.playerMaxHp;
+  document.getElementById('php-bar').style.width=Math.max(0,G.playerHp/G.playerMaxHp*100)+'%';
 }
 function renderAll(){
   renderStats();
@@ -569,10 +587,9 @@ function updateTab(){
       });
     });
   }else if(activeTab===1){
-    h='<div style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:6px">🛒 装备商店 · 已装备: '+(Object.values(G.equipped).filter(Boolean).length)+'/6（购买时自动回收旧装备50%价格）</div>';
-    // 当前装备一览
+    h='<div style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:6px">🛒 装备商店 · 已装备: '+(Object.values(G.equipped).filter(Boolean).length)+'/8（购买时自动回收旧装备50%价格）</div>';
     h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;font-size:10px">';
-    ['weapon','armor','ring1','ring2','amulet','crown'].forEach(slot=>{
+    ['weapon','armor','ring1','ring2','amulet','crown','boots','gloves'].forEach(slot=>{
       const eq=G.equipped[slot];
       if(eq){
         const rc=RARITY_COLORS[eq.rare]||'#aaa';
@@ -582,7 +599,7 @@ function updateTab(){
     });
     h+='</div>';
     h+='<div style="display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap;font-size:10px">'+RARITY_NAMES.map((n,i)=>`<span style="color:${RARITY_COLORS[i]};background:${RARITY_BG[i]||'rgba(255,255,255,.04)'};padding:2px 6px;border-radius:6px">${n}</span>`).join('')+'</div>';
-    h+='<div style="font-size:10px;color:rgba(255,255,255,.15);margin-bottom:4px">🗡武器|🛡防具|💍幸运戒指|💍敏捷戒指|📿护符|👑头冠</div>';
+    h+='<div style="font-size:10px;color:rgba(255,255,255,.15);margin-bottom:4px">🗡武器|🛡防具|💍幸运戒指|💍敏捷戒指|📿护符|👑头冠|👢靴子|🧤手套</div>';
     EQUIP_SHOP.forEach((eq,i)=>{
       const owned=G.equipped[eq.slot]&&G.equipped[eq.slot].name===eq.name;
       const rc=RARITY_COLORS[eq.rare]||'#aaa';
@@ -666,20 +683,20 @@ function loop(t){
     const dps=calcDPS();
     G.monHp-=dps*dt;
     G._dmgTick=(G._dmgTick||0)+dps*dt;
-    // 每累积0.25秒的伤害弹一次数字
     if(G._dmgTick>dps*0.25){
       spawnDmg(Math.floor(G._dmgTick),'#fff',Math.floor(G._dmgTick)+'');
       G._dmgTick=0;
     }
     if(G.monHp<=0){killMon();G._dmgTick=0}
+    // 怪物反击：按攻速造成持续伤害
+    G._monAtkTick=(G._monAtkTick||0)+dt;
+    const md=monData();const matk=md.atk||3;
+    if(G._monAtkTick>0.8){G.playerHp-=matk;G._monAtkTick=0;spawnDmg(matk,'#f66','-'+matk+'❤️',true)}
+    if(G.playerHp<=0)die();
   }
-  // 技能冷却
   for(const k of Object.keys(G.skillCD)){if(G.skillCD[k]>0)G.skillCD[k]-=dt;if(G.skillCD[k]<0)G.skillCD[k]=0}
-  // 自动施放技能
   if(G.auto&&G.classes.length>1)castSkill();
-  // 流血/灼烧
   if(G.bleedTimer>0){G.bleedTimer-=dt;G.monHp-=G.bleedDmg*dt;if(G.monHp<=0)killMon()}
-  // 增益计时
   for(const k of Object.keys(G.buffs)){if(G.buffs[k]>0)G.buffs[k]-=dt;if(G.buffs[k]<=0)delete G.buffs[k]}
   if(Math.floor(t)%1000<20)renderAll();
   if(Math.floor(t)%15000<20)save();
