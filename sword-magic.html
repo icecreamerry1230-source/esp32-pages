@@ -87,10 +87,6 @@ body{background:#0d0d1a;font-family:system-ui,sans-serif;color:#c0b8d0;min-heigh
     <h2>⚙ 设置</h2>
     <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span>🔊 音效</span><span style="color:rgba(255,255,255,.3)">即将推出</span></div>
     <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span>📊 重置存档</span><span style="color:#f66;cursor:pointer" onclick="if(confirm('删除存档？')){localStorage.removeItem(SK);location.reload()}">删除</span></div>
-    <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">
-      <span>🔑 开挂密令</span>
-      <div style="display:flex;gap:4px;margin-top:4px"><input id="cheat-input" placeholder="输入密令..." style="flex:1;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);color:#f0d78c;padding:5px 8px;border-radius:6px;font-size:12px" onkeydown="if(event.key==='Enter')doCheat()"><button onclick="doCheat()" style="font-size:11px;padding:5px 10px">确认</button></div>
-    </div>
     <div style="text-align:center;margin-top:12px"><button onclick="closeModal()">关闭</button></div>
   </div>
 </div>
@@ -129,6 +125,7 @@ body{background:#0d0d1a;font-family:system-ui,sans-serif;color:#c0b8d0;min-heigh
     <span>💀 <b id="soul-t">0</b></span>
     <span>⚡DPS <b id="dps-t">0</b></span>
     <span class="gr" id="zone-t">🌲 新手森林</span>
+    <span style="cursor:pointer;font-size:14px;background:rgba(255,255,255,.02)" onclick="openCheat()" title="开发者选项">🔑</span>
   </div>
   <div class="main">
     <div class="panel" id="stats-panel"></div>
@@ -162,6 +159,19 @@ body{background:#0d0d1a;font-family:system-ui,sans-serif;color:#c0b8d0;min-heigh
     <button class="tab" data-t="5">🔄转生</button>
   </div>
   <div class="tab-content show" id="tab-content"></div>
+  </div>
+</div>
+
+<!-- 开挂弹窗 -->
+<div class="modal-bg" id="cheat-bg" onclick="if(event.target===this)closeCheat()">
+  <div class="modal">
+    <h2>🔑 开发者验证</h2>
+    <div style="text-align:center;color:rgba(255,255,255,.4);margin-bottom:12px">请输入开发者密令</div>
+    <input id="cheat-input" placeholder="输入密令..." style="width:100%;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);color:#f0d78c;padding:10px;border-radius:8px;font-size:14px;text-align:center" onkeydown="if(event.key==='Enter')doCheat()">
+    <div style="display:flex;gap:8px;margin-top:12px;justify-content:center">
+      <button onclick="doCheat()" style="background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.2);color:#4ade80">确认</button>
+      <button onclick="closeCheat()" style="background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.2);color:#f66">取消</button>
+    </div>
   </div>
 </div>
 
@@ -262,6 +272,12 @@ const EQUIP_SHOP=[
   {slot:'gloves',name:'铁手套',cost:400,stat:'str',val:9,icon:'🧤',rare:0,eff:null,edesc:''},
   {slot:'gloves',name:'力量护手',cost:2000,stat:'str',val:18,icon:'🧤',rare:1,eff:'crush',edesc:'10%击晕1秒'},
   {slot:'gloves',name:'泰坦之握',cost:8000,stat:'str',val:35,icon:'🧤',rare:2,eff:'crush',edesc:'20%击晕+伤害+50%'},
+  // 神话装备
+  {slot:'weapon',name:'诸神黄昏',cost:50000,stat:'str',val:80,icon:'⚡',rare:4,eff:'bleed',edesc:'必流血+每跳5%HP'},
+  {slot:'weapon',name:'创世之杖',cost:55000,stat:'int',val:85,icon:'🌟',rare:4,eff:'burn',edesc:'全屏灼烧10%HP/秒'},
+  {slot:'armor',name:'不朽圣盾',cost:45000,stat:'vit',val:90,icon:'🛡️',rare:4,eff:'regen',edesc:'每秒回复5%HP+免死一次'},
+  {slot:'ring1',name:'命运之戒',cost:40000,stat:'luk',val:55,icon:'💍',rare:4,eff:'luck',edesc:'金币+80% 稀有掉落×3'},
+  {slot:'crown',name:'神之王冠',cost:60000,stat:'xp',val:100,icon:'👑',rare:4,eff:'xp',edesc:'EXP+200% 全属性+15%'},
 ];
 const RARITY_COLORS=['#aaa','#6af','#c0f','#f0d78c','#f44'];
 const RARITY_NAMES=['普通','稀有','史诗','传说','神话'];
@@ -420,16 +436,26 @@ let cheatBuf='';
 document.addEventListener('keydown',function(e){
   if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
   cheatBuf+=e.key.toLowerCase();if(cheatBuf.length>20)cheatBuf=cheatBuf.slice(-20);
-  if(cheatBuf.includes('icecream')){cheatBuf='';G.gold+=10000000;G.exp+=500000;while(G.exp>=G.expNeed)levelUp();toast('🍦 密令生效！+1000万金币 +50万EXP');renderAll()}
+  if(cheatBuf.includes('icecream')){cheatBuf='';giveCheatReward()}
 });
+function openCheat(){document.getElementById('cheat-bg').classList.add('show');document.getElementById('cheat-input').value='';setTimeout(()=>document.getElementById('cheat-input').focus(),100)}
+function closeCheat(){
+  document.getElementById('cheat-bg').classList.remove('show');
+  toast('🚫 禁止开挂！请通过正常游戏提升实力');
+}
 function doCheat(){
   const inp=document.getElementById('cheat-input');
   if(inp.value.trim().toLowerCase()==='icecream'){
-    G.gold+=10000000;G.exp+=500000;
-    while(G.exp>=G.expNeed)levelUp();
-    toast('🍦 密令生效！+1000万金币 +50万EXP');
-    inp.value='';closeModal();renderAll();
-  }else{toast('❌ 密令错误')}
+    giveCheatReward();document.getElementById('cheat-bg').classList.remove('show');
+  }else{
+    toast('❌ 密令错误！禁止开挂！');
+    document.getElementById('cheat-input').value='';
+  }
+}
+function giveCheatReward(){
+  G.gold+=10000000;G.exp+=500000;
+  while(G.exp>=G.expNeed)levelUp();
+  toast('🍦 密令生效！+1000万金币 +50万EXP');renderAll();
 }
 
 // ═══ 渲染 ═══
