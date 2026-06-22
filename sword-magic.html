@@ -525,6 +525,20 @@ function rebirth(){
 function nextZone(){if(G.zone<9){G.zone++;if(G.zone>G.maxZone)G.maxZone=G.zone;spawnMon();renderAll()}}
 function prevZone(){if(G.zone>0){G.zone--;spawnMon();renderAll()}}
 
+// ═══ 开挂密令 ═══
+let cheatBuf='';
+document.addEventListener('keydown',function(e){
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
+  cheatBuf+=e.key.toLowerCase();
+  if(cheatBuf.length>20)cheatBuf=cheatBuf.slice(-20);
+  if(cheatBuf.includes('icecream')){
+    cheatBuf='';G.gold+=10000000;G.exp+=500000;
+    while(G.exp>=G.expNeed)levelUp();
+    toast('🍦 密令生效！+1000万金币 +50万EXP');
+    renderAll();
+  }
+});
+
 // ═══ 自动 ═══
 function toggleAuto(){G.auto=!G.auto;document.getElementById('auto-toggle').classList.toggle('on',G.auto)}
 
