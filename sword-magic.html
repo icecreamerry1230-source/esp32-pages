@@ -125,6 +125,7 @@ body{background:#0d0d1a;font-family:system-ui,sans-serif;color:#c0b8d0;min-heigh
     <span>💀 <b id="soul-t">0</b></span>
     <span>⚡DPS <b id="dps-t">0</b></span>
     <span class="gr" id="zone-t">🌲 新手森林</span>
+    <span>⭐EXP <b id="exp-t">0/60</b></span>
     <span style="cursor:pointer;font-size:14px;background:rgba(255,255,255,.02)" onclick="openCheat()" title="开发者选项">🔑</span>
   </div>
   <div class="main">
@@ -488,7 +489,7 @@ function renderBattle(){
   document.getElementById('phpmax-text').textContent=G.playerMaxHp;
   document.getElementById('php-bar').style.width=Math.max(0,G.playerHp/G.playerMaxHp*100)+'%';
 }
-function renderAll(){renderStats();document.getElementById('lvl').textContent='Lv.'+G.lv+' '+className(G.curClass);document.getElementById('gold-t').textContent=Math.floor(G.gold);document.getElementById('soul-t').textContent=G.souls;document.getElementById('dps-t').textContent=calcDPS();renderBattle();updateTab();if(Math.floor(Date.now()/1000)%15<2)save()}
+function renderAll(){renderStats();document.getElementById('lvl').textContent='Lv.'+G.lv+' '+className(G.curClass);document.getElementById('gold-t').textContent=Math.floor(G.gold);document.getElementById('soul-t').textContent=G.souls;document.getElementById('dps-t').textContent=calcDPS();document.getElementById('exp-t').textContent=G.exp+'/'+G.expNeed;renderBattle();updateTab();if(Math.floor(Date.now()/1000)%15<2)save()}
 let activeTab=0;
 function updateTab(){
   let h='';
