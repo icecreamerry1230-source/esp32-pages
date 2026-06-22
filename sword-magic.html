@@ -126,6 +126,7 @@ body{background:#0d0d1a;font-family:system-ui,sans-serif;color:#c0b8d0;min-heigh
     <span>⚡DPS <b id="dps-t">0</b></span>
     <span class="gr" id="zone-t">🌲 新手森林</span>
     <span>⭐EXP <b id="exp-t">0/60</b></span>
+    <span id="save-dot" style="font-size:10px;color:rgba(255,255,255,.2)">💾</span>
     <span style="cursor:pointer;font-size:14px;background:rgba(255,255,255,.02)" onclick="openCheat()" title="开发者选项">🔑</span>
   </div>
   <div class="main">
@@ -381,10 +382,10 @@ function doHeavyStrike(){
 function castSkill(){
   const sid=hasActiveSkill();if(!sid)return;
   const sk=ACTIVE_SKILLS[sid];if(!sk||(G.skillCD[sid]&&G.skillCD[sid]>0))return;
-  let dmg=baseAtk();if(sk.dmg>0){dmg=Math.floor(dmg*sk.dmg);if(sk.extraScale==='hpLost'){const hpPct=1-G.playerHp/playerMaxHP();dmg+=Math.floor(dmg*hpPct*5)}for(let i=0;i<(sk.hits||1);i++){G.monHp-=dmg;spawnDmg(dmg,sk.color,sk.icon+' '+sk.name)}}
+  let dmg=baseAtk();if(sk.dmg>0){dmg=Math.floor(dmg*sk.dmg);if(sk.extraScale==='hpLost'){dmg+=Math.floor(dmg*Math.max(0,1-G.playerHp/G.playerMaxHp)*5)}for(let i=0;i<(sk.hits||1);i++){G.monHp-=dmg;spawnDmg(dmg,sk.color,sk.icon+' '+sk.name)}}
   if(sk.buff)G.buffs[sk.buff]=sk.dur;
   if(sk.goldBonus){const g=Math.floor(monGold()*sk.goldBonus);G.gold+=g;spawnDmg(g,'#ff0','💛+'+g)}
-  G.skillCD[sid]=sk.cd;
+  const p=applyClassPassives();G.skillCD[sid]=Math.max(1,sk.cd-p.skillCdReduc);
   if(G.monHp<=0)killMon();
 }
 function killMon(){
@@ -535,7 +536,7 @@ function renderBattle(){
   document.getElementById('player-sprite').textContent=classSprite();
   document.getElementById('player-sprite').style.color=classAtkColor();
 }
-function renderAll(){renderStats();document.getElementById('lvl').textContent='Lv.'+G.lv+' '+className(G.curClass);document.getElementById('gold-t').textContent=Math.floor(G.gold);document.getElementById('soul-t').textContent=G.souls;document.getElementById('dps-t').textContent=calcDPS();document.getElementById('exp-t').textContent=G.exp+'/'+G.expNeed;renderBattle();updateTab();if(Math.floor(Date.now()/1000)%15<2)save()}
+function renderAll(){renderStats();document.getElementById('lvl').textContent='Lv.'+G.lv+' '+className(G.curClass);document.getElementById('gold-t').textContent=Math.floor(G.gold);document.getElementById('soul-t').textContent=G.souls;document.getElementById('dps-t').textContent=calcDPS();document.getElementById('exp-t').textContent=G.exp+'/'+G.expNeed;renderBattle();updateTab();if(saveIndicator>0){document.getElementById('save-dot').textContent='💾';saveIndicator-=0.05}else{document.getElementById('save-dot').textContent=''}if(Math.floor(Date.now()/1000)%12<1)save()}
 let activeTab=0;
 function updateTab(){
   let h='';
@@ -565,7 +566,7 @@ function updateTab(){
   }else if(activeTab===1){
     const all=[...CLASSES.T1,...CLASSES.T2,...CLASSES.T3];
     h='<div style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:6px">🏛 职业树 · '+G.classes.length+'/'+(1+all.length)+' · 当前: '+className(G.curClass)+'</div>';
-    [['T0 初始',CLASSES.T0],['T1 基础 Lv.8',CLASSES.T1],['T2 进阶 Lv.30',CLASSES.T2],['T3 大师 Lv.60',CLASSES.T3]].forEach(([tier,list])=>{
+    [['T0 初始',CLASSES.T0],['T1 基础 Lv.8',CLASSES.T1],['T2 进阶 Lv.25',CLASSES.T2],['T3 大师 Lv.50',CLASSES.T3]].forEach(([tier,list])=>{
       h+=`<div style="font-size:10px;color:rgba(255,255,255,.2);margin:6px 0 2px">${tier}</div>`;
       list.forEach(c=>{
         const cur=G.curClass===c.id;const unl=G.classes.includes(c.id);const avail=canUnlock(c);
@@ -621,8 +622,9 @@ function toast(msg){const el=document.createElement('div');el.className='toast';
 
 // ═══ 存档 ═══
 const SK='sword_magic_save';
-function save(){G.lastSave=Date.now();localStorage.setItem(SK,JSON.stringify(G))}
-function load(){try{const d=JSON.parse(localStorage.getItem(SK));if(d&&d.version===G.version){Object.assign(G,d);return true}}catch(e){}return false}
+let saveIndicator=0;
+function save(){G.lastSave=Date.now();localStorage.setItem(SK,JSON.stringify(G));saveIndicator=2}
+function load(){try{const d=JSON.parse(localStorage.getItem(SK));if(d&&d.version===G.version){Object.assign(G,d);_passiveCache=null;return true}}catch(e){}return false}
 
 // ═══ 主循环 ═══
 let lt=0;
