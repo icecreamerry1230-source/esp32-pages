@@ -200,36 +200,36 @@ const ZONES=[
 ];
 
 const CLASSES={
-  T0:[{id:'novice',name:'初心者',icon:'⚔️',sprite:'🧑',color:'#aaa',desc:'冒险的起点',passive:''}],
+  T0:[{id:'novice',name:'初心者',icon:'⚔️',sprite:'🧑',color:'#aaa',desc:'冒险的起点',passive:'',tier:0,req:{}}],
   T1:[
-    {id:'warrior',name:'战士',icon:'🛡️',sprite:'🛡️',color:'#f66',desc:'近战坦克 · 高HP高防御',passive:'VIT额外+30%HP · 怪物反击伤害-20%'},
-    {id:'mage',name:'法师',icon:'🔮',sprite:'🔮',color:'#a0f',desc:'重击大师 · 技能爆发',passive:'重击间隔-30% · 重击倍率+50% · 主动技能CD-2秒'},
-    {id:'archer',name:'弓箭手',icon:'🏹',sprite:'🏹',color:'#5f5',desc:'暴击猎手 · 极速连击',passive:'暴率+10% · 攻速+30% · 多重箭概率翻倍'},
-    {id:'acolyte',name:'侍僧',icon:'⛪',sprite:'⛪',color:'#ff0',desc:'金币大亨 · 不死之身',passive:'金币+40% · 击杀回复额外20%HP · 免死一次(CD60s)'},
+    {id:'warrior',name:'战士',icon:'🛡️',sprite:'🛡️',color:'#f66',tier:1,req:{lv:8,str:12},desc:'近战坦克 · 高HP高防御',passive:'HP+30% · 受击-20% · ATK+10%'},
+    {id:'mage',name:'法师',icon:'🔮',sprite:'🔮',color:'#a0f',tier:1,req:{lv:8,int:12},desc:'重击大师 · 技能爆发',passive:'重击间隔-30% · 倍率+50% · 技能CD-2秒'},
+    {id:'archer',name:'弓箭手',icon:'🏹',sprite:'🏹',color:'#5f5',tier:1,req:{lv:8,dex:12},desc:'暴击猎手 · 极速连击',passive:'暴率+10% · 攻速+30%'},
+    {id:'acolyte',name:'侍僧',icon:'⛪',sprite:'⛪',color:'#ff0',tier:1,req:{lv:8,int:8,vit:8},desc:'金币大亨 · 不死之身',passive:'金币+40% · 免死一次'},
   ],
   T2:[
-    {id:'knight',name:'骑士',icon:'🐴',sprite:'🛡️',color:'#6af',desc:'圣盾坦克',passive:'受击20%概率格挡 · HP+50%'},
-    {id:'berserker',name:'狂战士',icon:'🪓',sprite:'🛡️',color:'#f44',desc:'狂怒战神',passive:'HP越低ATK越高(最高×2) · 吸血+5%'},
-    {id:'wizard',name:'巫师',icon:'🧙',sprite:'🔮',color:'#c0f',desc:'奥术智者',passive:'重击伤害+80% · 经验+25%'},
-    {id:'elementalist',name:'元素使',icon:'❄️',sprite:'🔮',color:'#6cf',desc:'元素主宰',passive:'攻击附带随机元素: 30%冻结/灼烧/感电'},
-    {id:'ranger',name:'游侠',icon:'🏹',sprite:'🏹',color:'#5c7',desc:'自然射手',passive:'每第5次攻击必定暴击 · 暴伤+40%'},
-    {id:'assassin',name:'刺客',icon:'🗡️',sprite:'🏹',color:'#a0f',desc:'暗杀者',passive:'对满血怪物首击×3 · 暴伤+80% · 闪避+15%'},
-    {id:'priest',name:'祭司',icon:'✝️',sprite:'⛪',color:'#ff0',desc:'神圣牧师',passive:'金币+80% · 每10秒全队回血20%'},
-    {id:'monk',name:'武僧',icon:'✊',sprite:'⛪',color:'#f90',desc:'金刚武僧',passive:'HP+80% · 空手攻击力+50% · 反击伤害×2'},
+    {id:'knight',name:'骑士',icon:'🐴',sprite:'🛡️',color:'#6af',tier:2,req:{lv:25,str:40,vit:25},desc:'圣盾坦克',passive:'格挡20% · HP+50%'},
+    {id:'berserker',name:'狂战士',icon:'🪓',sprite:'🛡️',color:'#f44',tier:2,req:{lv:25,str:55},desc:'狂怒战神',passive:'HP越低ATK越高(最高×2)'},
+    {id:'wizard',name:'巫师',icon:'🧙',sprite:'🔮',color:'#c0f',tier:2,req:{lv:25,int:50},desc:'奥术智者',passive:'重击伤害+80% · 经验+25%'},
+    {id:'elementalist',name:'元素使',icon:'❄️',sprite:'🔮',color:'#6cf',tier:2,req:{lv:25,int:35,dex:20},desc:'元素主宰',passive:'攻击附带元素效果'},
+    {id:'ranger',name:'游侠',icon:'🏹',sprite:'🏹',color:'#5c7',tier:2,req:{lv:25,dex:45},desc:'自然射手',passive:'每5击必暴 · 暴伤+40%'},
+    {id:'assassin',name:'刺客',icon:'🗡️',sprite:'🏹',color:'#a0f',tier:2,req:{lv:25,dex:40,str:20},desc:'暗杀者',passive:'首击×3 · 暴伤+80% · 闪避+15%'},
+    {id:'priest',name:'祭司',icon:'✝️',sprite:'⛪',color:'#ff0',tier:2,req:{lv:25,int:40,vit:25},desc:'神圣牧师',passive:'金币+80% · 每10秒回血20%'},
+    {id:'monk',name:'武僧',icon:'✊',sprite:'⛪',color:'#f90',tier:2,req:{lv:25,str:25,vit:25},desc:'金刚武僧',passive:'HP+80% · ATK+50%'},
   ],
   T3:[
-    {id:'paladin',name:'圣骑士',icon:'👼',sprite:'🛡️',color:'#6af',desc:'圣光守护',passive:'全属性+15% · 光环:怪物伤害-30%'},
-    {id:'darkknight',name:'暗黑骑士',icon:'🦇',sprite:'🛡️',color:'#a0f',desc:'暗影领主',passive:'ATK+70% · 击杀回满血+伤害×1.5持续3秒'},
-    {id:'juggernaut',name:'毁灭者',icon:'💀',sprite:'🛡️',color:'#f44',desc:'灭世者',passive:'ATK+80% · 暴击无视50%防御 · HP翻倍'},
-    {id:'archmage',name:'大法师',icon:'🌟',sprite:'🔮',color:'#c0f',desc:'禁咒使者',passive:'重击CD减半 · 重击伤害×3 · 全屏溅射'},
-    {id:'warlock',name:'术士',icon:'🔥',sprite:'🔮',color:'#f90',desc:'恶魔契约',passive:'ATK+65% · 经验+50% · 击杀召唤恶魔助战'},
-    {id:'grandElem',name:'大元素使',icon:'🌪️',sprite:'🔮',color:'#6cf',desc:'元素之神',passive:'元素触发率翻倍 · 攻速+50% · 冻结延长至4秒'},
-    {id:'sniper',name:'狙击手',icon:'🎯',sprite:'🏹',color:'#5c7',desc:'死神之眼',passive:'暴率+25% · 暴伤+150% · 每10秒必暴狙击'},
-    {id:'beastmaster',name:'兽王',icon:'🦅',sprite:'🏹',color:'#5f5',desc:'万兽之王',passive:'召唤2只战鹰 · 攻速+50% · 金币+30%'},
-    {id:'shadowMaster',name:'暗影大师',icon:'👤',sprite:'🏹',color:'#a0f',desc:'无形死神',passive:'暴率+35% · 暴伤+200% · 击杀隐身2秒无敌'},
-    {id:'bishop',name:'主教',icon:'⛪',sprite:'⛪',color:'#ff0',desc:'神之代言',passive:'金币+120% · 全属性+20% · 光环:友方+15%全属性'},
-    {id:'inquisitor',name:'审判官',icon:'⚖️',sprite:'⛪',color:'#f66',desc:'神圣审判',passive:'ATK+60% · 暴率+20% · 对BOSS伤害+100%'},
-    {id:'grandmaster',name:'宗师',icon:'☯️',sprite:'⛪',color:'#f90',desc:'天人合一',passive:'全属性+30% · HP+100% · 所有伤害×1.5'},
+    {id:'paladin',name:'圣骑士',icon:'👼',sprite:'🛡️',color:'#6af',tier:3,req:{lv:50,str:80,vit:55,int:30},desc:'圣光守护',passive:'全属性+15% · 光环减伤30%'},
+    {id:'darkknight',name:'暗黑骑士',icon:'🦇',sprite:'🛡️',color:'#a0f',tier:3,req:{lv:50,str:100,vit:40},desc:'暗影领主',passive:'ATK+70% · 击杀满血+增伤'},
+    {id:'juggernaut',name:'毁灭者',icon:'💀',sprite:'🛡️',color:'#f44',tier:3,req:{lv:50,str:120,vit:65},desc:'灭世者',passive:'ATK+80% · HP翻倍'},
+    {id:'archmage',name:'大法师',icon:'🌟',sprite:'🔮',color:'#c0f',tier:3,req:{lv:50,int:110},desc:'禁咒使者',passive:'重击CD减半 · 伤害×3'},
+    {id:'warlock',name:'术士',icon:'🔥',sprite:'🔮',color:'#f90',tier:3,req:{lv:50,int:85,str:30},desc:'恶魔契约',passive:'ATK+65% · EXP+50%'},
+    {id:'grandElem',name:'大元素使',icon:'🌪️',sprite:'🔮',color:'#6cf',tier:3,req:{lv:50,int:85,dex:40},desc:'元素之神',passive:'元素翻倍 · 攻速+50%'},
+    {id:'sniper',name:'狙击手',icon:'🎯',sprite:'🏹',color:'#5c7',tier:3,req:{lv:50,dex:100},desc:'死神之眼',passive:'暴率+25% · 暴伤+150%'},
+    {id:'beastmaster',name:'兽王',icon:'🦅',sprite:'🏹',color:'#5f5',tier:3,req:{lv:50,dex:70,int:40},desc:'万兽之王',passive:'攻速+50% · 金币+30%'},
+    {id:'shadowMaster',name:'暗影大师',icon:'👤',sprite:'🏹',color:'#a0f',tier:3,req:{lv:50,dex:90,str:50},desc:'无形死神',passive:'暴率+35% · 暴伤+200%'},
+    {id:'bishop',name:'主教',icon:'⛪',sprite:'⛪',color:'#ff0',tier:3,req:{lv:50,int:95,vit:45},desc:'神之代言',passive:'金币+120% · 全属性+20%'},
+    {id:'inquisitor',name:'审判官',icon:'⚖️',sprite:'⛪',color:'#f66',tier:3,req:{lv:50,int:70,str:55},desc:'神圣审判',passive:'ATK+60% · BOSS伤+100%'},
+    {id:'grandmaster',name:'宗师',icon:'☯️',sprite:'⛪',color:'#f90',tier:3,req:{lv:50,str:70,vit:70},desc:'天人合一',passive:'全属性+30% · HP+100%'},
   ]
 };
 
@@ -417,8 +417,9 @@ function buyStat(stat){const val=G.stats[stat];const cost=statCost(val);if(G.gol
 function switchClass(id){if(G.classes.includes(id)){G.curClass=id;toast('切换为 '+className(id));renderAll()}}
 function canUnlock(c){if(G.classes.includes(c.id))return false;if(c.req.lv&&G.lv<c.req.lv)return false;if(c.req.str&&G.stats.str<c.req.str)return false;if(c.req.int&&G.stats.int<c.req.int)return false;if(c.req.dex&&G.stats.dex<c.req.dex)return false;if(c.req.vit&&G.stats.vit<c.req.vit)return false;if(!G.classes.includes(c.parent))return false;return true}
 function unlockClass(id){const all=[...CLASSES.T1,...CLASSES.T2,...CLASSES.T3];const c=all.find(x=>x.id===id);if(!c||!canUnlock(c))return;G.classes.push(id);G.curClass=id;G.stats.str+=3;G.stats.int+=3;G.stats.dex+=3;G.stats.vit+=3;G.stats.luk+=3;_passiveCache=null;toast('✨ 转职为 '+c.name+'！'+c.passive);renderAll()}
-function className(id){const all=[{id:'novice',name:'初心者',icon:'⚔️',sprite:'🧑',color:'#aaa'},...CLASSES.T1,...CLASSES.T2,...CLASSES.T3];const c=all.find(x=>x.id===id);return c?c.icon+' '+c.name:id}
-function classInfo(id){const all=[{id:'novice',name:'初心者',icon:'⚔️',sprite:'🧑',color:'#aaa',passive:''},...CLASSES.T1,...CLASSES.T2,...CLASSES.T3];return all.find(x=>x.id===id)||all[0]}
+function allClasses(){return[...CLASSES.T0,...CLASSES.T1,...CLASSES.T2,...CLASSES.T3]}
+function className(id){const c=allClasses().find(x=>x.id===id);return c?c.icon+' '+c.name:id}
+function classInfo(id){return allClasses().find(x=>x.id===id)||CLASSES.T0[0]}
 function classAtkColor(){const ci=classInfo(G.curClass);return ci.color||'#fff'}
 function classSprite(){const ci=classInfo(G.curClass);return ci.sprite||'🧑'}
 
