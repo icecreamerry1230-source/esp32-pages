@@ -113,7 +113,7 @@ body{background:#0d0d1a;font-family:system-ui,sans-serif;color:#c0b8d0;min-heigh
     <button class="menu-btn" onclick="openModal('rule')">📋 规则</button>
     <button class="menu-btn" onclick="openModal('set')">⚙ 设置</button>
     <button class="menu-btn" onclick="window.location.href='games.html'">退出游戏</button>
-    <div class="menu-ver">v2.0</div>
+    <div class="menu-ver">v4.0 · 职业觉醒</div>
   </div>
 
   <div class="game-screen" id="game-screen">
@@ -308,7 +308,7 @@ let G={
   zone:0,monIdx:0,monHp:30,playerHp:100,playerMaxHp:100,
   totalKills:0,maxZone:0,clicks:0,
   rebirth:0,souls:0,
-  auto:false,lastSave:Date.now(),version:3,
+  auto:false,lastSave:Date.now(),version:4,
   skillCD:{},buffs:{},bleedDmg:0,bleedTimer:0,heavyCD:0
 };
 
@@ -333,25 +333,35 @@ function calcDPS(){
 function hasActiveSkill(){
   for(const cid of G.classes){if(cid==='novice')continue;if(ACTIVE_SKILLS[cid])return cid;const t2=CLASSES.T2.find(c=>c.id===cid);if(t2&&ACTIVE_SKILLS[t2.parent])return t2.parent;const t3=CLASSES.T3.find(c=>c.id===cid);if(t3){const t2p=CLASSES.T2.find(c=>c.id===t3.parent);if(t2p&&ACTIVE_SKILLS[t2p.parent])return t2p.parent}}return null;}
 
-function monData(){const z=ZONES[G.zone];return G.monIdx<3?z.mons[G.monIdx]:z.boss}
+function monData(){const z=ZONES[G.zone];return G.monIdx<4?z.mons[G.monIdx]:z.boss}
 function monHPMax(){return monData().hp}
 function monGold(){return Math.floor(monData().g*goldMult())}
 function monXP(){return Math.floor(monData().xp*xpMult())}
 function expToLevel(l){return Math.floor(60*Math.pow(1.4,l-1))}
 function statCost(n){return Math.floor(8*Math.pow(1.16,n-1))}
 
+// ═══ 音效 ═══
+let audioCtx;
+function snd(f0,f1,dur,vol){try{if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume();const t=audioCtx.currentTime,o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sine';o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+dur);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur+.02);o.connect(g);g.connect(audioCtx.destination);o.start(t);o.stop(t+dur+.04)}catch(e){}}
+function sndClick(){snd(500,900,.04,.04)}
+function sndCrit(){snd(800,1200,.06,.06)}
+function sndHeavy(){snd(200,400,.08,.08);setTimeout(()=>snd(300,600,.06,.06),60)}
+function sndKill(){snd(600,1000,.05,.05);setTimeout(()=>snd(800,1200,.06,.06),50)}
+function sndLevel(){[500,700,900,1100].forEach((f,i)=>setTimeout(()=>snd(f,f+300,.08,.06),i*80))}
+function sndBuyEquip(){snd(400,800,.05,.05)}
+
 // ═══ 战斗 ═══
 function spawnMon(){
   const bossChance=Math.min(0.05+G.zone*0.01,0.15);
-  G.monIdx=Math.random()<bossChance?3:(Math.floor(Math.random()*3));
+  G.monIdx=Math.random()<bossChance?4:(Math.floor(Math.random()*4));
   G.monHp=monHPMax();renderBattle();
 }
 function doClick(){
   let dmg=baseAtk();let extraHits=0;
-  const wep=G.equipped.weapon;
+  const wep=G.equipped.weapon;const cc=classAtkColor();
   if(wep&&wep.eff==='double'){if(Math.random()<(wep.rare>=2?0.25:0.12))extraHits=wep.rare>=2?2:1;}
-  if(Math.random()<critChance()){dmg=Math.floor(dmg*critMult());spawnDmg(dmg,'#f0d78c','💥'+dmg)}
-  else spawnDmg(dmg,'#fff',dmg+'');
+  if(Math.random()<critChance()){dmg=Math.floor(dmg*critMult());spawnDmg(dmg,'#f0d78c','💥'+dmg);sndCrit()}
+  else{spawnDmg(dmg,cc,dmg+'');sndClick()}
   if(Math.random()<0.03){dmg=Math.floor(dmg*1.5);spawnDmg(dmg,'#f66','奋力一击!')}
   G.monHp-=dmg;
   if(wep&&wep.eff==='bleed'&&Math.random()<(wep.rare>=2?0.2:0.1)){G.bleedDmg=Math.floor(dmg*0.3);G.bleedTimer=(wep.rare>=2?5:3);spawnDmg(G.bleedDmg,'#f44','🩸')}
@@ -365,7 +375,7 @@ function doClick(){
 }
 function doHeavyStrike(){
   const dmg=Math.floor(baseAtk()*heavyMul());
-  G.monHp-=dmg;spawnDmg(dmg,'#f90','💢重击!');
+  G.monHp-=dmg;spawnDmg(dmg,'#f90','💢重击!');sndHeavy();
   if(G.monHp<=0)killMon();
 }
 function castSkill(){
@@ -380,13 +390,13 @@ function castSkill(){
 function killMon(){
   const g=monGold(),xp=monXP();
   G.gold+=g;G.exp+=xp;G.totalKills++;
-  G.playerMaxHp=playerMaxHP();G.playerHp=G.playerMaxHp;
+  G.playerMaxHp=playerMaxHP();G.playerHp=G.playerMaxHp;_passiveCache=null;
   if(G.exp>=G.expNeed)levelUp();
-  spawnDmg(-g,'#f0d78c','+'+g+'🪙');
+  spawnDmg(-g,'#f0d78c','+'+g+'🪙');sndKill();
   toast('击杀 '+monData().n+'! +'+g+'🪙 +'+xp+'XP 💚满血');
   spawnMon();
 }
-function levelUp(){G.lv++;G.exp-=G.expNeed;G.expNeed=expToLevel(G.lv);G.stats.str++;G.stats.int++;G.stats.dex++;G.stats.vit++;G.stats.luk++;G.playerMaxHp=playerMaxHP();G.playerHp=G.playerMaxHp;toast('🎉 升级! Lv.'+G.lv);if(G.lv>=8&&!G.classes.some(c=>c!=='novice'))toast('⚡ 可转职了！点击下方转职标签')}
+function levelUp(){G.lv++;G.exp-=G.expNeed;G.expNeed=expToLevel(G.lv);G.stats.str++;G.stats.int++;G.stats.dex++;G.stats.vit++;G.stats.luk++;G.playerMaxHp=playerMaxHP();G.playerHp=G.playerMaxHp;_passiveCache=null;sndLevel();toast('🎉 升级! Lv.'+G.lv);if(G.lv>=8&&!G.classes.some(c=>c!=='novice'))toast('⚡ 可转职了！点击下方转职标签')}
 function die(){
   G.auto=false;document.getElementById('auto-toggle').classList.remove('on');
   G.playerHp=playerMaxHP();G.playerMaxHp=G.playerHp;
@@ -406,31 +416,31 @@ function buyStat(stat){const val=G.stats[stat];const cost=statCost(val);if(G.gol
 // ═══ 职业 ═══
 function switchClass(id){if(G.classes.includes(id)){G.curClass=id;toast('切换为 '+className(id));renderAll()}}
 function canUnlock(c){if(G.classes.includes(c.id))return false;if(c.req.lv&&G.lv<c.req.lv)return false;if(c.req.str&&G.stats.str<c.req.str)return false;if(c.req.int&&G.stats.int<c.req.int)return false;if(c.req.dex&&G.stats.dex<c.req.dex)return false;if(c.req.vit&&G.stats.vit<c.req.vit)return false;if(!G.classes.includes(c.parent))return false;return true}
-function unlockClass(id){const all=[...CLASSES.T1,...CLASSES.T2,...CLASSES.T3];const c=all.find(x=>x.id===id);if(!c||!canUnlock(c))return;G.classes.push(id);G.curClass=id;for(const[k,v]of Object.entries(c.bonus))G.stats[k]=(G.stats[k]||0)+v;toast('✨ 转职为 '+c.name+'！');renderAll()}
+function unlockClass(id){const all=[...CLASSES.T1,...CLASSES.T2,...CLASSES.T3];const c=all.find(x=>x.id===id);if(!c||!canUnlock(c))return;G.classes.push(id);G.curClass=id;G.stats.str+=3;G.stats.int+=3;G.stats.dex+=3;G.stats.vit+=3;G.stats.luk+=3;_passiveCache=null;toast('✨ 转职为 '+c.name+'！'+c.passive);renderAll()}
 function className(id){const all=[{id:'novice',name:'初心者',icon:'⚔️',sprite:'🧑',color:'#aaa'},...CLASSES.T1,...CLASSES.T2,...CLASSES.T3];const c=all.find(x=>x.id===id);return c?c.icon+' '+c.name:id}
 function classInfo(id){const all=[{id:'novice',name:'初心者',icon:'⚔️',sprite:'🧑',color:'#aaa',passive:''},...CLASSES.T1,...CLASSES.T2,...CLASSES.T3];return all.find(x=>x.id===id)||all[0]}
 function classAtkColor(){const ci=classInfo(G.curClass);return ci.color||'#fff'}
 function classSprite(){const ci=classInfo(G.curClass);return ci.sprite||'🧑'}
 
+// 缓存被动避免递归
+let _passiveCache=null,_passiveCacheTime=0;
 function applyClassPassives(){
-  // 返回额外加成
-  let p={atkMul:1,hpMul:1,goldMul:1,critBonus:0,cdmgBonus:0,speedBonus:0,heavyCDReduc:0,heavyMulBonus:0};
+  if(_passiveCache&&Date.now()-_passiveCacheTime<500)return _passiveCache;
+  let p={atkMul:1,hpMul:1,goldMul:1,critBonus:0,cdmgBonus:0,speedBonus:0,heavyCDReduc:0,heavyMulBonus:0,skillCdReduc:0};
   const cls=G.classes;
-  // T1
-  if(cls.includes('warrior')){p.hpMul*=1.3;p.atkMul*=1.1}
-  if(cls.includes('mage')){p.heavyCDReduc+=0.3;p.heavyMulBonus+=0.5}
-  if(cls.includes('archer')){p.critBonus+=0.1;p.speedBonus+=0.3}
-  if(cls.includes('acolyte')){p.goldMul*=1.4}
-  // T2
+  if(cls.includes('warrior')){p.hpMul=1.3;p.atkMul=1.1}
+  if(cls.includes('mage')){p.heavyCDReduc=0.3;p.heavyMulBonus=0.5;p.skillCdReduc=2}
+  if(cls.includes('archer')){p.critBonus=0.1;p.speedBonus=0.3}
+  if(cls.includes('acolyte')){p.goldMul=1.4}
   if(cls.includes('knight')){p.hpMul*=1.5}
-  if(cls.includes('berserker')){const hpPct=G.playerHp/playerMaxHP();p.atkMul*=1+(1-hpPct)}
+  if(cls.includes('berserker')){let hpPct=1;if(G.playerMaxHp>0)hpPct=G.playerHp/G.playerMaxHp;p.atkMul*=1+(1-hpPct)*0.8}
   if(cls.includes('wizard')){p.heavyMulBonus+=0.8}
-  if(cls.includes('ranger')){p.cdmgBonus+=0.4}
-  if(cls.includes('assassin')){p.cdmgBonus+=0.8;p.critBonus+=0.1}
+  if(cls.includes('elementalist')){p.speedBonus+=0.15}
+  if(cls.includes('ranger')){p.cdmgBonus=0.4}
+  if(cls.includes('assassin')){p.cdmgBonus=0.8;p.critBonus+=0.1}
   if(cls.includes('priest')){p.goldMul*=1.8}
   if(cls.includes('monk')){p.hpMul*=1.8;p.atkMul*=1.5}
-  // T3
-  if(cls.includes('paladin')){p.hpMul*=1.3;p.atkMul*=1.15}
+  if(cls.includes('paladin')){p.hpMul*=1.3}
   if(cls.includes('darkknight')){p.atkMul*=1.7}
   if(cls.includes('juggernaut')){p.atkMul*=1.8;p.hpMul*=2}
   if(cls.includes('archmage')){p.heavyCDReduc+=0.5;p.heavyMulBonus+=2}
@@ -442,11 +452,11 @@ function applyClassPassives(){
   if(cls.includes('bishop')){p.goldMul*=2.2}
   if(cls.includes('inquisitor')){p.atkMul*=1.6;p.critBonus+=0.2}
   if(cls.includes('grandmaster')){p.atkMul*=1.5;p.hpMul*=2}
-  return p;
+  _passiveCache=p;_passiveCacheTime=Date.now();return p;
 }
 
 // ═══ 装备 ═══
-function buyEquip(idx){const eq=EQUIP_SHOP[idx];if(G.gold<eq.cost)return;const old=G.equipped[eq.slot];let refund=0;if(old){refund=Math.floor(old.cost*0.5);G.gold+=refund}G.gold-=eq.cost;G.equipped[eq.slot]={...eq};toast('购买 '+eq.name+'!'+(refund>0?' (回收 +'+refund+'🪙)':''));renderAll()}
+function buyEquip(idx){const eq=EQUIP_SHOP[idx];if(G.gold<eq.cost)return;const old=G.equipped[eq.slot];let refund=0;if(old){refund=Math.floor(old.cost*0.5);G.gold+=refund}G.gold-=eq.cost;G.equipped[eq.slot]={...eq};sndBuyEquip();toast('购买 '+eq.name+'!'+(refund>0?' (回收 +'+refund+'🪙)':''));renderAll()}
 function sellEquip(slot){const old=G.equipped[slot];if(!old)return;const refund=Math.floor(old.cost*0.5);G.gold+=refund;G.equipped[slot]=null;toast('出售 '+old.name+' +'+refund+'🪙');renderAll()}
 
 // ═══ 转生 ═══
@@ -454,7 +464,7 @@ function rebirth(){
   const minLv=50+G.rebirth*10;
   if(G.lv<minLv||!G.classes.some(c=>CLASSES.T2.find(x=>x.id===c)))return toast('条件不足: Lv.'+minLv+' + T2职业');
   const souls=Math.floor(G.lv/10)+G.classes.length*3+G.maxZone*2+G.totalKills/100;
-  G={gold:0,lv:1,exp:0,expNeed:60,stats:{str:5,int:5,dex:5,vit:5,luk:5},curClass:'novice',classes:['novice'],equipped:{weapon:null,armor:null,ring1:null,ring2:null,amulet:null,crown:null,boots:null,gloves:null},zone:0,monIdx:0,monHp:30,playerHp:100,playerMaxHp:100,totalKills:0,maxZone:G.maxZone,clicks:0,rebirth:G.rebirth+1,souls:G.souls+souls,auto:G.auto,lastSave:Date.now(),version:3,skillCD:{},buffs:{},bleedDmg:0,bleedTimer:0,heavyCD:0};
+  G={gold:0,lv:1,exp:0,expNeed:60,stats:{str:5,int:5,dex:5,vit:5,luk:5},curClass:'novice',classes:['novice'],equipped:{weapon:null,armor:null,ring1:null,ring2:null,amulet:null,crown:null,boots:null,gloves:null},zone:0,monIdx:0,monHp:30,playerHp:100,playerMaxHp:100,totalKills:0,maxZone:G.maxZone,clicks:0,rebirth:G.rebirth+1,souls:G.souls+souls,auto:G.auto,lastSave:Date.now(),version:4,skillCD:{},buffs:{},bleedDmg:0,bleedTimer:0,heavyCD:0};
   toast('🔄 转生! +'+souls+' 英雄之魂');spawnMon();renderAll();save();
 }
 
@@ -513,7 +523,7 @@ function renderBattle(){
   document.getElementById('hp-bar').style.width=Math.max(0,G.monHp/maxHp*100)+'%';
   document.getElementById('hp-text').textContent=Math.max(0,Math.floor(G.monHp));
   document.getElementById('hp-max').textContent=maxHp;
-  document.getElementById('mon-name').textContent=md.n+(G.monIdx===3?' 👑BOSS':'')+' · '+md.spd;
+  document.getElementById('mon-name').textContent=md.n+(G.monIdx===4?' 👑BOSS':'')+' · '+md.spd;
   document.getElementById('monster').textContent=md.e;
   document.getElementById('zone-t').textContent=ZONES[G.zone].n;
   document.getElementById('zone-info').textContent=ZONES[G.zone].n+' - 第'+(G.zone+1)+'区域';
