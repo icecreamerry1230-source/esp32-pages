@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>岁差和章动 - 通俗解释</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a1a;font-family:system-ui,sans-serif;color:#e0e0e0;line-height:1.8;overflow-x:hidden}
+.page{max-width:800px;margin:0 auto;padding:30px 20px 60px}
+h1{text-align:center;font-size:28px;font-weight:300;letter-spacing:3px;color:#ffd700;margin-bottom:8px}
+h2{font-size:20px;color:#ffd700;margin:36px 0 12px;border-bottom:1px solid rgba(255,215,0,.15);padding-bottom:6px}
+h3{font-size:16px;color:#ffaa44;margin:16px 0 8px}
+p{font-size:15px;color:rgba(255,255,255,.7);margin:8px 0}
+canvas{display:block;margin:16px auto;border-radius:12px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05)}
+.caption{text-align:center;font-size:13px;color:rgba(255,255,255,.4);margin-top:6px}
+.highlight{color:#ffd700;font-weight:600}
+.note{background:rgba(255,215,0,.06);border-left:3px solid #ffd700;padding:10px 16px;border-radius:0 8px 8px 0;margin:12px 0;font-size:14px}
+.compare{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin:12px 0}
+.compare .box{flex:1;min-width:200px;background:rgba(255,255,255,.03);border-radius:12px;padding:16px;text-align:center}
+.box h4{color:#ffd700;margin-bottom:6px}
+.box p{font-size:13px}
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>🌍 地球的岁差和章动</h1>
+<p style="text-align:center;color:rgba(255,255,255,.4)">用最简单的方式理解地球自转轴的两种晃动</p>
+
+<h2>1️⃣ 先理解一个日常现象：陀螺</h2>
+<p>你有没有玩过陀螺？陀螺转起来之后，它的转轴<span class="highlight">不是固定不动的</span>——它会慢慢地画圈。这就是"岁差"的原型。</p>
+<canvas id="c1" width="700" height="300"></canvas>
+<div class="caption">▲ 陀螺的自转轴在绕圈晃动（慢速画大圈）</div>
+
+<h2>2️⃣ 地球也是一个"大陀螺"</h2>
+<p>地球每 24 小时自转一圈。但因为地球<span class="highlight">不是正球体</span>（赤道略鼓），再加上太阳和月球的引力拉扯，地球的自转轴也会像陀螺一样<span class="highlight">慢慢地绕圈</span>。</p>
+<canvas id="c2" width="700" height="400"></canvas>
+<div class="caption">▲ 蓝色轴线绕黄色垂直线缓慢旋转一圈需要 <b>26,000 年</b>——这就是岁差</div>
+
+<div class="note">
+  💡 <b>岁差 = 地球自转轴绕黄道轴缓慢画圈，周期 26,000 年。</b><br>
+  现在的北极星是小熊座α星。但 13,000 年后，北极星会变成织女星！
+</div>
+
+<h2>3️⃣ 什么是章动？</h2>
+<p>如果岁差是"画大圈"（26,000年一圈），那<span class="highlight">章动就是画大圈的同时"抖小圈"</span>。</p>
+<p>章动主要是<span class="highlight">月球引力</span>造成的。月球绕地球的轨道面跟黄道面有 5° 夹角，这导致地球自转轴在岁差的基础上还附加了一个<span class="highlight">小幅度的快速抖动</span>。</p>
+<canvas id="c3" width="700" height="400"></canvas>
+<div class="caption">▲ 绿线是大圈（岁差），红色小锯齿是叠加在上面的抖动（章动）</div>
+
+<div class="compare">
+  <div class="box">
+    <h4>🔵 岁差 Precession</h4>
+    <p>周期：<b>26,000 年</b></p>
+    <p>幅度：<b>23.5°</b>（整个圆锥）</p>
+    <p>原因：太阳+月球引力</p>
+    <p>效果：北极星会改变</p>
+  </div>
+  <div class="box">
+    <h4>🔴 章动 Nutation</h4>
+    <p>周期：<b>18.6 年</b></p>
+    <p>幅度：<b>仅 9 角秒</b>（极小！）</p>
+    <p>原因：主要是月球引力</p>
+    <p>效果：天文观测需修正</p>
+  </div>
+</div>
+
+<h2>4️⃣ 为什么我们感觉不到？</h2>
+<canvas id="c4" width="700" height="220"></canvas>
+<div class="caption">▲ 人的一生约 80 年，岁差只移动了约 1°（整个大圈是 360°）。章动更是只有 9 角秒——肉眼看不出。</div>
+
+<div class="note">
+  📐 <b>9 角秒有多大？</b> 1° = 3600 角秒。9 角秒 ≈ 0.0025°。<br>
+  相当于你伸直手臂看一根头发丝的宽度——这就是章动的幅度。
+</div>
+
+<h2>📊 总结</h2>
+<div style="text-align:center;font-size:18px;line-height:2.5;margin:20px 0">
+  地球自转轴 = <span style="color:#ffd700">绕大圈</span>（岁差 26,000 年）<br>
+  <span style="font-size:14px;color:rgba(255,255,255,.4)">＋ 叠加在绕大圈上的</span><br>
+  <span style="color:#ff6644">小幅抖动</span>（章动 18.6 年）
+</div>
+
+</div>
+
+<script>
+// ═══ 动画 1：陀螺 ═══
+(function(){
+  const c=document.getElementById('c1'),ctx=c.getContext('2d');
+  let t=0;
+  function draw(){
+    ctx.clearRect(0,0,700,300);
+    const cx=350,cy=160;
+    const precAngle=t*0.4;
+    // 桌面
+    ctx.fillStyle='#333';ctx.fillRect(0,cy+40,700,20);
+    ctx.fillStyle='#555';ctx.fillRect(0,cy+40,700,2);
+    // 陀螺体
+    ctx.save();ctx.translate(cx,cy);
+    const ax=Math.sin(precAngle)*0.3,ay=Math.cos(precAngle)*0.3;
+    const len=Math.sqrt(ax*ax+1);
+    const nx=ax/len,ny=1/len;
+    const ang=Math.atan2(nx,ny);
+    ctx.rotate(ang);
+    // 转轴
+    ctx.strokeStyle='#4a9eff';ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(0,-100);ctx.lineTo(0,30);ctx.stroke();
+    // 陀螺
+    ctx.fillStyle='#e74c3c';ctx.beginPath();ctx.moveTo(0,30);ctx.lineTo(-25,55);ctx.lineTo(25,55);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#c0392b';ctx.beginPath();ctx.arc(0,55,12,0,Math.PI);ctx.fill();
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(0,27,4,0,Math.PI*2);ctx.fill();
+    // 岁差大圈虚线
+    ctx.restore();
+    ctx.strokeStyle='rgba(0,255,136,.35)';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+    ctx.beginPath();ctx.arc(cx,cy-20,55,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+    // 标签
+    ctx.fillStyle='#fff';ctx.font='13px system-ui';ctx.textAlign='center';
+    ctx.fillText('陀螺转轴在绕圈晃动',cx,cy+85);
+    ctx.fillText('← 岁差大圈',cx-70,cy-30);
+    ctx.fillStyle='#4a9eff';ctx.fillText('转轴',cx+50,cy-30);
+    // 箭头
+    ctx.strokeStyle='#00ff88';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.arc(cx,cy-20,55,t*0.4+0.3,t*0.4+0.6);ctx.stroke();
+    t+=0.03;requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ═══ 动画 2：地球岁差 ═══
+(function(){
+  const c=document.getElementById('c2'),ctx=c.getContext('2d');
+  let t=0;
+  function draw(){
+    ctx.clearRect(0,0,700,400);
+    const cx=350,cy=180;
+    // 黄道轴（垂直）
+    ctx.strokeStyle='rgba(255,215,0,.5)';ctx.lineWidth=2;ctx.setLineDash([8,4]);
+    ctx.beginPath();ctx.moveTo(cx,cy-170);ctx.lineTo(cx,cy+170);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='#ffd700';ctx.beginPath();ctx.arc(cx,cy-170,6,0,Math.PI*2);ctx.fill();
+    ctx.fillText('黄道轴(北)',cx+14,cy-166);
+    // 地球
+    const precAngle=t*0.15;
+    const tilt=23.5*Math.PI/180;
+    const ax=Math.sin(tilt)*Math.cos(precAngle);
+    const ay=Math.cos(tilt);
+    const az=Math.sin(tilt)*Math.sin(precAngle);
+    const angle=Math.atan2(ax,ay);
+    // 岁差锥线
+    ctx.strokeStyle='rgba(0,255,136,.25)';ctx.lineWidth=1;ctx.setLineDash([3,8]);
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx-90,cy-120);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+90,cy-120);ctx.stroke();ctx.setLineDash([]);
+    // 地球
+    ctx.save();ctx.translate(cx,cy);
+    // 岁差轨迹圆弧
+    ctx.strokeStyle='rgba(0,255,136,.5)';ctx.lineWidth=2;
+    ctx.beginPath();ctx.ellipse(0,0,95,40,0,0,Math.PI*2);ctx.stroke();
+    // 转轴
+    ctx.save();ctx.rotate(angle);
+    ctx.strokeStyle='#4a9eff';ctx.lineWidth=4;
+    ctx.beginPath();ctx.moveTo(0,-130);ctx.lineTo(0,130);ctx.stroke();
+    // 北箭头
+    ctx.fillStyle='#4a9eff';ctx.beginPath();ctx.moveTo(0,-130);ctx.lineTo(-6,-118);ctx.lineTo(6,-118);ctx.closePath();ctx.fill();
+    // 地球
+    ctx.fillStyle='#2255cc';ctx.beginPath();ctx.arc(0,0,40,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#44aa44';ctx.beginPath();ctx.arc(-10,-8,14,0,Math.PI);ctx.fill();
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(0,-2,4,0,Math.PI*2);ctx.fill();
+    // 赤道线
+    ctx.strokeStyle='rgba(255,255,255,.3)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.ellipse(0,0,41,8,0,0,Math.PI*2);ctx.stroke();
+    ctx.restore();
+    // 标签
+    ctx.fillStyle='#fff';ctx.font='13px system-ui';ctx.textAlign='center';
+    ctx.fillText('🌍 地球（赤道略鼓）',0,75);
+    ctx.restore();
+    // 岁差大圈
+    ctx.fillStyle='#00ff88';ctx.font='13px system-ui';
+    ctx.fillText('← 岁差轨迹：26,000年绕一圈',cx+100,cy-40);
+    ctx.fillStyle='#4a9eff';ctx.fillText('自转轴倾斜 23.5°',cx-120,cy-90);
+    // 大圈箭头
+    ctx.strokeStyle='#00ff88';ctx.lineWidth=2;
+    ctx.beginPath();ctx.ellipse(cx,cy,95,40,0,t*0.15+0.1,t*0.15+0.4);ctx.stroke();
+    t+=0.03;requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ═══ 动画 3：章动 ═══
+(function(){
+  const c=document.getElementById('c3'),ctx=c.getContext('2d');
+  let t=0;
+  function draw(){
+    ctx.clearRect(0,0,700,400);
+    const cx=200,cy=200;
+    // 画岁差大圈
+    ctx.strokeStyle='rgba(0,255,136,.6)';ctx.lineWidth=2;
+    ctx.beginPath();ctx.ellipse(cx,cy,120,60,0,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle='#00ff88';ctx.font='12px system-ui';ctx.textAlign='center';
+    ctx.fillText('岁差大圈 (26000年)',cx,cy-80);
+    // 画章动放大图
+    const mx=520,my=200;
+    // 放大镜框
+    ctx.strokeStyle='rgba(255,255,255,.15)';ctx.lineWidth=1;ctx.setLineDash([2,4]);
+    ctx.beginPath();ctx.moveTo(cx+60,cy-30);ctx.lineTo(mx-80,my-30);ctx.stroke();ctx.setLineDash([]);
+    // 放大区域
+    ctx.fillStyle='rgba(0,0,0,.6)';ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.roundRect(mx-120,my-90,240,180,12);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#fff';ctx.font='13px system-ui';ctx.textAlign='center';
+    ctx.fillText('🔍 放大看',mx,my-100);
+    // 章动波浪
+    ctx.strokeStyle='#ff6644';ctx.lineWidth=2.5;
+    ctx.beginPath();
+    for(let i=0;i<200;i++){
+      const px=mx-100+i,py=my+Math.sin(i*0.12+t*2)*25+Math.sin(i*0.04+t*0.8)*8;
+      if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+    ctx.fillStyle='#ff6644';ctx.font='12px system-ui';
+    ctx.fillText('章动抖动 (18.6年周期)',mx,my+60);
+    // 尺寸说明
+    ctx.fillStyle='rgba(255,255,255,.5)';ctx.font='11px system-ui';
+    ctx.fillText('实际幅度仅 9 角秒 ≈ 0.0025°（此处放大示意）',mx,my+80);
+    // 岁差圈上的标记点
+    const px2=cx+Math.cos(t*0.15)*120,py2=cy+Math.sin(t*0.15)*60;
+    ctx.fillStyle='#ff0';ctx.beginPath();ctx.arc(px2,py2,6,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#fff';ctx.font='12px system-ui';ctx.fillText('当前位置',px2+12,py2-8);
+    t+=0.03;requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ═══ 动画 4：人生尺度 ═══
+(function(){
+  const c=document.getElementById('c4'),ctx=c.getContext('2d');
+  let t=0;
+  function draw(){
+    ctx.clearRect(0,0,700,220);
+    // 岁差整圈
+    const cx=350,cy=110,r=90;
+    ctx.strokeStyle='rgba(0,255,136,.5)';ctx.lineWidth=3;ctx.setLineDash([3,5]);
+    ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='#00ff88';ctx.font='12px system-ui';ctx.textAlign='center';
+    ctx.fillText('一整圈 = 26,000 年',cx,cy+r+30);
+    // 人的一生 (80年)
+    const lifeAngle=80/26000*Math.PI*2;
+    ctx.strokeStyle='#ffd700';ctx.lineWidth=8;ctx.lineCap='round';
+    ctx.beginPath();ctx.arc(cx,cy,r+5,Math.PI*1.5,Math.PI*1.5+lifeAngle);ctx.stroke();
+    ctx.fillStyle='#ffd700';ctx.font='12px system-ui';
+    ctx.fillText('人的一生 80 年',cx+30,cy-15);
+    // 章动放大示意
+    ctx.strokeStyle='#ff6644';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.arc(cx+30,cy-r+5,12,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle='#ff6644';ctx.font='10px system-ui';
+    ctx.fillText('章动幅度',cx+55,cy-r+5);
+    // 刻度
+    ctx.fillStyle='rgba(255,255,255,.4)';ctx.font='11px system-ui';
+    ctx.fillText('0年',cx+r+15,cy);ctx.fillText('6500年',cx,cy-r-8);ctx.fillText('13000年',cx-r-20,cy);ctx.fillText('19500年',cx,cy+r+20);
+    t+=0.01;requestAnimationFrame(draw);
+  }
+  draw();
+})();
+</script>
+</body>
+</html>
