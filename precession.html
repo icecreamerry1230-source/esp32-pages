@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>地球岁差与章动</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;overflow:hidden;font-family:system-ui,sans-serif;color:#fff;user-select:none}
+canvas{display:block}
+#ui{position:fixed;top:16px;left:16px;z-index:2;pointer-events:none}
+#ui h1{font-size:22px;font-weight:300;letter-spacing:2px;color:#fff;margin-bottom:4px}
+#ui p{font-size:12px;color:rgba(255,255,255,.5);max-width:320px}
+#info{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:2;display:flex;gap:20px;font-size:12px;background:rgba(0,0,0,.6);padding:10px 20px;border-radius:20px;flex-wrap:wrap;justify-content:center}
+#info span{color:rgba(255,255,255,.5)}#info b{color:#ffd700}
+#controls{position:fixed;right:16px;top:50%;transform:translateY(-50%);z-index:2;display:flex;flex-direction:column;gap:8px}
+#controls button{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.6);padding:8px 14px;border-radius:10px;cursor:pointer;font-size:11px;transition:all .2s}
+#controls button:hover,#controls button.on{background:rgba(255,215,0,.1);border-color:rgba(255,215,0,.3);color:#ffd700}
+#legend{position:fixed;right:16px;bottom:20px;z-index:2;font-size:11px;line-height:1.8}
+#legend div{display:flex;align-items:center;gap:6px}
+#legend .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.speed-slider{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:2;display:flex;align-items:center;gap:10px;font-size:11px;color:rgba(255,255,255,.5)}
+.speed-slider input{width:120px;accent-color:#ffd700}
+</style>
+</head>
+<body>
+
+<div id="ui">
+  <h1>🌍 地球岁差与章动</h1>
+  <p>岁差：自转轴绕黄道轴缓慢旋转，周期约 26,000 年<br>章动：月球引力引起的小幅抖动，周期 18.6 年，振幅约 9″</p>
+</div>
+
+<div id="info">
+  <span>岁差角: <b id="prec-val">0°</b></span>
+  <span>章动角: <b id="nut-val">0″</b></span>
+  <span>速度: <b id="speed-val">1×</b></span>
+</div>
+
+<div id="controls">
+  <button class="on" data-v="1">1× 速度</button>
+  <button data-v="5">5× 速度</button>
+  <button data-v="20">20× 速度</button>
+  <button data-v="100">100×</button>
+  <button onclick="toggleTrace()">🔵 轨迹线</button>
+  <button onclick="toggleNutation()">〰️ 章动</button>
+  <button onclick="resetView()">🔄 重置视角</button>
+</div>
+
+<div id="legend">
+  <div><span class="dot" style="background:#4a9eff"></span> 地球自转轴</div>
+  <div><span class="dot" style="background:#ffd700"></span> 黄道轴（垂直）</div>
+  <div><span class="dot" style="background:#00ff88"></span> 岁差轨迹（26,000年）</div>
+  <div><span class="dot" style="background:#ff6644"></span> 章动抖动（18.6年）</div>
+  <div><span class="dot" style="background:#ff4488"></span> 瞬时自转轴</div>
+</div>
+
+<script type="importmap">
+{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ═══ 场景 ═══
+const scene=new THREE.Scene();
+
+// 星空
+const starsGeo=new THREE.BufferGeometry();
+const starsVerts=[];for(let i=0;i<2000;i++){starsVerts.push((Math.random()-.5)*40,(Math.random()-.5)*40,(Math.random()-.5)*40)}
+starsGeo.setAttribute('position',new THREE.Float32BufferAttribute(starsVerts,3));
+scene.add(new THREE.Points(starsGeo,new THREE.PointsMaterial({color:0xffffff,size:.03})));
+
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(window.innerWidth,window.innerHeight);
+renderer.shadowMap.enabled=true;
+document.body.appendChild(renderer.domElement);
+
+const camera=new THREE.PerspectiveCamera(45,window.innerWidth/window.innerHeight,.1,50);
+camera.position.set(3,2.5,5);
+camera.lookAt(0,0,0);
+
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;controls.dampingFactor=.08;
+controls.target.set(0,.3,0);
+
+// ═══ 光照 ═══
+scene.add(new THREE.AmbientLight(0x333355,2));
+const sunLight=new THREE.DirectionalLight(0xffffff,5);
+sunLight.position.set(5,5,3);scene.add(sunLight);
+
+// ═══ 天空球（黄道参考面） ═══
+const eclipticRing=new THREE.TorusGeometry(1.8,.01,8,100);
+const eclipticMesh=new THREE.Mesh(eclipticRing,new THREE.MeshBasicMaterial({color:0xffd700,transparent:true,opacity:.3}));
+scene.add(eclipticMesh);
+
+// 黄道面光晕
+const eclipticPlane=new THREE.RingGeometry(1.5,1.85,64);
+const eclipticPlaneMesh=new THREE.Mesh(eclipticPlane,new THREE.MeshBasicMaterial({color:0xffd700,side:THREE.DoubleSide,transparent:true,opacity:.06}));
+eclipticPlaneMesh.rotation.x=-Math.PI/2;scene.add(eclipticPlaneMesh);
+
+// ═══ 黄道轴（垂直参考线） ═══
+const axisGeo=new THREE.CylinderGeometry(.02,.02,4.5,8);
+const axisMesh=new THREE.Mesh(axisGeo,new THREE.MeshBasicMaterial({color:0xffd700,transparent:true,opacity:.5}));
+scene.add(axisMesh);
+
+// 黄道轴标签球
+const axisTop=new THREE.Mesh(new THREE.SphereGeometry(.06,16,16),new THREE.MeshBasicMaterial({color:0xffd700}));
+axisTop.position.y=2.25;axisTop.name='axisTop';scene.add(axisTop);
+const axisBot=new THREE.Mesh(new THREE.SphereGeometry(.06,16,16),new THREE.MeshBasicMaterial({color:0xffd700}));
+axisBot.position.y=-2.25;scene.add(axisBot);
+
+// ═══ 岁差锥面（半透明） ═══
+const PRECESSION_ANGLE=23.44*Math.PI/180; // 黄赤交角 ~23.44°
+const coneGeo=new THREE.ConeGeometry(Math.sin(PRECESSION_ANGLE)*2,Math.cos(PRECESSION_ANGLE)*4,64,1,true);
+const coneMesh=new THREE.Mesh(coneGeo,new THREE.MeshBasicMaterial({color:0x00ff88,transparent:true,opacity:.08,side:THREE.DoubleSide}));
+coneMesh.position.y=0;scene.add(coneMesh);
+
+// ═══ 岁差轨迹环 ═══
+const precRingGeo=new THREE.TorusGeometry(Math.sin(PRECESSION_ANGLE)*2,.015,16,200);
+const precRing=new THREE.Mesh(precRingGeo,new THREE.MeshBasicMaterial({color:0x00ff88,transparent:true,opacity:.7}));
+precRing.position.y=Math.cos(PRECESSION_ANGLE)*2;scene.add(precRing);
+
+// ═══ 地球组 ═══
+const earthGroup=new THREE.Group();
+scene.add(earthGroup);
+
+// 地球
+const earthGeo=new THREE.SphereGeometry(.5,48,48);
+
+// 简易地球纹理
+const texCanvas=document.createElement('canvas');texCanvas.width=512;texCanvas.height=256;
+const tctx=texCanvas.getContext('2d');
+// 海洋
+tctx.fillStyle='#2255aa';tctx.fillRect(0,0,512,256);
+// 简化大陆
+tctx.fillStyle='#44aa44';
+tctx.fillRect(60,40,120,80);tctx.fillRect(200,60,140,70);tctx.fillRect(380,30,100,90); // 欧亚
+tctx.fillRect(80,140,60,90);tctx.fillRect(180,150,100,70); // 非洲
+tctx.fillRect(40,50,30,100);tctx.fillRect(400,50,30,100); // 美洲
+tctx.fillRect(300,180,100,50); // 澳洲
+// 冰盖
+tctx.fillStyle='#fff';
+tctx.fillRect(0,0,512,10);tctx.fillRect(0,246,512,10);
+const tex=new THREE.CanvasTexture(texCanvas);
+
+const earthMesh=new THREE.Mesh(earthGeo,new THREE.MeshPhongMaterial({map:tex,specular:0x333333,shininess:15}));
+earthGroup.add(earthMesh);
+
+// 赤道环
+const eqRing=new THREE.TorusGeometry(.52,.008,8,64);
+const eqMesh=new THREE.Mesh(eqRing,new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.3}));
+eqMesh.rotation.x=Math.PI/2;earthGroup.add(eqMesh);
+
+// ═══ 自转轴（地球本体系） ═══
+const spinAxisGroup=new THREE.Group();
+earthGroup.add(spinAxisGroup);
+
+const spinAxisGeo=new THREE.CylinderGeometry(.025,.025,1.8,8);
+const spinAxisMesh=new THREE.Mesh(spinAxisGeo,new THREE.MeshBasicMaterial({color:0x4a9eff}));
+spinAxisGroup.add(spinAxisMesh);
+
+// 北极指示球
+const northPole=new THREE.Mesh(new THREE.SphereGeometry(.05,16,16),new THREE.MeshBasicMaterial({color:0x4a9eff}));
+northPole.position.y=.95;spinAxisGroup.add(northPole);
+const southPole=new THREE.Mesh(new THREE.SphereGeometry(.04,16,16),new THREE.MeshBasicMaterial({color:0x88bbff}));
+southPole.position.y=-.95;spinAxisGroup.add(southPole);
+
+// ═══ 章动轨迹（小圈） ═══
+const nutRingGeo=new THREE.TorusGeometry(.08,.008,8,32);
+const nutRing=new THREE.Mesh(nutRingGeo,new THREE.MeshBasicMaterial({color:0xff6644,transparent:true,opacity:.7}));
+scene.add(nutRing);
+
+// 瞬时轴指示
+const instantAxisGeo=new THREE.CylinderGeometry(.015,.015,2.2,6);
+const instantAxis=new THREE.Mesh(instantAxisGeo,new THREE.MeshBasicMaterial({color:0xff4488,transparent:true,opacity:.8}));
+scene.add(instantAxis);
+
+const instantTop=new THREE.Mesh(new THREE.SphereGeometry(.04,8,8),new THREE.MeshBasicMaterial({color:0xff4488}));
+scene.add(instantTop);
+
+// ═══ 状态 ═══
+let speed=1,showTrace=true,showNutation=true;
+let precAngle=0; // 岁差相位
+
+// 章动参数
+const NUTATION_AMPLITUDE=9.2/3600*Math.PI/180; // 9.2角秒 → 弧度
+const NUTATION_PERIOD=18.6; // 年
+
+// ═══ 更新 ═══
+function animate(t){
+  requestAnimationFrame(animate);
+  const dt=Math.min(.1,(t-(animate._lt||t))/1000);
+  animate._lt=t;
+
+  // 岁差进度（加速后）
+  const precSpeed=(2*Math.PI/26000)*speed; // 每真实秒转的岁差弧度
+  precAngle+=precSpeed*dt;
+  if(precAngle>Math.PI*2)precAngle-=Math.PI*2;
+
+  // 岁差：自转轴绕黄道轴旋转
+  const precX=Math.sin(PRECESSION_ANGLE)*Math.cos(precAngle);
+  const precZ=Math.sin(PRECESSION_ANGLE)*Math.sin(precAngle);
+  const precY=Math.cos(PRECESSION_ANGLE);
+
+  // 章动：叠加微小抖动
+  const nutPhase=precAngle*(26000/NUTATION_PERIOD);
+  let nutDx=0,nutDy=0,nutDz=0;
+  if(showNutation){
+    const nutMag=NUTATION_AMPLITUDE*2;
+    nutDx=Math.cos(nutPhase)*nutMag;
+    nutDy=Math.sin(nutPhase)*nutMag*.7;
+    nutDz=Math.sin(nutPhase*1.2)*nutMag*.5;
+  }
+
+  // 最终轴方向
+  const ax=precX+nutDx,ay=precY+nutDy,az=precZ+nutDz;
+  const axisLen=Math.sqrt(ax*ax+ay*ay+az*az);
+  const nax=ax/axisLen,nay=ay/axisLen,naz=az/axisLen;
+
+  // 地球绕瞬时轴旋转
+  const axisVec=new THREE.Vector3(nax,nay,naz).normalize();
+  earthGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),axisVec);
+  // 自转
+  earthMesh.rotation.y+=speed*1.5*dt;
+
+  // 岁差轨迹环位置
+  precRing.position.set(0,Math.cos(PRECESSION_ANGLE)*2,0);
+
+  // 章动轨迹环跟随轴端
+  const tipX=precX*2,tipY=precY*2,tipZ=precZ*2;
+  nutRing.position.set(tipX,tipY,tipZ);
+  nutRing.lookAt(new THREE.Vector3(tipX+nutDx,tipY+nutDy,tipZ+nutDz));
+
+  // 瞬时轴指示
+  instantAxis.position.set(0,0,0);
+  instantAxis.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),axisVec);
+  instantTop.position.set(nax*2.2,nay*2.2,naz*2.2);
+
+  // 更新轨迹可见性
+  precRing.visible=showTrace;
+  nutRing.visible=showTrace&&showNutation;
+  coneMesh.visible=showTrace;
+
+  // UI
+  document.getElementById('prec-val').textContent=(precAngle*180/Math.PI%360).toFixed(1)+'°';
+  document.getElementById('nut-val').textContent=(showNutation?(Math.sin(nutPhase)*9.2).toFixed(1):'0')+'″';
+  document.getElementById('speed-val').textContent=speed+'×';
+
+  controls.update();
+  renderer.render(scene,camera);
+}
+animate._lt=performance.now();
+
+// ═══ 控制 ═══
+document.querySelectorAll('#controls button[data-v]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    speed=parseInt(btn.dataset.v);
+    document.querySelectorAll('#controls button[data-v]').forEach(b=>b.classList.remove('on'));
+    btn.classList.add('on');
+  });
+});
+
+window.toggleTrace=function(){
+  showTrace=!showTrace;
+  document.querySelectorAll('#controls button').forEach(b=>{if(b.textContent.includes('轨迹'))b.classList.toggle('on',showTrace)});
+};
+window.toggleNutation=function(){
+  showNutation=!showNutation;
+  document.querySelectorAll('#controls button').forEach(b=>{if(b.textContent.includes('章动'))b.classList.toggle('on',showNutation)});
+};
+window.resetView=function(){
+  camera.position.set(3,2.5,5);controls.target.set(0,.3,0);controls.update();
+};
+
+// 初始按钮状态
+document.querySelectorAll('#controls button').forEach(b=>{
+  if(b.textContent.includes('轨迹'))b.classList.add('on');
+  if(b.textContent.includes('章动'))b.classList.add('on');
+});
+
+window.addEventListener('resize',()=>{
+  camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth,window.innerHeight);
+});
+
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>
