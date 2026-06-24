@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>卫星地面轨迹</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#050a18;font-family:system-ui,sans-serif;display:flex;min-height:100vh;color:#e0e0e0;flex-direction:column;align-items:center;padding:16px}
+.back{color:rgba(255,255,255,.4);text-decoration:none;font-size:12px;align-self:flex-start;margin-bottom:8px;letter-spacing:1px}.back:hover{color:#4a9eff}
+h1{font-size:20px;font-weight:300;letter-spacing:2px;margin-bottom:4px}
+p{font-size:12px;color:rgba(255,255,255,.4);margin-bottom:8px}
+canvas{border-radius:12px;border:1px solid rgba(255,255,255,.05)}
+.ctrls{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;justify-content:center}
+.ctrls button{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.6);padding:6px 14px;border-radius:10px;font-size:12px;cursor:pointer}.ctrls button.on{background:rgba(74,158,255,.1);border-color:rgba(74,158,255,.25);color:#4a9eff}
+.info{font-size:12px;margin-top:6px;color:rgba(255,255,255,.5)}.info b{color:#ffd700}
+</style>
+</head>
+<body>
+<a class="back" href="satellite-hub.html">← 合集</a>
+<h1>🗺️ 卫星地面轨迹</h1>
+<p>卫星在地面上的投影路径。轨道越高、倾角越大，覆盖范围越广</p>
+<canvas id="c" width="760" height="400"></canvas>
+<div class="info">当前轨迹: <b id="trk">--</b> &nbsp;|&nbsp; 轨道周期约 <b id="per">--</b> 分钟</div>
+<div class="ctrls">
+  <button class="on" data-h="800" onclick="setAlt(800,this)">LEO 800km</button>
+  <button data-h="5500" onclick="setAlt(5500,this)">MEO 5,500km</button>
+  <button data-h="20200" onclick="setAlt(20200,this)">GPS 20,200km</button>
+  <button data-h="35786" onclick="setAlt(35786,this)">GEO 35,786km</button>
+</div>
+<script>
+const c=document.getElementById('c'),ctx=c.getContext('2d');
+let altitude=800,trail=[],t=0,incl=55;
+
+function drawMap(){
+  ctx.fillStyle='#0a1530';ctx.fillRect(0,0,760,400);
+  // 经纬网
+  ctx.strokeStyle='rgba(255,255,255,.04)';ctx.lineWidth=.5;
+  for(let i=0;i<720;i+=36){ctx.beginPath();ctx.moveTo(40+i,30);ctx.lineTo(40+i,370);ctx.stroke()}
+  for(let i=0;i<340;i+=20){ctx.beginPath();ctx.moveTo(40,50+i);ctx.lineTo(740,50+i);ctx.stroke()}
+  // 赤道
+  ctx.strokeStyle='rgba(255,215,0,.15)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(40,210);ctx.lineTo(740,210);ctx.stroke();
+  ctx.fillStyle='rgba(255,215,0,.4)';ctx.font='10px system-ui';ctx.fillText('赤 道',10,214);
+  // 简化大陆轮廓
+  ctx.fillStyle='rgba(74,158,255,.08)';
+  ctx.fillRect(60,60,90,50);ctx.fillRect(180,50,80,60);ctx.fillRect(300,55,120,70);ctx.fillRect(500,70,70,40);
+  ctx.fillRect(100,160,60,80);ctx.fillRect(200,150,50,70);ctx.fillRect(350,160,80,50);
+  ctx.fillRect(550,150,60,60);ctx.fillRect(120,300,70,40);ctx.fillRect(300,280,120,60);
+  // 标签
+  ctx.fillStyle='rgba(255,255,255,.2)';ctx.font='9px system-ui';ctx.textAlign='center';
+  ctx.fillText('北美洲',100,90);ctx.fillText('欧亚大陆',360,80);ctx.fillText('南美洲',140,200);ctx.fillText('非洲',280,200);
+  ctx.fillText('澳大利亚',550,200);ctx.fillText('南极洲',380,370);
+  ctx.textAlign='start';
+}
+
+function lon2x(lon){return 40+((lon+180)/360)*700}
+function lat2y(lat){return 210-(lat/90)*180}
+
+function setAlt(alt,btn){
+  altitude=alt;trail=[];t=0;
+  document.querySelectorAll('.ctrls button').forEach(b=>b.classList.remove('on'));
+  if(btn)btn.classList.add('on');
+}
+
+function draw(){
+  drawMap();
+  const period=2*Math.PI*Math.sqrt(Math.pow(6371+altitude,3)/(398600)); // 秒
+  // 轨道计算
+  const angSpeed=2*Math.PI/period;
+  t+=period/800;
+  // 当前星下点
+  const lat=Math.asin(Math.sin(incl*Math.PI/180)*Math.sin(t*angSpeed))*180/Math.PI;
+  const lon=((Math.atan2(Math.cos(incl*Math.PI/180)*Math.sin(t*angSpeed),Math.cos(t*angSpeed))-t*2*Math.PI/86400*period/86400)*180/Math.PI+180)%360-180;
+
+  trail.push({lat,lon});
+  if(trail.length>800)trail.shift();
+
+  // 轨迹线
+  if(trail.length>1){
+    ctx.beginPath();
+    trail.forEach((p,i)=>{
+      const px=lon2x(p.lon),py=lat2y(p.lat);
+      if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
+    });
+    ctx.strokeStyle='#4a9eff';ctx.lineWidth=1.5;ctx.stroke();
+  }
+
+  // 当前卫星位置
+  const sx=lon2x(lon),sy=lat2y(lat);
+  const grad=ctx.createRadialGradient(sx,sy,0,sx,sy,8);
+  grad.addColorStop(0,'#fff');grad.addColorStop(.5,'#ffd700');grad.addColorStop(1,'#4a9eff');
+  ctx.beginPath();ctx.arc(sx,sy,7,0,Math.PI*2);ctx.fillStyle=grad;ctx.fill();
+  ctx.fillStyle='#fff';ctx.font='11px system-ui';ctx.textAlign='center';ctx.fillText('🛰️',sx,sy+3);
+
+  document.getElementById('trk').textContent=lat.toFixed(1)+'°N, '+lon.toFixed(1)+'°E';
+  document.getElementById('per').textContent=Math.floor(period/60);
+
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>

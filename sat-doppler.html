@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>多普勒频移</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#050a18;font-family:system-ui,sans-serif;display:flex;min-height:100vh;color:#e0e0e0;flex-direction:column;align-items:center;padding:16px}
+.back{color:rgba(255,255,255,.4);text-decoration:none;font-size:12px;align-self:flex-start;margin-bottom:8px;letter-spacing:1px}.back:hover{color:#4a9eff}
+h1{font-size:20px;font-weight:300;letter-spacing:2px;margin-bottom:4px}
+p{font-size:12px;color:rgba(255,255,255,.4);margin-bottom:8px}
+canvas{border-radius:12px;border:1px solid rgba(255,255,255,.05)}.info{font-size:12px;margin-top:8px;color:rgba(255,255,255,.5)}.info b{color:#ffd700}
+</style>
+</head>
+<body>
+<a class="back" href="satellite-hub.html">← 合集</a>
+<h1>〰️ 多普勒频移效应</h1>
+<p>卫星飞近时频率升高(蓝移)，飞远时频率降低(红移)——用于测速和搜星</p>
+<canvas id="c" width="750" height="420"></canvas>
+<div class="info">接收频率: <b id="fr">1575.42 MHz</b> &nbsp;|&nbsp; 频移: <b id="fs">0 Hz</b> &nbsp;|&nbsp; 卫星距离: <b id="dist">-- km</b></div>
+<script>
+const c=document.getElementById('c'),ctx=c.getContext('2d');
+const BASE_FREQ=1575.42e6;
+let satX=750,history=[],t=0;
+
+function draw(){
+  ctx.clearRect(0,0,750,420);
+  ctx.fillStyle='#0a1020';ctx.fillRect(0,0,750,420);
+
+  // 天空背景
+  ctx.fillStyle='rgba(74,158,255,.03)';ctx.fillRect(0,0,750,160);
+
+  // 地面站
+  const gx=200,gy=140;
+  ctx.fillStyle='#4a9eff';ctx.beginPath();ctx.arc(gx,gy,14,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#fff';ctx.font='11px system-ui';ctx.textAlign='center';
+  ctx.fillText('📡 地面站',gx,gy+30);
+
+  // 卫星轨迹
+  ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;ctx.setLineDash([3,6]);
+  ctx.beginPath();ctx.moveTo(0,60);ctx.lineTo(750,80);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='rgba(255,255,255,.2)';ctx.font='10px system-ui';ctx.fillText('卫星轨道',740,70);
+
+  // 卫星
+  t+=0.006;satX-=1.5;if(satX<-40)satX=790;
+  const sx=satX,sy=70;
+  const dx=sx-gx,dy=sy-gy;const dist=Math.sqrt(dx*dx+dy*dy);
+
+  // 信号波
+  ctx.strokeStyle='rgba(74,158,255,.15)';ctx.lineWidth=.8;ctx.setLineDash([2,4]);
+  ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(gx,gy);ctx.stroke();ctx.setLineDash([]);
+
+  // 多普勒频移
+  const relVel=1.2*(dx>0?1:-1); // 相对速度
+  const freq=BASE_FREQ*(1-relVel/3e8);
+  const shift=freq-BASE_FREQ;
+
+  // 卫星标记
+  const grad=ctx.createRadialGradient(sx,sy,0,sx,sy,10);
+  grad.addColorStop(0,'#fff');grad.addColorStop(1,'#4a9eff');
+  ctx.beginPath();ctx.arc(sx,sy,9,0,Math.PI*2);ctx.fillStyle=grad;ctx.fill();
+  ctx.fillText('🛰️',sx,sy+4);
+
+  // 速度箭头
+  const velDir=dx>0?1:-1;
+  ctx.strokeStyle='#ff6644';ctx.lineWidth=2;ctx.fillStyle='#ff6644';
+  ctx.beginPath();ctx.moveTo(sx,sy-16);ctx.lineTo(sx+velDir*25,sy-16);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(sx+velDir*25,sy-16);ctx.lineTo(sx+velDir*20,sy-20);ctx.lineTo(sx+velDir*20,sy-12);ctx.closePath();ctx.fill();
+
+  // 波形图
+  const wy=260,wh=130;
+  ctx.fillStyle='rgba(0,0,0,.3)';ctx.fillRect(40,wy,670,wh);
+  ctx.strokeStyle='rgba(255,255,255,.05)';ctx.lineWidth=.5;
+  for(let i=60;i<710;i+=60){ctx.beginPath();ctx.moveTo(i,wy);ctx.lineTo(i,wy+wh);ctx.stroke()}
+  ctx.fillStyle='rgba(255,255,255,.3)';ctx.font='11px system-ui';
+  ctx.fillText('接收信号波形',380,wy-8);
+
+  // 绘制波形
+  history.push({f:freq,t:0});
+  if(history.length>600)history.shift();
+  history.forEach(h=>h.t++);
+
+  ctx.strokeStyle='#4a9eff';ctx.lineWidth=2;ctx.beginPath();
+  const firstT=history[0]?.t||0;
+  history.forEach((h,i)=>{
+    const wx=50+i,waveFreq=freq/BASE_FREQ;
+    const wy2=wy+wh/2+Math.sin(h.t*0.15*waveFreq)*40;
+    if(i===0)ctx.moveTo(wx,wy2);else ctx.lineTo(wx,wy2);
+  });
+  ctx.stroke();
+
+  // 当前频移指示
+  const shiftKHz=Math.round(shift/1000);
+  const shiftColor=shift>0?'#44aaff':shift<0?'#ff6644':'#888';
+  ctx.fillStyle=shiftColor;ctx.font='14px system-ui';ctx.textAlign='center';
+  ctx.fillText((shift>0?'↑蓝移':'↓红移')+' '+Math.abs(shiftKHz)+' kHz',380,wy+wh+30);
+
+  document.getElementById('fr').textContent=(freq/1e6).toFixed(4)+' MHz';
+  document.getElementById('fs').textContent=Math.round(shift)+' Hz';
+  document.getElementById('dist').textContent=Math.floor(dist*20)+' km';
+
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>

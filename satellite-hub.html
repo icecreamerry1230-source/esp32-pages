@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>卫星导航演示集合</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050a18;font-family:system-ui,sans-serif;color:#e0e0e0;min-height:100vh}
+.bg{position:fixed;inset:0;z-index:-1;background:radial-gradient(ellipse at 50% 0,#0a1a3a,#050a18 70%)}
+.header{text-align:center;padding:40px 20px 20px}
+.header .icon{font-size:56px}
+.header h1{font-size:26px;font-weight:300;letter-spacing:4px;background:linear-gradient(135deg,#4a9eff,#00ff88,#ffd700);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin:8px 0}
+.header p{font-size:13px;color:rgba(255,255,255,.4);letter-spacing:1px}
+.back{display:inline-block;color:rgba(255,255,255,.4);text-decoration:none;font-size:12px;margin-bottom:8px;letter-spacing:1px}.back:hover{color:#4a9eff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;max-width:960px;margin:0 auto;padding:0 16px 40px}
+.card{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:16px;padding:24px;text-decoration:none;color:inherit;transition:all .25s;display:block}
+.card:hover{border-color:rgba(74,158,255,.25);background:rgba(74,158,255,.04);transform:translateY(-3px)}
+.card .ci{font-size:36px;margin-bottom:8px}
+.card .cn{font-size:17px;font-weight:600;color:#e0e0e0;margin-bottom:4px}
+.card .cd{font-size:12px;color:rgba(255,255,255,.4);line-height:1.5}
+.card .ct{font-size:11px;color:rgba(255,255,255,.2);margin-top:6px}
+.footer{text-align:center;padding:20px;font-size:11px;color:rgba(255,255,255,.15)}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+
+<div class="header">
+  <a class="back" href="index.html">← 首页</a>
+  <div class="icon">🛰️</div>
+  <h1>卫星导航定位演示</h1>
+  <p>GNSS · GPS · 北斗 · 定位原理可视化</p>
+</div>
+
+<div class="grid">
+  <a class="card" href="sat-orbit.html">
+    <div class="ci">🌐</div><div class="cn">GPS 卫星星座</div>
+    <div class="cd">24颗GPS卫星分布在6个轨道面，实时3D演示卫星运行轨迹</div>
+    <div class="ct">3D可视化 · Three.js</div>
+  </a>
+  <a class="card" href="sat-trilateration.html">
+    <div class="ci">📍</div><div class="cn">三球定位原理</div>
+    <div class="cd">3颗卫星同时测距 → 交会出唯一位置。GPS定位的核心原理</div>
+    <div class="ct">2D交互动画 · Canvas</div>
+  </a>
+  <a class="card" href="sat-doppler.html">
+    <div class="ci">〰️</div><div class="cn">多普勒频移效应</div>
+    <div class="cd">卫星高速飞过时信号频率变化，直观展示频移波形</div>
+    <div class="ct">波形实时绘制 · Canvas</div>
+  </a>
+  <a class="card" href="sat-groundtrack.html">
+    <div class="ci">🗺️</div><div class="cn">卫星地面轨迹</div>
+    <div class="cd">卫星星下点在世界地图上的移动路径。含不同轨道高度对比</div>
+    <div class="ct">世界地图投影 · Canvas</div>
+  </a>
+  <a class="card" href="sat-pdop.html">
+    <div class="ci">📐</div><div class="cn">几何精度因子 (DOP)</div>
+    <div class="cd">卫星分布对定位精度的影响。卫星聚在一起精度差，分散精度高</div>
+    <div class="ct">交互模拟 · Canvas</div>
+  </a>
+  <a class="card" href="sat-visibility.html">
+    <div class="ci">👁️</div><div class="cn">卫星可见性</div>
+    <div class="cd">地面某点能看到的卫星数量随时间变化，含仰角天空图</div>
+    <div class="ct">天空图投影 · Canvas</div>
+  </a>
+</div>
+
+<div class="footer">GNSS · Global Navigation Satellite System · 2026</div>
+</body>
+</html>

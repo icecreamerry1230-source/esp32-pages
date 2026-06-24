@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>GPS卫星星座</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000;overflow:hidden;font-family:system-ui,sans-serif;color:#fff;user-select:none}canvas{display:block}
+#ui{position:fixed;top:16px;left:16px;z-index:2;pointer-events:none}#ui h1{font-size:20px;font-weight:300;letter-spacing:2px}#ui p{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px}
+#info{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:2;background:rgba(0,0,0,.6);padding:8px 18px;border-radius:16px;font-size:12px;display:flex;gap:16px}
+#info span{color:rgba(255,255,255,.5)}#info b{color:#ffd700}
+.legend{position:fixed;right:16px;bottom:16px;z-index:2;font-size:11px;line-height:1.8}.legend div{display:flex;align-items:center;gap:6px}.legend .dot{width:8px;height:8px;border-radius:50%}
+.back{position:fixed;top:16px;right:20px;z-index:2;color:rgba(255,255,255,.4);text-decoration:none;font-size:12px}.back:hover{color:#4a9eff}</style>
+</head>
+<body>
+<div id="ui"><h1>🌐 GPS 卫星星座</h1><p>24颗卫星 · 6轨道面 · 轨道高度 20,200km · 周期约12小时</p></div>
+<div id="info"><span>可见卫星: <b id="vis">0</b></span><span>总卫星: <b>24</b></span><span>轨道面: <b>6</b></span></div>
+<div class="legend"><div><span class="dot" style="background:#4a9eff"></span>GPS卫星</div><div><span class="dot" style="background:#2255cc"></span>地球</div><div><span class="dot" style="background:rgba(255,255,255,.3)"></span>轨道面</div></div>
+<a class="back" href="satellite-hub.html">← 合集</a>
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+const S=new THREE.Scene(),R=new THREE.WebGLRenderer({antialias:true});R.setSize(window.innerWidth,window.innerHeight);R.setPixelRatio(Math.min(devicePixelRatio,2));document.body.appendChild(R.domElement);
+const C=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,.1,100);C.position.set(0,3,7);new OrbitControls(C,R.domElement).enableDamping=true;
+S.add(new THREE.AmbientLight(0x334466,2));const L=new THREE.DirectionalLight(0xffffff,3);L.position.set(5,5,5);S.add(L);
+// 星空
+const stars=new THREE.BufferGeometry();const sv=[];for(let i=0;i<1500;i++)sv.push((Math.random()-.5)*60,(Math.random()-.5)*60,(Math.random()-.5)*60);stars.setAttribute('position',new THREE.Float32BufferAttribute(sv,3));S.add(new THREE.Points(stars,new THREE.PointsMaterial({color:0xffffff,size:.04})));
+// 地球
+const earth=new THREE.Mesh(new THREE.SphereGeometry(1.5,48,48),new THREE.MeshPhongMaterial({color:0x2255cc,specular:0x112244,shininess:10}));S.add(earth);
+const eq=new THREE.Mesh(new THREE.TorusGeometry(1.52,.01,8,64),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.2}));eq.rotation.x=Math.PI/2;S.add(eq);
+earth.rotation.z=23.44*Math.PI/180;
+// GPS轨道
+const ORBIT_R=3.7; // 20,200/6371 ≈ 3.17 + 地球半径
+const SATELLITES=[];
+const COLORS=[0x4a9eff,0x00ff88,0xff6644,0xffaa00,0xaa44ff,0x44ddff];
+for(let plane=0;plane<6;plane++){
+  const raan=(plane/6)*Math.PI*2;
+  const incl=55*Math.PI/180;
+  const ringGeo=new THREE.TorusGeometry(ORBIT_R,.012,8,120);
+  const ring=new THREE.Mesh(ringGeo,new THREE.MeshBasicMaterial({color:COLORS[plane],transparent:true,opacity:.2}));
+  ring.rotation.x=Math.PI/2-incl;ring.rotation.y=raan;S.add(ring);
+  for(let s=0;s<4;s++){
+    const phase=(s/4)*Math.PI*2+plane*0.3;
+    const sat=new THREE.Mesh(new THREE.BoxGeometry(.08,.08,.12),new THREE.MeshPhongMaterial({color:COLORS[plane],emissive:COLORS[plane],emissiveIntensity:.5}));
+    S.add(sat);SATELLITES.push({mesh:sat,raan,incl,phase,orbitR:ORBIT_R});
+  }
+}
+// 地面站
+const gs=new THREE.Mesh(new THREE.SphereGeometry(.06,8,8),new THREE.MeshBasicMaterial({color:0xff0000}));
+const gsLat=30*Math.PI/180,gsLon=120*Math.PI/180;
+gs.position.set(Math.cos(gsLat)*Math.cos(gsLon)*1.5,Math.sin(gsLat)*1.5,Math.cos(gsLat)*Math.sin(gsLon)*1.5);
+S.add(gs);
+function orbid2xyz(raan,incl,phase,r){
+  const x0=r*Math.cos(phase),y0=r*Math.sin(phase);
+  const x=x0*Math.cos(raan)-y0*Math.sin(raan)*Math.cos(incl);
+  const y=x0*Math.sin(raan)+y0*Math.cos(raan)*Math.cos(incl);
+  const z=y0*Math.sin(incl);
+  return new THREE.Vector3(x,y,z);
+}
+let lt=0;
+function anim(t){requestAnimationFrame(anim);const dt=Math.min((t-lt)/1000,.1);lt=t;
+  const rotSpeed=2*Math.PI/12; // 12小时轨道周期缩放到12秒
+  let visible=0;
+  SATELLITES.forEach(s=>{
+    s.phase+=rotSpeed*dt;
+    const pos=orbid2xyz(s.raan,s.incl,s.phase,s.orbitR);
+    s.mesh.position.copy(pos);
+    if(pos.distanceTo(gs.position)<ORBIT_R+1)visible++;
+  });
+  document.getElementById('vis').textContent=visible;
+  R.render(S,C);
+}
+anim(performance.now());
+window.addEventListener('resize',()=>{C.aspect=innerWidth/innerHeight;C.updateProjectionMatrix();R.setSize(innerWidth,innerHeight)});
+</script>
+</body>
+</html>
