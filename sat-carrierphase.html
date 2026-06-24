@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>载波相位测量</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#050a18;font-family:system-ui,sans-serif;display:flex;min-height:100vh;color:#e0e0e0;flex-direction:column;align-items:center;padding:16px}
+.back{color:rgba(255,255,255,.4);text-decoration:none;font-size:12px;align-self:flex-start;margin-bottom:8px;letter-spacing:1px}.back:hover{color:#4a9eff}
+h1{font-size:20px;font-weight:300;letter-spacing:2px;margin-bottom:4px}p{font-size:12px;color:rgba(255,255,255,.4);margin-bottom:8px}
+canvas{border-radius:12px;border:1px solid rgba(255,255,255,.05)}
+.info{font-size:12px;margin-top:8px;color:rgba(255,255,255,.5);text-align:center}.info b{color:#ffd700}
+.ctrls{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;justify-content:center}
+.ctrls button{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.6);padding:6px 14px;border-radius:10px;font-size:12px;cursor:pointer}.ctrls button.on{background:rgba(74,158,255,.1);border-color:rgba(74,158,255,.25);color:#4a9eff}
+</style>
+</head>
+<body>
+<a class="back" href="satellite-hub.html">← 合集</a>
+<h1>〰️ 载波相位 vs 伪距测量</h1>
+<p>伪距(码)精度~3m，载波相位~3mm——但载波有整周模糊度问题</p>
+<canvas id="c" width="750" height="480"></canvas>
+<div class="info">
+  伪距(码): <b id="code-dist" style="color:#f90">--m</b> &nbsp;|&nbsp;
+  载波相位: <b id="phase-dist" style="color:#4ade80">--m</b> &nbsp;|&nbsp;
+  整周数 N: <b id="ambig" style="color:#ff6644">?</b>
+</div>
+<div class="ctrls">
+  <button class="on" id="bt-show" onclick="toggleView()">显示波形细节</button>
+  <button onclick="changeDist()">改变距离</button>
+</div>
+<script>
+const c=document.getElementById('c'),ctx=c.getContext('2d');
+const L1_WAVELENGTH=0.19; // L1波长 19cm
+let trueDist=80; // 真实距离(米)
+let showWave=true,t=0;
+
+function toggleView(){showWave=!showWave;document.getElementById('bt-show').classList.toggle('on',showWave)}
+function changeDist(){trueDist=40+Math.random()*100}
+
+function draw(){
+  ctx.clearRect(0,0,750,480);
+  ctx.fillStyle='#0a1020';ctx.fillRect(0,0,750,480);
+  t+=0.3;
+
+  const cx=80,cy=240;
+  const satellites=750;
+
+  // 图示：卫星 → 接收机
+  ctx.fillStyle='#4a9eff';ctx.beginPath();ctx.arc(cx,cy-60,12,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#fff';ctx.font='12px system-ui';ctx.textAlign='center';ctx.fillText('🛰️',cx,cy-56);
+  ctx.fillText('卫星',cx,cy-78);
+
+  ctx.fillStyle='#ffd700';ctx.beginPath();ctx.arc(cx,cy+80,10,0,Math.PI*2);ctx.fill();
+  ctx.fillText('📡',cx,cy+84);ctx.fillText('接收机',cx,cy+102);
+
+  // 信号传播
+  ctx.strokeStyle='rgba(74,158,255,.15)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(cx,cy-48);ctx.lineTo(cx,cy+70);ctx.stroke();
+
+  // 右侧：波形放大图
+  const wx=250,wy=60,ww=460,wh=360;
+  ctx.fillStyle='rgba(0,0,0,.3)';ctx.fillRect(wx,wy,ww,wh);
+  ctx.strokeStyle='rgba(255,255,255,.05)';ctx.lineWidth=.5;
+  for(let i=wy+30;i<wy+wh;i+=30){ctx.beginPath();ctx.moveTo(wx,i);ctx.lineTo(wx+ww,i);ctx.stroke()}
+
+  // 载波（高精度但模糊）
+  const cycles=trueDist/L1_WAVELENGTH;
+  const fullCycles=Math.floor(cycles);
+  const fracCycles=cycles-fullCycles;
+
+  ctx.strokeStyle='#4ade80';ctx.lineWidth=2;
+  ctx.beginPath();
+  for(let x=0;x<ww;x++){
+    const phase=t+x*0.1;
+    const y=wy+wh/2+Math.sin(phase)*25;
+    if(x===0)ctx.moveTo(wx+x,y);else ctx.lineTo(wx+x,y);
+  }
+  ctx.stroke();
+  ctx.fillStyle='#4ade80';ctx.font='12px system-ui';ctx.textAlign='left';
+  ctx.fillText('L1载波 (λ=19cm)',wx+8,wy+20);
+
+  // 整周计数
+  ctx.fillStyle='rgba(0,255,136,.3)';ctx.font='14px system-ui';
+  ctx.fillText('整周数: N='+fullCycles, wx+8, wy+wh-50);
+  ctx.fillText('不足一周: Δφ='+fracCycles.toFixed(2)+'周 (='+(fracCycles*L1_WAVELENGTH*100).toFixed(1)+'cm)', wx+8, wy+wh-28);
+
+  // 伪距码（粗精度但无模糊）
+  const codeBits=[];
+  for(let i=0;i<80;i++)codeBits.push(Math.random()>.5?'1':'0');
+  ctx.fillStyle='#f90';ctx.font='11px system-ui';ctx.fillText('C/A码 (码片≈300m)',wx+200,wy+20);
+  for(let i=0;i<60;i++){
+    ctx.fillStyle=codeBits[i]==='1'?'#f90':'rgba(255,153,0,.2)';
+    ctx.fillRect(wx+i*7.5,wy+50,7,12);
+  }
+  ctx.fillStyle='#f90';ctx.font='12px system-ui';
+  ctx.fillText('伪距: '+trueDist.toFixed(1)+'±3m (码相关)',wx+8,wy+wh-8);
+
+  // 精度对比图
+  const bx=wx+200,by=wy+120;
+  ctx.fillStyle='#fff';ctx.font='11px system-ui';ctx.textAlign='left';
+  ctx.fillText('精度对比(对数尺度):',bx,by);
+  const bars=[{label:'伪距C/A',val:3,color:'#f90'},{label:'载波相位',val:0.003,color:'#4ade80'},{label:'伪距P码',val:0.3,color:'#4a9eff'}];
+  bars.forEach((bar,i)=>{
+    const barY=by+18+i*30;
+    ctx.fillStyle='rgba(255,255,255,.03)';ctx.fillRect(bx,barY,160,22);
+    const w=Math.max(20,Math.log10(bar.val+0.001)*30+100);
+    ctx.fillStyle=bar.color;ctx.fillRect(bx,barY+4,w,14);
+    ctx.fillStyle='#fff';ctx.font='11px system-ui';ctx.fillText(bar.label, bx+4, barY+15);
+    ctx.fillText(bar.val+'m', bx+90, barY+15);
+  });
+
+  // 整周模糊度问题示意
+  const ambx=wx+200,amby=by+120;
+  ctx.fillStyle='#ff6644';ctx.font='13px system-ui';
+  ctx.fillText('⚠ 整周模糊度',ambx,amby);
+  ctx.font='11px system-ui';ctx.fillText('载波只能测"一周以内"的部分',ambx,amby+18);
+  ctx.fillText('整周数N是未知的——需要解算!',ambx,amby+34);
+  ctx.fillText('解法: 多频/差分/长时间观测',ambx,amby+50);
+
+  document.getElementById('code-dist').textContent=trueDist.toFixed(1)+'±3';
+  document.getElementById('phase-dist').textContent=(fullCycles*L1_WAVELENGTH+fracCycles*L1_WAVELENGTH).toFixed(3);
+  document.getElementById('ambig').textContent=fullCycles+'周 (需解算)';
+
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>

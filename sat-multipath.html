@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>多路径效应</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#050a18;font-family:system-ui,sans-serif;display:flex;min-height:100vh;color:#e0e0e0;flex-direction:column;align-items:center;padding:16px}
+.back{color:rgba(255,255,255,.4);text-decoration:none;font-size:12px;align-self:flex-start;margin-bottom:8px;letter-spacing:1px}.back:hover{color:#4a9eff}
+h1{font-size:20px;font-weight:300;letter-spacing:2px;margin-bottom:4px}p{font-size:12px;color:rgba(255,255,255,.4);margin-bottom:8px}
+canvas{border-radius:12px;border:1px solid rgba(255,255,255,.05)}
+.ctrls{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;justify-content:center;align-items:center}
+.ctrls button{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.6);padding:6px 14px;border-radius:10px;font-size:12px;cursor:pointer}.ctrls button.on{background:rgba(74,158,255,.1);border-color:rgba(74,158,255,.25);color:#4a9eff}
+.ctrls label{font-size:10px;color:rgba(255,255,255,.4);display:flex;flex-direction:column;align-items:center;gap:2px}.ctrls input{width:80px;accent-color:#ff6644}
+.info{font-size:12px;margin-top:8px;color:rgba(255,255,255,.5);text-align:center}.info b{color:#ffd700}
+</style>
+</head>
+<body>
+<a class="back" href="satellite-hub.html">← 合集</a>
+<h1>🏢 多路径效应</h1>
+<p>卫星信号经建筑物/水面反射后到达接收机 → 真实距离+反射路径叠加 → 测距误差</p>
+<canvas id="c" width="750" height="480"></canvas>
+<div class="info">直接路径: <b id="dir-path" style="color:#4a9eff">--m</b> &nbsp;|&nbsp; 反射路径额外: <b id="ref-path" style="color:#ff6644">--m</b> &nbsp;|&nbsp; 测距误差: <b id="err-path" style="color:#f90">--m</b></div>
+<div class="ctrls">
+  <label>反射面距离 <input type="range" min="10" max="80" value="40" id="refl-dist" oninput="u()"></label>
+  <label>反射系数 <input type="range" min="10" max="100" value="60" id="refl-coef" oninput="u()"><span id="coefv">0.6</span></label>
+  <button onclick="toggleRefl()" id="bt-refl" class="on">显示反射</button>
+  <button onclick="moveSat()">移动卫星</button>
+</div>
+<script>
+const c=document.getElementById('c'),ctx=c.getContext('2d');
+let reflDist=40,reflCoef=0.6,showRefl=true,satAngle=-30;
+
+function u(){reflDist=parseInt(document.getElementById('refl-dist').value);reflCoef=parseInt(document.getElementById('refl-coef').value)/100;document.getElementById('coefv').textContent=reflCoef.toFixed(1)}
+function toggleRefl(){showRefl=!showRefl;document.getElementById('bt-refl').classList.toggle('on',showRefl)}
+function moveSat(){satAngle=-60+Math.random()*90}
+
+function draw(){
+  ctx.clearRect(0,0,750,480);
+  ctx.fillStyle='#0a1020';ctx.fillRect(0,0,750,480);
+
+  const rx=280,ry=170; // 接收机
+  const bx=400,by=350; // 建筑/反射面
+  const satR=300;
+  const satX=rx+satR*Math.cos(satAngle*Math.PI/180);
+  const satY=ry+satR*Math.sin(satAngle*Math.PI/180);
+
+  // 地面
+  ctx.fillStyle='#1a1530';ctx.fillRect(0,350,750,130);
+  ctx.strokeStyle='rgba(255,255,255,.06)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(0,350);ctx.lineTo(750,350);ctx.stroke();
+
+  // 建筑
+  ctx.fillStyle='#2a2840';ctx.fillRect(bx-15,by-80,30,80);
+  ctx.fillStyle='#3a3860';ctx.fillRect(bx-12,by-70,8,8);ctx.fillRect(bx+4,by-70,8,8);ctx.fillRect(bx-12,by-56,8,8);ctx.fillRect(bx+4,by-56,8,8);
+  ctx.fillRect(bx-12,by-42,8,8);ctx.fillRect(bx+4,by-42,8,8);
+  ctx.fillStyle='rgba(255,255,255,.3)';ctx.font='10px system-ui';ctx.textAlign='center';ctx.fillText('🏢',bx,by-84);
+
+  // 反射面
+  ctx.strokeStyle='rgba(255,102,68,.3)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(bx-reflDist,by);ctx.lineTo(bx+reflDist,by);ctx.stroke();
+  ctx.fillStyle='rgba(255,102,68,.08)';ctx.fillRect(bx-reflDist,by,reflDist*2,2);
+
+  // 接收机
+  ctx.fillStyle='#ffd700';ctx.beginPath();ctx.arc(rx,ry,10,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#fff';ctx.font='11px system-ui';ctx.textAlign='center';ctx.fillText('📡',rx,ry+2);
+  ctx.fillText('接收机',rx,ry+24);
+
+  // 卫星
+  ctx.fillStyle='#4a9eff';ctx.beginPath();ctx.arc(satX,satY,9,0,Math.PI*2);ctx.fill();
+  ctx.fillText('🛰️',satX,satY+2);
+  ctx.fillText('GPS卫星',satX,satY+22);
+
+  // 直接路径
+  const dirDist=Math.sqrt((satX-rx)**2+(satY-ry)**2);
+  ctx.strokeStyle='#4a9eff';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(satX,satY);ctx.lineTo(rx,ry);ctx.stroke();
+  ctx.fillStyle='#4a9eff';ctx.font='11px system-ui';ctx.textAlign='center';
+  ctx.fillText('直接路径 '+dirDist.toFixed(0)+'m',rx+80,ry-50);
+
+  // 反射路径
+  if(showRefl){
+    // 镜像法：反射点
+    const reflX=(satX+rx)/2,reflY=by;
+    const reflDistExtra=Math.sqrt((satX-reflX)**2+(satY-reflY)**2)+Math.sqrt((rx-reflX)**2+(ry-reflY)**2)-dirDist;
+    ctx.strokeStyle='#ff6644';ctx.lineWidth=1.5;ctx.setLineDash([5,3]);
+    ctx.beginPath();ctx.moveTo(satX,satY);ctx.lineTo(reflX,reflY);ctx.lineTo(rx,ry);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='#ff6644';ctx.font='11px system-ui';
+    ctx.fillText('反射路径 +'+reflDistExtra.toFixed(0)+'m',rx+80,ry-30);
+
+    // 反射点
+    ctx.fillStyle='#ff6644';ctx.beginPath();ctx.arc(reflX,reflY,4,0,Math.PI*2);ctx.fill();
+    ctx.fillText('反射点',reflX,reflY-10);
+  }
+
+  // 右侧：信号叠加示意
+  const sx=520,sy=40;
+  ctx.fillStyle='rgba(0,0,0,.3)';ctx.fillRect(sx,sy,210,200);
+  ctx.fillStyle='#fff';ctx.font='12px system-ui';ctx.textAlign='center';
+  ctx.fillText('信号叠加(接收端)',sx+105,sy+18);
+
+  // 直接信号波形
+  ctx.strokeStyle='#4a9eff';ctx.lineWidth=1.5;ctx.beginPath();
+  for(let x=0;x<200;x++){const y=sy+50+Math.sin(x*0.15)*15;if(x===0)ctx.moveTo(sx+x,y);else ctx.lineTo(sx+x,y)}ctx.stroke();
+  ctx.fillStyle='#4a9eff';ctx.font='10px system-ui';ctx.textAlign='left';ctx.fillText('直接信号',sx+4,sy+42);
+
+  // 反射信号(延迟+衰减)
+  if(showRefl){
+    ctx.strokeStyle='#ff6644';ctx.lineWidth=1;ctx.beginPath();
+    const delay=20+reflDist/2;const atten=reflCoef;
+    for(let x=0;x<200;x++){const y=sy+100+Math.sin((x-delay)*0.15)*15*atten;if(x===0)ctx.moveTo(sx+x,y);else ctx.lineTo(sx+x,y)}ctx.stroke();
+    ctx.fillStyle='#ff6644';ctx.font='10px system-ui';ctx.fillText('反射信号(延迟+衰减)',sx+4,sy+92);
+  }
+
+  // 合成信号
+  ctx.strokeStyle='#f90';ctx.lineWidth=2;ctx.beginPath();
+  for(let x=0;x<200;x++){
+    const direct=Math.sin(x*0.15)*15;
+    const reflected=showRefl?Math.sin((x-20-reflDist/2)*0.15)*15*reflCoef:0;
+    const y=sy+155+direct+reflected;
+    if(x===0)ctx.moveTo(sx+x,y);else ctx.lineTo(sx+x,y);
+  }
+  ctx.stroke();
+  ctx.fillStyle='#f90';ctx.font='10px system-ui';ctx.fillText('合成信号(偏移!)',sx+4,sy+147);
+
+  // 误差箭头
+  if(showRefl){
+    ctx.fillStyle='#f90';ctx.font='11px system-ui';
+    ctx.fillText('← 码相位偏移 → 测距误差',sx,200);
+  }
+
+  // 底部说明
+  ctx.fillStyle='rgba(255,255,255,.3)';ctx.font='10px system-ui';ctx.textAlign='left';
+  ctx.fillText('多路径误差范围: 码测距 1-5m | 载波相位 1-5cm | 可通过扼流圈天线+长观测时间抑制',30,440);
+  ctx.fillText('高反射环境(城市/水面)定位精度显著下降 | DGPS无法消除多路径(非公共误差)',30,458);
+
+  const extra=showRefl?Math.sqrt((satX-((satX+rx)/2))**2+(satY-350)**2)+Math.sqrt((rx-(satX+rx)/2)**2+(ry-350)**2)-dirDist:0;
+  document.getElementById('dir-path').textContent=dirDist.toFixed(0);
+  document.getElementById('ref-path').textContent=showRefl?'+'+extra.toFixed(0):'--';
+  document.getElementById('err-path').textContent=showRefl?(extra*0.3).toFixed(1):'--';
+}
+c.addEventListener('click',e=>{const r=c.getBoundingClientRect();satAngle=Math.atan2(e.clientY-r.top-ry,e.clientX-r.left-rx)*180/Math.PI;draw()});
+u();moveSat();draw();
+</script>
+</body>
+</html>
