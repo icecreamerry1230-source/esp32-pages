@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>卫星可见性</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#050a18;font-family:system-ui,sans-serif;display:flex;min-height:100vh;color:#e0e0e0;flex-direction:column;align-items:center;padding:16px}
+.back{color:rgba(255,255,255,.4);text-decoration:none;font-size:12px;align-self:flex-start;margin-bottom:8px;letter-spacing:1px}.back:hover{color:#4a9eff}
+h1{font-size:20px;font-weight:300;letter-spacing:2px;margin-bottom:4px}p{font-size:12px;color:rgba(255,255,255,.4);margin-bottom:8px}
+canvas{border-radius:12px;border:1px solid rgba(255,255,255,.05);cursor:pointer}
+.info{font-size:12px;margin-top:8px;color:rgba(255,255,255,.5);text-align:center}.info b{color:#ffd700}
+.ctrls{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;justify-content:center}
+.ctrls label{font-size:11px;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:4px}.ctrls input[type=range]{width:100px;accent-color:#4a9eff}
+</style>
+</head>
+<body>
+<a class="back" href="satellite-hub.html">← 合集</a>
+<h1>👁️ 卫星可见性 — 天空图</h1>
+<p>地面某点能看到的卫星。仰角>5°才算可见。移动位置看卫星覆盖变化</p>
+<canvas id="c" width="750" height="480"></canvas>
+<div class="info">可见卫星: <b id="vcnt">0</b> 颗 &nbsp;|&nbsp; 纬度: <b id="lat">30°N</b> &nbsp;|&nbsp; GPS卫星共24颗</div>
+<div class="ctrls">
+  <label>纬度 <input type="range" min="-90" max="90" value="30" id="lat-sld" oninput="u()"></label>
+  <label>经度 <input type="range" min="-180" max="180" value="120" id="lon-sld" oninput="u()"></label>
+  <label>仰角阈值 <input type="range" min="0" max="30" value="5" id="el-sld" oninput="u()"><span id="elv">5°</span></label>
+</div>
+<script>
+const c=document.getElementById('c'),ctx=c.getContext('2d');
+let userLat=30,userLon=120,elMask=5;
+// 模拟24颗GPS卫星（简化为固定轨道分布）
+const ALL_SATS=[];
+// 6轨道面×4颗，倾角55°
+for(let p=0;p<6;p++){
+  const raan=p*60*Math.PI/180;
+  for(let s=0;s<4;s++){
+    const phase=s*90*Math.PI/180+p*15*Math.PI/180;
+    ALL_SATS.push({raan,phase,incl:55*Math.PI/180,r:26560}); // 轨道半径km
+  }
+}
+
+function u(){
+  userLat=parseInt(document.getElementById('lat-sld').value);
+  userLon=parseInt(document.getElementById('lon-sld').value);
+  elMask=parseInt(document.getElementById('el-sld').value);
+  document.getElementById('elv').textContent=elMask+'°';
+  draw();
+}
+
+function azel(sat,t){
+  // 简化：计算卫星相对地面某点的方位角和仰角
+  const phi=userLat*Math.PI/180,lam=userLon*Math.PI/180;
+  const satLat=Math.asin(Math.sin(sat.incl)*Math.sin(sat.phase+t*0.3))*180/Math.PI;
+  const satLon=((sat.raan+Math.atan2(Math.cos(sat.incl)*Math.sin(sat.phase+t*0.3),Math.cos(sat.phase+t*0.3))-t*0.25)*180/Math.PI+180)%360-180;
+  const dLat=(satLat-userLat)*Math.PI/180,dLon=(satLon-userLon)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(userLat*Math.PI/180)*Math.cos(satLat*Math.PI/180)*Math.sin(dLon/2)**2;
+  const gcDist=2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  const elev=Math.asin((sat.r*Math.cos(gcDist)-6371)/Math.sqrt(sat.r**2+6371**2-2*sat.r*6371*Math.cos(gcDist)));
+  const az=Math.atan2(Math.sin(dLon)*Math.cos(satLat*Math.PI/180),Math.cos(userLat*Math.PI/180)*Math.sin(satLat*Math.PI/180)-Math.sin(userLat*Math.PI/180)*Math.cos(satLat*Math.PI/180)*Math.cos(dLon));
+  return{az:az*180/Math.PI,elev:elev*180/Math.PI};
+}
+
+let t=0;
+function draw(){
+  ctx.clearRect(0,0,750,480);
+  ctx.fillStyle='#0a1020';ctx.fillRect(0,0,750,480);
+  t+=0.02;
+
+  const cx=220,cy=250,r=180;
+  // 天空图圆
+  ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;
+  [30,60,90].forEach(e=>{
+    const rad=r*(90-e)/90;
+    ctx.beginPath();ctx.arc(cx,cy,rad,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,.15)';ctx.font='9px system-ui';ctx.textAlign='center';
+    ctx.fillText(e+'°',cx,cy-rad+2);
+  });
+  // 方位线
+  ['N','E','S','W'].forEach((dir,i)=>{
+    const ang=i*Math.PI/2-Math.PI/2;
+    ctx.fillStyle='rgba(255,255,255,.2)';ctx.font='11px system-ui';ctx.textAlign='center';
+    ctx.fillText(dir,cx+Math.cos(ang)*(r+14),cy+Math.sin(ang)*(r+14)+4);
+  });
+
+  // 可见vs不可见卫星
+  let visible=0;
+  ALL_SATS.forEach((sat,i)=>{
+    const {az,elev}=azel(sat,t);
+    const rad=r*(90-elev)/90;
+    const sx=cx+Math.sin(az*Math.PI/180)*rad;
+    const sy=cy-Math.cos(az*Math.PI/180)*rad;
+    if(elev>elMask&&rad<=r){
+      visible++;
+      ctx.fillStyle='#4ade80';ctx.beginPath();ctx.arc(sx,sy,5,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#fff';ctx.font='8px system-ui';ctx.fillText(i+1,sx-6,sy-8);
+      ctx.fillStyle='rgba(74,222,128,.15)';ctx.beginPath();ctx.arc(sx,sy,5,0,Math.PI*2);ctx.fill();
+    }else if(rad>r){
+      // 不可见（低于地平线）
+      ctx.fillStyle='rgba(255,255,255,.08)';ctx.beginPath();ctx.arc(sx,sy,2,0,Math.PI*2);ctx.fill();
+    }
+  });
+
+  // 高仰角区
+  ctx.fillStyle='rgba(74,222,128,.03)';ctx.beginPath();ctx.arc(cx,cy,r*0.33,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.1)';ctx.font='10px system-ui';ctx.textAlign='center';
+  ctx.fillText('天顶',cx,cy-4);
+
+  // 右侧：可见卫星列表和时间线
+  const rx=440;
+  ctx.fillStyle='#fff';ctx.font='13px system-ui';ctx.textAlign='left';
+  ctx.fillText('可见卫星列表 ('+visible+'颗)',rx,30);
+  ctx.fillStyle='rgba(255,255,255,.04)';ctx.fillRect(rx,40,280,22*Math.min(visible,12)+8);
+
+  let vy=50,shown=0;
+  ALL_SATS.forEach((sat,i)=>{
+    const {az,elev}=azel(sat,t);
+    if(elev>elMask&&shown<12){
+      const azStr=az.toFixed(0).padStart(3,' ')+'°';
+      const elStr=elev.toFixed(0).padStart(2,' ')+'°';
+      ctx.fillStyle='#4ade80';ctx.font='10px system-ui';
+      ctx.fillText('🛰️#'+(i+1)+'  '+azStr+'  '+elStr,rx+6,vy+6);
+      // 信号强度示意
+      const sigBars=Math.min(5,Math.ceil(elev/18));
+      for(let b=0;b<sigBars;b++){ctx.fillStyle='#4ade80';ctx.fillRect(rx+180+b*12,vy,8,8-b*1.5)}
+      vy+=20;shown++;
+    }
+  });
+
+  // 时间线（24小时可见性）
+  const ty=340;
+  ctx.fillStyle='#fff';ctx.font='13px system-ui';ctx.fillText('24小时可见卫星数',rx,ty);
+  ctx.fillStyle='rgba(0,0,0,.3)';ctx.fillRect(rx,ty+10,280,50);
+  ctx.strokeStyle='#4ade80';ctx.lineWidth=2;ctx.beginPath();
+  for(let h=0;h<24;h++){
+    let cnt=0;
+    ALL_SATS.forEach(sat=>{const{elev}=azel(sat,t+h*0.5);if(elev>elMask)cnt++});
+    const vx=rx+h*280/24,vy2=ty+60-cnt*6;
+    if(h===0)ctx.moveTo(vx,vy2);else ctx.lineTo(vx,vy2);
+  }
+  ctx.stroke();
+  ctx.fillStyle='rgba(255,255,255,.2)';ctx.font='9px system-ui';
+  for(let h=0;h<24;h+=6)ctx.fillText(h+'h',rx+h*280/24-6,ty+72);
+
+  document.getElementById('vcnt').textContent=visible;
+  document.getElementById('lat').textContent=Math.abs(userLat)+'°'+(userLat>=0?'N':'S');
+
+  requestAnimationFrame(draw);
+}
+u();t=2;draw();
+</script>
+</body>
+</html>
