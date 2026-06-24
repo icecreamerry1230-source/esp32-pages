@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>伪距与钟差</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#050a18;font-family:system-ui,sans-serif;display:flex;min-height:100vh;color:#e0e0e0;flex-direction:column;align-items:center;padding:16px}
+.back{color:rgba(255,255,255,.4);text-decoration:none;font-size:12px;align-self:flex-start;margin-bottom:8px;letter-spacing:1px}.back:hover{color:#4a9eff}
+h1{font-size:20px;font-weight:300;letter-spacing:2px;margin-bottom:4px}p{font-size:12px;color:rgba(255,255,255,.4);margin-bottom:8px}
+canvas{border-radius:12px;border:1px solid rgba(255,255,255,.05)}
+.ctrls{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;justify-content:center}
+.ctrls button{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.6);padding:6px 14px;border-radius:10px;font-size:12px;cursor:pointer}.ctrls button.on{background:rgba(74,158,255,.1);border-color:rgba(74,158,255,.25);color:#4a9eff}</style>
+</head>
+<body>
+<a class="back" href="satellite-hub.html">← 合集</a>
+<h1>⏱️ 伪距与钟差 — 为什么需要第4颗卫星</h1>
+<p>接收机钟差导致所有卫星测距偏大相同的量——4颗卫星解得三维坐标+钟差</p>
+<canvas id="c" width="750" height="480"></canvas>
+<div class="info" style="font-size:12px;color:rgba(255,255,255,.5);margin-top:8px;text-align:center" id="info"></div>
+<div class="ctrls">
+  <button onclick="toggleClock()" id="bt-clock">开启接收机钟差</button>
+  <button onclick="addSat()">+ 卫星</button>
+  <button onclick="resetSats()">重置</button>
+</div>
+<script>
+const c=document.getElementById('c'),ctx=c.getContext('2d');
+let target={x:380,y:300},sats=[],clockErr=0,showClock=true;
+
+function resetSats(){
+  sats=[{x:200,y:100},{x:550,y:80},{x:370,y:420},{x:600,y:350}];
+  draw();
+}
+function addSat(){sats.push({x:100+Math.random()*550,y:60+Math.random()*380});draw()}
+function toggleClock(){showClock=!showClock;clockErr=showClock?25:0;document.getElementById('bt-clock').classList.toggle('on',showClock);draw()}
+
+function draw(){
+  ctx.clearRect(0,0,750,480);
+  ctx.fillStyle='#0a1020';ctx.fillRect(0,0,750,480);
+
+  // 真正距离
+  const trueDists=sats.map(s=>{
+    const dx=s.x-target.x,dy=s.y-target.y;
+    return Math.sqrt(dx*dx+dy*dy);
+  });
+
+  // 伪距 = 真距 + 钟差
+  const pseudoDists=trueDists.map(d=>d+clockErr);
+
+  // 3颗卫星时的情况（无钟差修正）
+  const useSats=Math.min(3,sats.length);
+
+  // 画伪距圆（偏大的圆）
+  sats.forEach((s,i)=>{
+    const r=pseudoDists[i];
+    // 偏大的圆
+    if(showClock){
+      ctx.beginPath();ctx.arc(s.x,s.y,r,0,Math.PI*2);
+      ctx.strokeStyle='rgba(255,102,68,.2)';ctx.lineWidth=1.5;ctx.stroke();
+      ctx.fillStyle='rgba(255,102,68,.04)';ctx.fill();
+    }
+    // 真实圆
+    ctx.beginPath();ctx.arc(s.x,s.y,trueDists[i],0,Math.PI*2);
+    ctx.strokeStyle='rgba(74,158,255,.3)';ctx.lineWidth=1;ctx.setLineDash([3,5]);ctx.stroke();ctx.setLineDash([]);
+
+    // 卫星图标
+    const g=ctx.createRadialGradient(s.x,s.y,0,s.x,s.y,8);
+    g.addColorStop(0,'#fff');g.addColorStop(1,'#4a9eff');
+    ctx.beginPath();ctx.arc(s.x,s.y,7,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+    ctx.fillStyle='#fff';ctx.font='10px system-ui';ctx.textAlign='center';ctx.fillText('🛰️'+(i+1),s.x,s.y+3);
+    ctx.fillText('r='+Math.floor(trueDists[i]),s.x,s.y+18);
+    if(showClock){
+      ctx.fillStyle='rgba(255,102,68,.6)';ctx.font='9px system-ui';
+      ctx.fillText('伪距+'+clockErr,s.x,s.y+30);
+    }
+  });
+
+  // 3颗卫星无钟差的"错误交会区"
+  if(sats.length>=3){
+    const s3=sats.slice(0,3),d3=pseudoDists.slice(0,3);
+    // 找到三个伪距圆的近似交点（它们不会交于一点！）
+    ctx.fillStyle='rgba(255,102,68,.1)';ctx.strokeStyle='rgba(255,102,68,.5)';ctx.lineWidth=2;
+    // 简单绘制交会三角形
+    for(let i=0;i<3;i++){
+      const s1=s3[i],s2=s3[(i+1)%3];
+      const d=Math.sqrt((s1.x-s2.x)**2+(s1.y-s2.y)**2);
+      const a=(d3[i]**2-d3[(i+1)%3]**2+d**2)/(2*d);
+      const h=Math.sqrt(Math.max(0,d3[i]**2-a**2));
+      const mx=s1.x+a*(s2.x-s1.x)/d,my=s1.y+a*(s2.y-s1.y)/d;
+      const rx=-(s2.y-s1.y)*h/d,ry=(s2.x-s1.x)*h/d;
+      // 取离目标点近的交点
+      const ix1=mx+rx,iy1=my+ry,ix2=mx-rx,iy2=my-ry;
+      const d1=(ix1-target.x)**2+(iy1-target.y)**2,d2=(ix2-target.x)**2+(iy2-target.y)**2;
+      const ix=d1<d2?ix1:ix2,iy=d1<d2?iy1:iy2;
+      ctx.beginPath();ctx.arc(ix,iy,4,0,Math.PI*2);ctx.fill();ctx.stroke();
+    }
+  }
+
+  // 4颗卫星+钟差修正的正确解
+  if(sats.length>=4&&showClock){
+    ctx.fillStyle='#4ade80';ctx.beginPath();ctx.arc(target.x,target.y,6,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#fff';ctx.font='12px system-ui';ctx.textAlign='center';
+    ctx.fillText('✅ 4星解算: 正确位置+钟差',target.x,target.y-16);
+  }else if(sats.length>=3&&showClock){
+    ctx.fillStyle='#ffd700';ctx.beginPath();ctx.arc(target.x,target.y-20,4,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#f90';ctx.font='12px system-ui';ctx.textAlign='center';
+    ctx.fillText('⚠ 3星: 伪距圆不交于一点!',target.x,395);
+  }
+
+  // 目标真实位置
+  ctx.fillStyle='#ffd700';ctx.beginPath();ctx.arc(target.x,target.y,5,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#fff';ctx.font='11px system-ui';ctx.fillText('真实位置',target.x+14,target.y);
+
+  document.getElementById('info').innerHTML=showClock?
+    '接收机钟差: <b style="color:#f90">+'+clockErr+'</b> 单位 → 所有伪距偏大 → 3星圆不交于一点 → <b style="color:#4ade80">需要第4颗卫星解钟差</b>':
+    '钟差=0 → 3星即可精确交会（理想情况，实际钟差永远存在）';
+}
+c.addEventListener('pointermove',e=>{if(e.buttons){const r=c.getBoundingClientRect();target.x=e.clientX-r.left;target.y=e.clientY-r.top;draw()}});
+c.addEventListener('click',e=>{const r=c.getBoundingClientRect();target.x=e.clientX-r.left;target.y=e.clientY-r.top;draw()});
+resetSats();
+document.getElementById('bt-clock').classList.add('on');
+</script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>差分GPS定位</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#050a18;font-family:system-ui,sans-serif;display:flex;min-height:100vh;color:#e0e0e0;flex-direction:column;align-items:center;padding:16px}
+.back{color:rgba(255,255,255,.4);text-decoration:none;font-size:12px;align-self:flex-start;margin-bottom:8px;letter-spacing:1px}.back:hover{color:#4a9eff}
+h1{font-size:20px;font-weight:300;letter-spacing:2px;margin-bottom:4px}p{font-size:12px;color:rgba(255,255,255,.4);margin-bottom:8px}
+canvas{border-radius:12px;border:1px solid rgba(255,255,255,.05)}
+.ctrls{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;justify-content:center}
+.ctrls button{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.6);padding:6px 14px;border-radius:10px;font-size:12px;cursor:pointer}.ctrls button.on{background:rgba(74,158,255,.1);border-color:rgba(74,158,255,.25);color:#4a9eff}
+</style>
+</head>
+<body>
+<a class="back" href="satellite-hub.html">← 合集</a>
+<h1>📡 差分GPS (DGPS) 定位原理</h1>
+<p>基准站(已知坐标)计算修正量 → 广播给流动站 → 消除公共误差 → 精度从米级提升到分米级</p>
+<canvas id="c" width="750" height="500"></canvas>
+<div class="info" style="font-size:12px;color:rgba(255,255,255,.5);margin-top:8px;text-align:center" id="info"></div>
+<div class="ctrls">
+  <button class="on" id="bt-dgps" onclick="toggleDGPS()">DGPS模式</button>
+  <button onclick="toggleErrors()">显示误差</button>
+</div>
+<script>
+const c=document.getElementById('c'),ctx=c.getContext('2d');
+let rover={x:480,y:280},base={x:180,y:320},showDGPS=true,showErrors=true,t=0;
+
+function toggleDGPS(){showDGPS=!showDGPS;document.getElementById('bt-dgps').classList.toggle('on',showDGPS)}
+function toggleErrors(){showErrors=!showErrors}
+
+// 模拟卫星
+const satellites=[{x:100,y:80},{x:350,y:40},{x:620,y:100},{x:680,y:380},{x:400,y:440}];
+// 公共误差（电离层+对流层+星历，对所有接收机相同）
+const commonError={dx:18,dy:-12};
+
+function draw(){
+  ctx.clearRect(0,0,750,500);
+  ctx.fillStyle='#0a1020';ctx.fillRect(0,0,750,500);
+  t+=0.02;
+
+  // 地面纹理
+  ctx.fillStyle='rgba(74,158,255,.02)';ctx.fillRect(0,330,750,170);
+  ctx.strokeStyle='rgba(255,255,255,.03)';ctx.lineWidth=.5;
+  for(let i=0;i<750;i+=40){ctx.beginPath();ctx.moveTo(i,330);ctx.lineTo(i,500);ctx.stroke()}
+
+  // 基准站（已知坐标）
+  ctx.fillStyle='#4ade80';ctx.beginPath();ctx.arc(base.x,base.y,12,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#fff';ctx.font='13px system-ui';ctx.textAlign='center';ctx.fillText('🏛️ 基准站',base.x,base.y-18);
+  ctx.fillText('(已知坐标)',base.x,base.y+28);
+  ctx.strokeStyle='rgba(74,222,128,.4)';ctx.lineWidth=2;ctx.setLineDash([3,3]);
+  ctx.beginPath();ctx.arc(base.x,base.y,18,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+
+  // 流动站
+  ctx.fillStyle='#ffd700';ctx.beginPath();ctx.arc(rover.x,rover.y,9,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#fff';ctx.font='13px system-ui';ctx.fillText('🚗 流动站',rover.x,rover.y-16);
+  ctx.fillText('(待定位)',rover.x,rover.y+26);
+
+  // 卫星 → 基准站测距
+  satellites.forEach((s,i)=>{
+    const dx=s.x-base.x,dy=s.y-base.y;
+    const d=Math.sqrt(dx*dx+dy*dy);
+    // 伪距（含公共误差）
+    const pseudoDist=d+commonError.dx;
+
+    // 基准站知道自己的位置 → 算出修正量 = 伪距 - 真距 = 公共误差
+    const correction=pseudoDist-d;
+
+    // 同一卫星 → 流动站
+    const rdx=s.x-rover.x,rdy=s.y-rover.y;
+    const rd=Math.sqrt(rdx*rdx+rdy*rdy);
+    const roverPseudo=rd+commonError.dx;
+
+    // DGPS修正后的距离
+    const correctedDist=roverPseudo-correction;
+
+    // 线
+    ctx.strokeStyle='rgba(74,158,255,.1)';ctx.lineWidth=.8;
+    ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(base.x,base.y);ctx.stroke();
+    ctx.strokeStyle='rgba(255,215,0,.1)';ctx.lineWidth=.8;
+    ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(rover.x,rover.y);ctx.stroke();
+
+    // 卫星
+    ctx.fillStyle='#4a9eff';ctx.beginPath();ctx.arc(s.x,s.y,5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#fff';ctx.font='9px system-ui';ctx.fillText('🛰️'+(i+1),s.x,s.y-10);
+  });
+
+  // 基准站→流动站的修正信息传输
+  if(showDGPS){
+    ctx.strokeStyle='rgba(74,222,128,.4)';ctx.lineWidth=2;ctx.setLineDash([5,3]);
+    ctx.beginPath();ctx.moveTo(base.x+14,base.y-8);ctx.lineTo(rover.x-10,rover.y-8);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='#4ade80';ctx.font='10px system-ui';ctx.textAlign='center';
+    ctx.fillText('📻 修正量广播',(base.x+rover.x)/2,base.y-20);
+  }
+
+  // 误差比较区
+  const ey=380;
+  ctx.fillStyle='rgba(0,0,0,.4)';ctx.fillRect(30,ey,690,100);
+  ctx.fillStyle='#fff';ctx.font='12px system-ui';ctx.textAlign='left';
+
+  // 单点定位误差 vs DGPS误差
+  const singleErr=Math.sqrt(commonError.dx*commonError.dx+commonError.dy*commonError.dy);
+  const dgpsErr=showDGPS?singleErr*0.1:singleErr;
+
+  ctx.fillText('定位精度对比',50,ey+20);
+  // 单点定位
+  ctx.fillStyle='#ff6644';ctx.fillRect(50,ey+30,Math.min(singleErr*4,600),16);
+  ctx.fillText('单点定位: '+singleErr.toFixed(1)+' 单位 (~10米级)',55,ey+42);
+  // DGPS
+  if(showDGPS){
+    ctx.fillStyle='#4ade80';ctx.fillRect(50,ey+55,dgpsErr*4,16);
+    ctx.fillText('DGPS:    '+dgpsErr.toFixed(1)+' 单位 (~分米级)',55,ey+67);
+  }
+
+  // 误差来源说明
+  if(showErrors){
+    ctx.fillStyle='rgba(255,255,255,.06)';ctx.fillRect(400,ey+5,300,90);
+    ctx.fillStyle='#fff';ctx.font='11px system-ui';ctx.fillText('公共误差来源:',410,ey+20);
+    ctx.fillStyle='rgba(255,255,255,.4)';ctx.font='10px system-ui';
+    ctx.fillText('🌐 电离层延迟 ~5-50m',410,ey+36);
+    ctx.fillText('☁️ 对流层延迟 ~2-20m',410,ey+52);
+    ctx.fillText('🛰️ 卫星星历误差 ~2-5m',410,ey+68);
+    ctx.fillText('⏰ 卫星钟差 ~1-3m',410,ey+84);
+  }
+
+  document.getElementById('info').innerHTML=showDGPS?
+    '<b style="color:#4ade80">DGPS开启</b>: 基准站计算公共误差修正量 → 流动站应用修正 → 精度从10m提升到0.5m':
+    '<b style="color:#f90">单点定位</b>: 直接使用伪距解算，包含所有误差 → 精度约10米';
+}
+c.addEventListener('pointermove',e=>{if(e.buttons){const r=c.getBoundingClientRect();const mx=e.clientX-r.left,my=e.clientY-r.top;if(Math.abs(mx-rover.x)<50&&Math.abs(my-rover.y)<50){rover.x=mx;rover.y=my}draw()}});
+draw();
+</script>
+</body>
+</html>

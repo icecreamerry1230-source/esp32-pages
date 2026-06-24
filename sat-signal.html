@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>GPS信号结构</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#050a18;font-family:system-ui,sans-serif;display:flex;min-height:100vh;color:#e0e0e0;flex-direction:column;align-items:center;padding:16px}
+.back{color:rgba(255,255,255,.4);text-decoration:none;font-size:12px;align-self:flex-start;margin-bottom:8px;letter-spacing:1px}.back:hover{color:#4a9eff}
+h1{font-size:20px;font-weight:300;letter-spacing:2px;margin-bottom:4px}p{font-size:12px;color:rgba(255,255,255,.4);margin-bottom:8px}
+canvas{border-radius:12px;border:1px solid rgba(255,255,255,.05)}
+.ctrls{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;justify-content:center}
+.ctrls button{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.6);padding:6px 14px;border-radius:10px;font-size:12px;cursor:pointer}.ctrls button.on{background:rgba(74,158,255,.1);border-color:rgba(74,158,255,.25);color:#4a9eff}
+</style>
+</head>
+<body>
+<a class="back" href="satellite-hub.html">← 合集</a>
+<h1>📡 GPS 信号结构</h1>
+<p>载波(L1=1575.42MHz) + C/A码(1.023Mbps) + 导航电文(50bps) — 三层叠加</p>
+<canvas id="c" width="750" height="500"></canvas>
+<div class="ctrls">
+  <button class="on" id="bt-all" onclick="setView('all')">全部显示</button>
+  <button id="bt-carrier" onclick="setView('carrier')">仅载波</button>
+  <button id="bt-code" onclick="setView('code')">C/A码</button>
+  <button id="bt-nav" onclick="setView('nav')">导航电文</button>
+  <button id="bt-mod" onclick="setView('mod')">调制结果</button>
+</div>
+<script>
+const c=document.getElementById('c'),ctx=c.getContext('2d');
+let t=0,view='all';
+
+function setView(v){
+  view=v;['all','carrier','code','nav','mod'].forEach(x=>{const b=document.getElementById('bt-'+x);if(b)b.classList.toggle('on',v===x)});
+}
+
+function drawWave(y,h,color,curve,label,alpha){
+  ctx.strokeStyle=color;ctx.globalAlpha=alpha||1;ctx.lineWidth=curve?1.5:2;
+  ctx.beginPath();
+  for(let x=30;x<720;x+=2){
+    const val=curve?Math.sin((x+t*2)*0.15)*h:((Math.floor(x/3+t)%2)*2-1)*h;
+    const wy=y+val;
+    if(x===30)ctx.moveTo(x,wy);else ctx.lineTo(x,wy);
+  }
+  ctx.stroke();
+  if(label){ctx.fillStyle=color;ctx.globalAlpha=alpha||1;ctx.font='11px system-ui';ctx.fillText(label,35,y-h-4)}
+}
+function drawBits(y,bits,color,label,alpha){
+  ctx.fillStyle=color;ctx.globalAlpha=alpha||1;
+  for(let i=0;i<bits.length;i++){
+    const bx=35+i*680/bits.length;
+    ctx.fillRect(bx,bits[i]==='1'?y-12:y,680/bits.length-2,12);
+  }
+  if(label){ctx.fillStyle=color;ctx.font='11px system-ui';ctx.fillText(label,35,y-18);ctx.globalAlpha=1}
+}
+
+function draw(){
+  ctx.clearRect(0,0,750,500);
+  ctx.fillStyle='#0a1020';ctx.fillRect(0,0,750,500);
+  t+=0.5;
+
+  const showAll=view==='all';
+  const showCarrier=showAll||view==='carrier';
+  const showCode=showAll||view==='code';
+  const showNav=showAll||view==='nav';
+  const showMod=showAll||view==='mod';
+
+  // 频率标识
+  ctx.fillStyle='rgba(255,255,255,.3)';ctx.font='10px system-ui';ctx.textAlign='right';
+  if(showCarrier)ctx.fillText('L1 载波 1575.42 MHz (正弦波)',720,52);
+  if(showCode)ctx.fillText('C/A 测距码 1.023 Mbps (0/1方波)',720,152);
+  if(showNav)ctx.fillText('导航电文 50 bps (数据位)',720,282);
+  if(showMod)ctx.fillText('BPSK调制后的发射信号',720,432);
+
+  // 载波层
+  if(showCarrier)drawWave(50,30,'#4a9eff',true,'载波 (L1)',.7);
+
+  // C/A码层
+  if(showCode){
+    const codeBits='1011001000110101110010011010111001001101100010111001010110100010110011011001';
+    drawBits(130,codeBits,'#00ff88','C/A码 (伪随机噪声码)',.6);
+    // 码速率标注
+    ctx.fillStyle='rgba(0,255,136,.3)';ctx.font='9px system-ui';ctx.textAlign='left';
+    ctx.fillText('1 chip ≈ 1μs ≈ 300m',35,168);
+  }
+
+  // 导航电文层
+  if(showNav){
+    const navBits='1011001011010010';
+    drawBits(270,navBits,'#ffd700','导航电文 (星历+钟差+电离层)',.7);
+    ctx.fillStyle='rgba(255,215,0,.3)';ctx.font='9px system-ui';ctx.textAlign='left';
+    ctx.fillText('1 bit = 20ms, 完整电文需12.5分钟',35,308);
+  }
+
+  // BPSK调制结果（相位翻转）
+  if(showMod){
+    ctx.strokeStyle='#ff6644';ctx.lineWidth=2;
+    ctx.beginPath();
+    let phase=1;
+    for(let x=30;x<720;x+=2){
+      const codeIdx=Math.floor((x-30)/3+t)%64;
+      const bit=codeIdx>=0&&codeIdx<64?'1011001000110101110010011010111001001101100010111001010110100010'[codeIdx]:'1';
+      if(bit==='0')phase*=-1;
+      const val=Math.sin(x*0.15)*25*phase;
+      if(x===30)ctx.moveTo(x,400+val);else ctx.lineTo(x,400+val);
+    }
+    ctx.stroke();
+    ctx.fillStyle='#ff6644';ctx.font='11px system-ui';ctx.fillText('BPSK调制信号 (相位翻转=码×载波)',35,382);
+    // 相位翻转指示
+    ctx.fillStyle='rgba(255,102,68,.3)';ctx.font='9px system-ui';ctx.fillText('码=0时载波相位翻转180°',35,440);
+  }
+
+  // 分隔线
+  ctx.strokeStyle='rgba(255,255,255,.06)';ctx.lineWidth=1;
+  [115,240,365].forEach(y=>{ctx.beginPath();ctx.moveTo(30,y);ctx.lineTo(720,y);ctx.stroke()});
+
+  // 标注框
+  ctx.strokeStyle='rgba(74,158,255,.2)';ctx.lineWidth=1;
+  ctx.fillStyle='rgba(74,158,255,.04)';
+  const labels=[
+    {x:10,y:20,w:90,h:82,text:'L1载波',color:'#4a9eff'},
+    {x:10,y:118,w:90,h:82,text:'C/A码',color:'#00ff88'},
+    {x:10,y:258,w:90,h:82,text:'导航电文',color:'#ffd700'},
+    {x:10,y:390,w:90,h:82,text:'调制信号',color:'#ff6644'},
+  ];
+  labels.forEach(l=>{
+    ctx.fillStyle='rgba(255,255,255,.02)';ctx.fillRect(l.x,l.y,l.w,l.h);
+    ctx.strokeStyle='rgba(255,255,255,.05)';ctx.strokeRect(l.x,l.y,l.w,l.h);
+    ctx.fillStyle=l.color;ctx.font='bold 12px system-ui';ctx.textAlign='center';
+    ctx.fillText(l.text,l.x+l.w/2,l.y+18);
+    ctx.fillStyle='rgba(255,255,255,.3)';ctx.font='9px system-ui';
+    const descs={L1载波:'正弦波',C/A码:'伪随机码',导航电文:'数据位',调制信号:'BPSK调制'};
+    ctx.fillText(descs[l.text],l.x+l.w/2,l.y+42);
+  });
+
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>
